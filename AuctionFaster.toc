@@ -1,0 +1,24 @@
+## Title: AuctionFaster
+## Notes: Simple auction interface
+## Version: 7.3.0
+## Author: Kaminaris
+## Interface: 70300
+## SavedVariables: AuctionFasterDb
+
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceGUI-3.0\AceGUI-3.0.xml
+Libs\AceGUI-3.0-SharedMediaWidgets\widget.xml
+Libs\AceConfig-3.0\AceConfig-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceHook-3.0\AceHook-3.0.xml
+Libs\LibTextTable-1.1\Lib.xml
+Libs\lib-st\lib-st.xml
+Libs\lib-st\AceGUIWidget-lib-st.lua
+Libs\LibGratuity-3.0\LibGratuity-3.0.lua
+
+main.lua
