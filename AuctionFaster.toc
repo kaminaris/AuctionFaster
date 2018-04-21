@@ -24,3 +24,7 @@ Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 ui.lua
 
 main.lua
+auctions.lua
+auctionTab.lua
+inventory.lua
+utils.lua
