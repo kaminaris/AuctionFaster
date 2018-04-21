@@ -2,6 +2,7 @@ AuctionFaster = LibStub('AceAddon-3.0'):NewAddon('AuctionFaster', 'AceConsole-3.
 local AceGUI = LibStub('AceGUI-3.0');
 local ScrollingTable = LibStub('ScrollingTable');
 local Gratuity = LibStub('LibGratuity-3.0');
+local StdUi = LibStub('StdUi-1.0');
 
 local options = {
 	type = 'group',
@@ -105,46 +106,52 @@ function AuctionFaster:AddAuctionHouseTab()
 end
 
 function AuctionFaster:DrawItemsFrame(auctionTab)
-	auctionTab.scrollframe = CreateFrame('ScrollFrame', "ANewScrollFrame", auctionTab, "UIPanelScrollFrameTemplate");
-	auctionTab.scrollframe:SetSize(200, 300);
+	auctionTab.scrollframe = CreateFrame('ScrollFrame', 'ANewScrollFrame', auctionTab, 'UIPanelScrollFrameTemplate');
+	auctionTab.scrollframe:SetSize(300, 300);
 	auctionTab.scrollframe:SetPoint('TOPLEFT', 5, -25);
 	auctionTab.scrollframe:SetPoint('BOTTOMLEFT', 300, 35);
 
-	local scrollBar = _G["ANewScrollFrameScrollBar"];
+	local scrollBar = _G['ANewScrollFrameScrollBar'];
 
-	local tex = auctionTab.scrollframe:CreateTexture(nil, "BACKGROUND", nil, -6)
-	tex:SetPoint("TOP", auctionTab.scrollframe)
-	tex:SetPoint("RIGHT", scrollBar, 3.7, 0)
-	tex:SetPoint("BOTTOM", auctionTab.scrollframe)
+	local tex = auctionTab.scrollframe:CreateTexture(nil, 'BACKGROUND', nil, -6)
+	tex:SetPoint('TOP', auctionTab.scrollframe)
+	tex:SetPoint('RIGHT', scrollBar, 3.7, 0)
+	tex:SetPoint('BOTTOM', auctionTab.scrollframe)
 	tex:SetWidth(scrollBar:GetWidth() + 10)
-	tex:SetTexture("Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar")
+	tex:SetTexture('Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar')
 	tex:SetTexCoord(0, 0.45, 0.1640625, 1)
 
-	local scrollChild = CreateFrame("Frame", "$parentScrollChild1", auctionTab.scrollframe)
+	local scrollChild = CreateFrame('Frame', '$parentScrollChild1', auctionTab.scrollframe)
 	scrollChild:SetWidth(auctionTab.scrollframe:GetWidth())
 	scrollChild:SetHeight(900);
-
-	local tex2 = scrollChild:CreateTexture(nil, "BACKGROUND")
-	tex2:SetTexture("Interface\\AdventureMap\\AdventureMapParchmentTile")
-	--	tex2:SetVertexColor(0,1,1,0.3)
-	tex2:SetAllPoints()
-
-	--LOAD SOME DATA and set the framesize
---	generateScrollChildData(scrollChild,20)
-	local texx = scrollChild:CreateTexture(nil, "ARTWORK")
-	texx:SetPoint("TOPLEFT", scrollChild)
-	texx:SetSize(13, 13);
-	texx:SetTexture("Interface\\AdventureMap\\AdventureMapParchmentTile")
-	texx:SetColorTexture(1, 1, 1, 0.5)
-
-
-	self:DrawItems(scrollChild)
 
 	auctionTab.scrollframe:SetScrollChild(scrollChild)
 	auctionTab.scrollframe:EnableMouse(true)
 
 	--make sure you cannot move the panel out of the screen
 	auctionTab.scrollframe:SetClampedToScreen(true)
+
+	self:DrawItems(scrollChild);
+	self:DrawRightPane(auctionTab);
+end
+
+function AuctionFaster:HighlightFrame(frame, highlight)
+	if highlight then
+		frame.highlightTexture:Show()
+	else
+		frame.highlightTexture:Hide()
+	end
+end
+
+function AuctionFaster:ShowTooltip(frame, link, show)
+	if show then
+		GameTooltip:SetOwner(frame);
+		GameTooltip:SetPoint('LEFT');
+		GameTooltip:SetHyperlink(link);
+		GameTooltip:Show();
+	else
+		GameTooltip:Hide();
+	end
 end
 
 function AuctionFaster:DrawItems(scrollChild)
@@ -153,28 +160,85 @@ function AuctionFaster:DrawItems(scrollChild)
 	scrollChild:SetHeight(lineHeight * #self.inventoryItems);
 
 	for i = 1, #self.inventoryItems do
-		local holdingFrame = CreateFrame('Frame', 'ASScrollItem' .. i, scrollChild);
-		holdingFrame:SetPoint('TOPLEFT', 0, -i * lineHeight);
+		local holdingFrame = CreateFrame('Button', 'ASScrollItem' .. i, scrollChild);
+		holdingFrame:SetPoint('TOPLEFT', 0, -(i - 1) * lineHeight);
 		holdingFrame:SetSize(scrollChild:GetWidth(), lineHeight);
 
-		local texx = holdingFrame:CreateTexture(nil, "ARTWORK")
-		texx:SetPoint("TOPLEFT", holdingFrame)
-		texx:SetSize(20, 20);
+		holdingFrame.highlightTexture = holdingFrame:CreateTexture(nil, 'BACKGROUND')
+		holdingFrame.highlightTexture:SetAllPoints(true)
+		holdingFrame.highlightTexture:SetColorTexture(1, 0.9, 0, 0.5)
+		holdingFrame.highlightTexture:Hide();
+		holdingFrame.itemLink = self.inventoryItems[i].link;
+		holdingFrame.itemIndex = i;
+
+
+		holdingFrame:EnableMouse();
+		holdingFrame:RegisterForClicks('AnyUp');
+		holdingFrame:SetScript('OnEnter', function(self)
+			AuctionFaster:HighlightFrame(self, true);
+			AuctionFaster:ShowTooltip(self, self.itemLink, true);
+		end)
+		holdingFrame:SetScript('OnLeave', function(self)
+			AuctionFaster:HighlightFrame(self, false);
+			AuctionFaster:ShowTooltip(self, nil, false);
+		end)
+		holdingFrame:SetScript('OnClick', function(self)
+			AuctionFaster:SelectItem(self.itemIndex);
+		end)
+
+
+		local texx = holdingFrame:CreateTexture(nil, 'ARTWORK')
+		texx:SetPoint('TOPLEFT', holdingFrame, 1, -1)
+		texx:SetSize(lineHeight - 2, lineHeight - 2);
 		texx:SetTexture(self.inventoryItems[i].icon)
 
-		local name = holdingFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		local name = holdingFrame:CreateFontString(nil, 'OVERLAY', 'GameFontHighlight')
 		name:SetText(self.inventoryItems[i].name);
-		name:SetSize(100, 20);
-		name:SetPoint("TOPLEFT", 30, -5);
-		name:SetJustifyH("LEFT");
+		name:SetSize(150, 20);
+		name:SetPoint('TOPLEFT', 35, -5);
+		name:SetJustifyH('LEFT');
 
-		local price = holdingFrame:CreateFontString("FPreviewFSPrc" .. i, "OVERLAY")
-		price:SetFont("Fonts\\FRIZQT__.TTF", 10)
-		price:SetText(GetMoneyString(self.inventoryItems[i].price));
-		price:SetSize(60, 20);
-		price:SetPoint("TOPRIGHT", holdingFrame, 0, -5);
-		price:SetJustifyH("RIGHT");
+		local price = StdUi:Label(holdingFrame, nil, GetMoneyString(self.inventoryItems[i].price), nil, 80, 20);
+		price:SetJustifyH('RIGHT');
+		price:SetPoint('TOPRIGHT', 0, -5);
+
+--		local price = holdingFrame:CreateFontString(nil, 'OVERLAY', 'GameFontHighlight')
+--		price:SetText(GetMoneyString(self.inventoryItems[i].price));
+--		price:SetSize(80, 20);
+--		price:SetPoint('TOPRIGHT', holdingFrame, 0, -5);
+--		price:SetJustifyH('RIGHT');
 	end
+end
+
+function AuctionFaster:SelectItem(index)
+	local auctionTab = self.auctionTab;
+	self.selectedItem = self.inventoryItems[index];
+
+
+	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
+	auctionTab.itemName:SetText(self.selectedItem.name);
+end
+
+function AuctionFaster:DrawRightPane(auctionTab)
+	local leftMargin = 340;
+	local iconSize = 48;
+	auctionTab.itemIcon = auctionTab:CreateTexture(nil, 'ARTWORK')
+	auctionTab.itemIcon:SetPoint('TOPLEFT', leftMargin, -25)
+	auctionTab.itemIcon:SetSize(iconSize, iconSize);
+	auctionTab.itemIcon:SetTexture('')
+
+	auctionTab.itemName = auctionTab:CreateFontString(nil, 'OVERLAY', 'GameFontHighlight')
+	auctionTab.itemName:SetText('No item selected');
+	auctionTab.itemName:SetSize(300, 20);
+	auctionTab.itemName:SetPoint('TOPLEFT', leftMargin + iconSize + 5, -25);
+	auctionTab.itemName:SetJustifyH('LEFT');
+
+	auctionTab.itemQty = auctionTab:CreateFontString(nil, 'OVERLAY', 'GameFontHighlight')
+	auctionTab.itemName:SetText('No item selected');
+	auctionTab.itemName:SetSize(300, 20);
+	auctionTab.itemName:SetPoint('TOPLEFT', leftMargin + iconSize + 5, -25);
+	auctionTab.itemName:SetJustifyH('LEFT');
+
 end
 
 function AuctionFaster:AuctionFrameTab_OnClick(tab)
@@ -264,6 +328,7 @@ function AuctionFaster:AddItemToInventory(itemId, link, bag, slot)
 		icon = itemIcon,
 		count = itemStackCount,
 		name = itemName,
+		link = itemLink,
 		price = itemSellPrice or 0
 	});
 end

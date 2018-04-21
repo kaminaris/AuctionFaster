@@ -21,4 +21,6 @@ Libs\lib-st\lib-st.xml
 Libs\lib-st\AceGUIWidget-lib-st.lua
 Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 
+ui.lua
+
 main.lua
