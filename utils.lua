@@ -28,6 +28,27 @@ function AuctionFaster:FormatMoney(money)
 	return output:trim();
 end
 
+function AuctionFaster:FormatMoneyNoColor(money)
+	if type(money) ~= 'number' then
+		return money;
+	end
+
+	local money = tonumber(money);
+
+	local gold = floor(money / COPPER_PER_GOLD);
+	local silver = floor((money - (gold * COPPER_PER_GOLD)) / COPPER_PER_SILVER);
+	local copper = floor(money % COPPER_PER_SILVER);
+
+	return gold .. 'c ' .. silver .. 's ' .. copper .. 'c';
+end
+
+function AuctionFaster:ParseMoney(text)
+	local gold, silver, copper = string.find(text, '(%d+)g (%d+)s (%d+)c');
+	local total = floor(copper + (silver * COPPER_PER_SILVER) + (gold * COPPER_PER_GOLD));
+
+	return total, gold, silver, copper
+end
+
 function AuctionFaster:FormatDuration(duration)
 	if duration >= 172800 then
 		return format('%.1f %s', duration/86400, 'days ago')

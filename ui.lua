@@ -71,7 +71,9 @@ function StdUi:Texture(parent, width, height, texture)
 	local tex = parent:CreateTexture(nil, 'ARTWORK');
 
 	self:SetObjSize(tex, width, height);
-	tex:SetTexture(texture);
+	if texture then
+		tex:SetTexture(texture);
+	end
 
 	return tex;
 end

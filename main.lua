@@ -51,22 +51,6 @@ function AuctionFaster:ShowTooltip(frame, link, show)
 	end
 end
 
-
-function AuctionFaster:SelectItem(index)
-	local auctionTab = self.auctionTab;
-	self.selectedItem = self.inventoryItems[index];
-
-	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
-	auctionTab.itemName:SetText(self.selectedItem.name);
-	auctionTab.itemQty:SetText('Qty: ' .. self.selectedItem.count);
-
-	self:GetCurrentAuctions();
-end
-
-
-
-
-
 function AuctionFaster:AUCTION_HOUSE_SHOW()
 	self:AddAuctionHouseTab();
 end

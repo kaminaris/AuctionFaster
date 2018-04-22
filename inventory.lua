@@ -46,7 +46,6 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 				canSell = not (strfind(line, ITEM_BIND_ON_PICKUP) or strfind(line, ITEM_BIND_TO_BNETACCOUNT)
 						or strfind(line, ITEM_BNETACCOUNTBOUND) or strfind(line, ITEM_SOULBOUND)
 						or strfind(line, ITEM_BIND_QUEST) or strfind(line, ITEM_CONJURED));
-				print(line, canSell);
 
 				if strfind(line, USE_COLON) then
 					break;
@@ -107,3 +106,88 @@ end
 function AuctionFaster:BAG_UPDATE_DELAYED()
 	self:ScanInventory();
 end
+
+AuctionFaster.freeInventorySlot = {bag = 0, slot = 1};
+function AuctionFaster:FindFirstFreeInventorySlot()
+	local itemId = GetContainerItemID(self.freeInventorySlot.bag, self.freeInventorySlot.slot);
+	if not itemId then
+		return self.freeInventorySlot.bag, self.freeInventorySlot.slot;
+	end
+
+	-- cached free slot is not available anymore, find another one
+	for bag = 0, 4 do
+		for slot = 1, GetContainerNumSlots(bag) do
+			local itemId = GetContainerItemID(bag, slot);
+			if not itemId then
+				self.freeInventorySlot = {bag = bag, slot = slot};
+				return bag, slot;
+			end
+		end
+	end
+
+	return nil, nil;
+end
+
+function AuctionFaster:GetItemFromInventory(id, name, qty)
+	local firstBag, firstSlot, remainingQty;
+
+	for bag = 0, 4 do
+		for slot = 1, GetContainerNumSlots(bag) do
+			local itemId = GetContainerItemID(bag, slot);
+			local link = GetContainerItemLink(bag, slot);
+			local _, count = GetContainerItemInfo(bag, slot);
+			local itemName, _, _, _, _, _, _, itemStackCount = GetItemInfo(link);
+
+			if id == itemId and name == itemName then
+				return bag, slot;
+			end
+		end
+	end
+
+	return nil, nil;
+end
+
+--
+--function AuctionFaster:GetItemFromInventory(id, name, qty)
+--	local firstBag, firstSlot, remainingQty;
+--
+--	for bag = 0, 4 do
+--		for slot = 1, GetContainerNumSlots(bag) do
+--			local itemId = GetContainerItemID(bag, slot);
+--			local link = GetContainerItemLink(bag, slot);
+--			local _, count = GetContainerItemInfo(bag, slot);
+--			local itemName, _, _, _, _, _, _, itemStackCount = GetItemInfo(link);
+--
+--			if id == itemId and name == itemName then
+--				if qty > itemStackCount then
+--					-- Not possible to stack this item as requested quantity
+--					return nil, nil, false;
+--				end
+--
+--				if qty == count then
+--					-- full stack or equals the quantity, no need to split anything
+--					return bag, slot, true;
+--				else
+--					if firstBag and firstSlot then
+--						-- we already found item previously
+--						if count >= remainingQty then
+--							-- this stack will suffice
+--							PickupContainerItem(bag, slot);
+--							SplitContainerItem(bag, slot, remainingQty);
+--						else
+--							-- we should merge it to first one and keep going
+--						end
+--					else
+--						-- this is just first stack
+--						firstBag = bag;
+--						firstSlot = slot;
+--						remainingQty = qty - count;
+--					end
+--				end
+--			end
+--		end
+--	end
+--
+--	-- Item not found or
+--	return nil, nil;
+--end
