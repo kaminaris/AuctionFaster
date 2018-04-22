@@ -20,6 +20,8 @@ function AuctionFaster:ScanInventory()
 			end
 		end
 	end
+
+	self:DrawItems();
 end
 
 function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
@@ -71,6 +73,12 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 
 	if not found then
+		local cacheKey = itemId .. itemName;
+		local scanPrice = '---';
+		if (AuctionFaster.auctionDb[cacheKey]) then
+			scanPrice = AuctionFaster.auctionDb[cacheKey].auctions[1][4];
+		end
+
 		tinsert(self.inventoryItems, {
 			icon = itemIcon,
 			count = count,
@@ -78,9 +86,21 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 			name = itemName,
 			link = itemLink,
 			itemId = itemId,
-			price = itemSellPrice or 0
+			price = scanPrice
 		});
 	end
+end
+
+function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
+	for i = 1, #self.inventoryItems do
+		local ii = self.inventoryItems[i];
+		if ii.itemId == itemId and ii.name == itemName then
+			self.inventoryItems[i].price = newPrice;
+			break;
+		end
+	end
+
+	self:DrawItems();
 end
 
 

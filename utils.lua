@@ -1,6 +1,9 @@
 
 function AuctionFaster:FormatMoney(money)
-
+	if type(money) ~= 'number' then
+		return money;
+	end
+	
 	local money = tonumber(money);
 	local goldColor = '|cfffff209';
 	local silverColor = '|cff7b7b7a';
@@ -23,4 +26,14 @@ function AuctionFaster:FormatMoney(money)
 	output = format('%s%s%02i%s ', output, copperColor, copper, '|rc')
 
 	return output:trim();
+end
+
+function AuctionFaster:FormatDuration(duration)
+	if duration >= 172800 then
+		return format('%.1f %s', duration/86400, 'days ago')
+	elseif duration >= 7200 then
+		return format('%.1f %s', duration/3600, 'hours ago')
+	else
+		return format('%.1f %s', duration/60, 'minutes ago')
+	end
 end

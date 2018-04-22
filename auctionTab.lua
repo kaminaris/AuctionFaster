@@ -1,6 +1,8 @@
 local ScrollingTable = LibStub('ScrollingTable');
 local StdUi = LibStub('StdUi-1.0');
 
+AuctionFaster.itemFramePool = {};
+
 function AuctionFaster:AddAuctionHouseTab()
 	if self.TabAdded then
 		return;
@@ -45,45 +47,77 @@ function AuctionFaster:DrawItemsFrame(auctionTab)
 	auctionTab.scrollFrame = scrollFrame;
 	auctionTab.scrollChild = scrollChild;
 
-	self:DrawItems(scrollChild);
+	self.safeToDrawItems = true;
+	self:DrawItems();
 
 end
 
 
-function AuctionFaster:DrawItems(scrollChild)
+function AuctionFaster:DrawItems()
+	-- Update bag delayed may cause this to happen before we open auction tab
+	if not self.safeToDrawItems then
+		return;
+	end
+
+	local scrollChild = self.auctionTab.scrollChild;
+
 	local lineHeight = 30;
 
 	scrollChild:SetHeight(lineHeight * #self.inventoryItems);
 
+	local holdingFrames = {};
 	for i = 1, #self.inventoryItems do
 
-		local holdingFrame = StdUi:Button(scrollChild, scrollChild:GetWidth(), lineHeight, nil, false, true, false);
-		holdingFrame.highlightTexture:SetColorTexture(1, 0.9, 0, 0.5);
+		-- next time we will be running this function we will reuse frames
+		local holdingFrame = table.remove(self.itemFramePool, 1);
+		if not holdingFrame then
+			-- no allocated frame need to create one
+			holdingFrame = StdUi:Button(scrollChild, scrollChild:GetWidth(), lineHeight, nil, false, true, false);
+			holdingFrame.highlightTexture:SetColorTexture(1, 0.9, 0, 0.5);
+
+			holdingFrame:EnableMouse();
+			holdingFrame:RegisterForClicks('AnyUp');
+			holdingFrame:SetScript('OnEnter', function(self)
+				AuctionFaster:ShowTooltip(self, self.itemLink, true);
+			end)
+			holdingFrame:SetScript('OnLeave', function(self)
+				AuctionFaster:ShowTooltip(self, nil, false);
+			end)
+			holdingFrame:SetScript('OnClick', function(self)
+				AuctionFaster:SelectItem(self.itemIndex);
+			end)
+
+			holdingFrame.itemIcon = StdUi:Texture(holdingFrame, lineHeight - 2, lineHeight - 2,
+				self.inventoryItems[i].icon);
+			holdingFrame.itemIcon:SetPoint('TOPLEFT', holdingFrame, 1, -1)
+
+			holdingFrame.itemName = StdUi:Label(holdingFrame, nil, self.inventoryItems[i].name, nil, 150, 20);
+			holdingFrame.itemName:SetPoint('TOPLEFT', 35, -5);
+
+			holdingFrame.itemPrice = StdUi:Label(holdingFrame, nil,
+				AuctionFaster:FormatMoney(self.inventoryItems[i].price), nil, 80, 20);
+			holdingFrame.itemPrice:SetJustifyH('RIGHT');
+			holdingFrame.itemPrice:SetPoint('TOPRIGHT', 0, -5);
+
+			tinsert(holdingFrames, holdingFrame);
+		end
+
+		-- there is a frame so we need to update it
 		holdingFrame:SetPoint('TOPLEFT', 0, -(i - 1) * lineHeight);
 		holdingFrame.itemLink = self.inventoryItems[i].link;
 		holdingFrame.itemIndex = i;
+		holdingFrame.itemIcon:SetTexture(self.inventoryItems[i].icon);
+		holdingFrame.itemName:SetText(self.inventoryItems[i].name);
+		holdingFrame.itemPrice:SetText(AuctionFaster:FormatMoney(self.inventoryItems[i].price));
+	end
 
-		holdingFrame:EnableMouse();
-		holdingFrame:RegisterForClicks('AnyUp');
-		holdingFrame:SetScript('OnEnter', function(self)
-			AuctionFaster:ShowTooltip(self, self.itemLink, true);
-		end)
-		holdingFrame:SetScript('OnLeave', function(self)
-			AuctionFaster:ShowTooltip(self, nil, false);
-		end)
-		holdingFrame:SetScript('OnClick', function(self)
-			AuctionFaster:SelectItem(self.itemIndex);
-		end)
+	-- hide all not used frames
+	for i = 1, #self.itemFramePool do
+		self.itemFramePool[i]:Hide();
+	end
 
-		local texx = StdUi:Texture(holdingFrame, lineHeight - 2, lineHeight - 2, self.inventoryItems[i].icon);
-		texx:SetPoint('TOPLEFT', holdingFrame, 1, -1)
-
-		local name = StdUi:Label(holdingFrame, nil, self.inventoryItems[i].name, nil, 150, 20);
-		name:SetPoint('TOPLEFT', 35, -5);
-
-		local price = StdUi:Label(holdingFrame, nil, AuctionFaster:FormatMoney(self.inventoryItems[i].price), nil, 80, 20);
-		price:SetJustifyH('RIGHT');
-		price:SetPoint('TOPRIGHT', 0, -5);
+	for i = 1, #holdingFrames do
+		tinsert(self.itemFramePool, holdingFrames[i]);
 	end
 end
 
@@ -97,12 +131,15 @@ function AuctionFaster:DrawRightPane(auctionTab)
 	auctionTab.itemIcon = StdUi:Texture(auctionTab, iconSize, iconSize, '');
 	auctionTab.itemIcon:SetPoint('TOPLEFT', leftMargin, -25)
 
-	auctionTab.itemName = StdUi:Label(auctionTab, 16, 'No item selected', nil, 300, 20);
+	auctionTab.itemName = StdUi:Label(auctionTab, 16, 'No item selected', nil, 250, 20);
 	auctionTab.itemName:SetPoint('TOPLEFT', leftMargin + iconSize + 5, -25);
 
-	auctionTab.itemQty = StdUi:Label(auctionTab, 14, 'Qty: O', nil, 300, 20);
+	auctionTab.itemQty = StdUi:Label(auctionTab, 14, 'Qty: O', nil, 250, 20);
 	auctionTab.itemQty:SetPoint('TOPLEFT', leftMargin + iconSize + 5, -45);
 
+	-- Last scan time
+	auctionTab.lastScan = StdUi:Label(auctionTab, 12, 'Last scan: ---');
+	StdUi:GlueRight(auctionTab.lastScan, auctionTab.itemName, 5, 0);
 
 	-- Bid per item edit box
 	auctionTab.bidPerItem = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '10g 6s 6c',
@@ -160,7 +197,7 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
 		},
 
 		{
-			['name'] = 'Bid',
+			['name'] = 'Bid / Item',
 			['width'] = 120,
 			['align'] = 'RIGHT',
 			['DoCellUpdate'] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
@@ -171,7 +208,7 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
 		},
 
 		{
-			['name'] = 'Buy',
+			['name'] = 'Buy / Item',
 			['width'] = 120,
 			['align'] = 'RIGHT',
 			['DoCellUpdate'] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
