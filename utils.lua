@@ -39,14 +39,18 @@ function AuctionFaster:FormatMoneyNoColor(money)
 	local silver = floor((money - (gold * COPPER_PER_GOLD)) / COPPER_PER_SILVER);
 	local copper = floor(money % COPPER_PER_SILVER);
 
-	return gold .. 'c ' .. silver .. 's ' .. copper .. 'c';
+	return gold .. 'g ' .. silver .. 's ' .. copper .. 'c';
 end
 
 function AuctionFaster:ParseMoney(text)
-	local gold, silver, copper = string.find(text, '(%d+)g (%d+)s (%d+)c');
+	local _, _, gold, silver, copper = string.find(text, '(%d+)g (%d+)s (%d+)c');
+
+	gold = tonumber(gold);
+	silver = tonumber(silver);
+	copper = tonumber(copper);
 	local total = floor(copper + (silver * COPPER_PER_SILVER) + (gold * COPPER_PER_GOLD));
 
-	return total, gold, silver, copper
+	return total, gold, silver, copper;
 end
 
 function AuctionFaster:FormatDuration(duration)
