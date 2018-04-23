@@ -292,10 +292,15 @@ function AuctionFaster:GetSellSettings()
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
 
+	local stackSize = tonumber(auctionTab.stackSize:GetText());
+	if stackSize > self.selectedItem.count then
+		stackSize = self.selectedItem.count;
+	end
+
 	return {
 		bidPerItem = self:ParseMoney(bidPerItemText),
 		buyPerItem = self:ParseMoney(buyPerItemText),
-		stackSize = auctionTab.stackSize:GetText(),
+		stackSize = stackSize,
 		maxStacks = maxStacks,
 		duration = 2
 	};

@@ -139,8 +139,6 @@ function AuctionFaster:SellItem()
 	end
 
 	local sellSettings = self:GetSellSettings();
-	DevTools_Dump(sellSettings);
---[[
 
 	PickupContainerItem(bag, slot);
 	if not CursorHasItem() then
@@ -150,7 +148,14 @@ function AuctionFaster:SellItem()
 	if not AuctionFrameAuctions.duration then
 		AuctionFrameAuctions.duration = 2
 	end
-	--ClickAuctionSellItemButton()
-	StartAuction(minBid, buyoutPrice, runTime, stackSize, numStacks)
-	]]--
+
+	-- Putem item in slot
+	ClickAuctionSellItemButton();
+
+	StartAuction(sellSettings.bidPerItem,
+		sellSettings.buyPerItem,
+		sellSettings.duration,
+		sellSettings.stackSize,
+		sellSettings.maxStacks);
+
 end
