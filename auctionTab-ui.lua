@@ -74,11 +74,26 @@ function AuctionFaster:DrawItems()
 
 	scrollChild:SetHeight(margin * 2 + lineHeight * #self.inventoryItems);
 
+	-- hide all frames
+	for i = 1, #self.itemFramePool do
+		self.itemFramePool[i]:Hide();
+	end
+
+	-- FOR TEST
+	local xrnd = math.random(100);
+--	table.sort(self.inventoryItems, function(a, b)
+--		if a.name > b.name then
+--			return true;
+--		else
+--			return false;
+--		end
+--	end);
+
 	local holdingFrames = {};
 	for i = 1, #self.inventoryItems do
 
 		-- next time we will be running this function we will reuse frames
-		local holdingFrame = tremove(self.itemFramePool);
+		local holdingFrame = self.itemFramePool[i];
 
 		if not holdingFrame then
 			-- no allocated frame need to create one
@@ -108,26 +123,20 @@ function AuctionFaster:DrawItems()
 			holdingFrame.itemPrice:SetJustifyH('RIGHT');
 			holdingFrame.itemPrice:SetPoint('TOPRIGHT', 0, -5);
 
-			tinsert(holdingFrames, holdingFrame);
+			-- insert only newly created to frame pool
+			tinsert(self.itemFramePool, holdingFrame);
 		end
 
 		-- there is a frame so we need to update it
+		holdingFrame:ClearAllPoints();
 		holdingFrame:SetPoint('TOPLEFT', margin, -(i - 1) * lineHeight - margin);
 		holdingFrame.itemLink = self.inventoryItems[i].link;
+		holdingFrame.item = self.inventoryItems[i];
 		holdingFrame.itemIndex = i;
 		holdingFrame.itemIcon:SetTexture(self.inventoryItems[i].icon);
 		holdingFrame.itemName:SetText(self.inventoryItems[i].name);
 		holdingFrame.itemPrice:SetText(AuctionFaster:FormatMoney(self.inventoryItems[i].price));
 		holdingFrame:Show();
-	end
-
-	-- hide all not used frames
-	for i = 1, #self.itemFramePool do
-		self.itemFramePool[i]:Hide();
-	end
-
-	for i = 1, #holdingFrames do
-		tinsert(self.itemFramePool, holdingFrames[i]);
 	end
 end
 
@@ -201,7 +210,7 @@ function AuctionFaster:DrawTabButtons()
 	auctionTab.buyItemButton = StdUi:PanelButton(auctionTab, 60, 20, 'Buy Item');
 	StdUi:GlueLeft(auctionTab.buyItemButton, auctionTab.postOneButton, 5);
 	auctionTab.buyItemButton:SetScript('OnClick', function()
-		local index = auctionTab.currentAuctions:GetSelection();
+		AuctionFaster:BuyItem();
 	end);
 end
 
@@ -210,35 +219,42 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
 
 	local cols = {
 		{
-			['name'] = 'Seller',
-			['width'] = 150,
-			['align'] = 'LEFT',
-		},
-
-		{
-			['name'] = 'Qty',
-			['width'] = 40,
-			['align'] = 'LEFT',
-		},
-
-		{
-			['name'] = 'Bid / Item',
-			['width'] = 120,
-			['align'] = 'RIGHT',
-			['DoCellUpdate'] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
+			name = 'Seller',
+			width = 150,
+			align = 'LEFT',
+			DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
 				if fShow then
-					cellFrame.text:SetText(AuctionFaster:FormatMoney(data[realrow][3]));
+					cellFrame.text:SetText(data[realrow].owner);
 				end
 			end,
 		},
-
 		{
-			['name'] = 'Buy / Item',
-			['width'] = 120,
-			['align'] = 'RIGHT',
-			['DoCellUpdate'] = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
+			name = 'Qty',
+			width = 40,
+			align = 'LEFT',
+			DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
 				if fShow then
-					cellFrame.text:SetText(AuctionFaster:FormatMoney(data[realrow][4]));
+					cellFrame.text:SetText(data[realrow].count);
+				end
+			end,
+		},
+		{
+			name = 'Bid / Item',
+			width = 120,
+			align = 'RIGHT',
+			DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
+				if fShow then
+					cellFrame.text:SetText(AuctionFaster:FormatMoney(data[realrow].bid));
+				end
+			end,
+		},
+		{
+			name = 'Buy / Item',
+			width = 120,
+			align = 'RIGHT',
+			DoCellUpdate = function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, self, ...)
+				if fShow then
+					cellFrame.text:SetText(AuctionFaster:FormatMoney(data[realrow].buy));
 				end
 			end,
 		},

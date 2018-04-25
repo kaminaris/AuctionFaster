@@ -50,6 +50,14 @@ function AuctionFaster:SelectItem(index)
 	self:GetCurrentAuctions();
 end
 
+function AuctionFaster:GetSelectedItemIdName()
+	if not self.selectedItem then
+		return nil, nil;
+	end
+
+	return self.selectedItem.itemId, self.selectedItem.name;
+end
+
 function AuctionFaster:UpdateItemQtyText()
 	if not self.selectedItem then
 		return
@@ -62,4 +70,14 @@ function AuctionFaster:UpdateItemQtyText()
 				', Max Stacks: ' .. maxStacks ..
 				', Remaining: ' .. remainingQty
 	);
+end
+
+function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
+	for i = 1, #self.itemFramePool do
+		local f = self.itemFramePool[i];
+		if f.item.itemId == itemId and f.item.name == itemName then
+			print('found', itemId, itemName, newPrice);
+			f.itemPrice:SetText(self:FormatMoney(newPrice));
+		end
+	end
 end

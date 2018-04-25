@@ -72,10 +72,9 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 
 	if not found then
-		local cacheKey = itemId .. itemName;
-		local scanPrice = '---';
-		if (AuctionFaster.auctionDb[cacheKey]) then
-			scanPrice = AuctionFaster.auctionDb[cacheKey].auctions[1][4];
+		local scanPrice = self:GetLowestPrice(itemId, itemName);
+		if not scanPrice then
+			scanPrice = '---';
 		end
 
 		tinsert(self.inventoryItems, {
@@ -99,7 +98,8 @@ function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 		end
 	end
 
-	self:DrawItems();
+	-- update the UI
+	self:UpdateItemsTabPrice(itemId, itemName, newPrice);
 end
 
 

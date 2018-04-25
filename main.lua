@@ -37,6 +37,10 @@ function AuctionFaster:OnInitialize()
 	self:RegisterEvent('BAG_UPDATE_DELAYED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+
+	if not self.db.global.auctionDb then
+		self.db.global.auctionDb = {};
+	end
 end
 
 

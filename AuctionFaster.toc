@@ -17,7 +17,6 @@ Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceHook-3.0\AceHook-3.0.xml
 Libs\LibTextTable-1.1\Lib.xml
 Libs\lib-st\lib-st.xml
-Libs\lib-st\AceGUIWidget-lib-st.lua
 Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 
 ui.lua

@@ -1,9 +1,8 @@
-AuctionFaster.auctionDb = {};
 
 function AuctionFaster:GetItemFromCache(itemId, itemName)
-	if self.auctionDb[itemId .. itemName] then
-		local item = self.auctionDb[itemId .. itemName];
-		if ((GetTime() - item.scanTime) > 60 * 10) then -- older than 10 minutes
+	if self.db.global.auctionDb[itemId .. itemName] then
+		local item = self.db.global.auctionDb[itemId .. itemName];
+		if ((GetServerTime() - item.scanTime) > 60 * 10) then -- older than 10 minutes
 			return nil;
 		end
 		return item;
@@ -17,9 +16,9 @@ function AuctionFaster:GetCurrentAuctions()
 	local itemId = selectedItem.itemId;
 	local name = selectedItem.name;
 
-	local cachedItem = self:GetItemFromCache(itemId, name);
-	if (cachedItem) then
-		self:UpdateAuctionTable(cachedItem);
+	local cacheItem = self:GetItemFromCache(itemId, name);
+	if cacheItem and #cacheItem.auctions > 0 then
+		self:UpdateAuctionTable(cacheItem);
 		return;
 	end
 
@@ -40,81 +39,112 @@ function AuctionFaster:GetCurrentAuctions()
 	self.currentlyQuerying = false;
 end
 
-function AuctionFaster:AUCTION_ITEM_LIST_UPDATE(a, b, c, d)
+function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	if (self.currentlySorting) then
 		return;
 	end
 
+	local selectedId, selectedName = self:GetSelectedItemIdName();
+
+	if not selectedId then
+		-- Not our scan, ignore it
+		return;
+	end;
+
 	local shown, total = GetNumAuctionItems('list');
 
 	-- since we did scan anyway, put it in cache
-
 	local cacheKey;
-	local cachedItem = {
-		scanTime = GetTime(),
+	local cacheItem = {
+		scanTime = GetServerTime(),
 		auctions = {},
 		totalItems = total
 	};
 
+	local addedSome = false;
 	for i = 1, shown do
 		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
 		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
 		ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
 
-		if not cacheKey then
-			cachedItem.itemName = name;
-			cachedItem.itemId = itemId;
-			cacheKey = itemId .. name;
+		-- this function runs for every AH scan so make sure to ignore it if item does not match selected one
+		if name == selectedName and itemId == selectedId then
+			addedSome = true;
+			if not cacheKey then
+				cacheItem.itemName = name;
+				cacheItem.itemId = itemId;
+				cacheKey = itemId .. name;
+			end
+
+			tinsert(cacheItem.auctions, {
+				owner = owner,
+				count = count,
+				itemId = itemId,
+				itemName = name,
+				bid = floor(minBid / count),
+				buy = floor(buyoutPrice / count),
+			});
 		end
-
-		tinsert(cachedItem.auctions, {
-
-			owner,
-			count,
-			floor(minBid / count),
-			floor(buyoutPrice / count),
-		});
 	end
 
-	table.sort(cachedItem.auctions, function(a, b)
-		return a[4] < b[4];
-	end);
+	if cacheKey and (addedSome or not self.db.global.auctionDb[cacheKey]) then
+		-- only cache it when there is no cache or items were added
+		table.sort(cacheItem.auctions, function(a, b)
+			return a.buy < b.buy;
+		end);
 
-	self.auctionDb[cacheKey] = cachedItem;
-	self:UpdateAuctionTable(cachedItem);
+		self.db.global.auctionDb[cacheKey] = cacheItem;
+		self:UpdateAuctionTable(cacheItem);
+	end
 end
 
-function AuctionFaster:UpdateAuctionTable(cachedItem)
-	self.auctionTab.currentAuctions:SetData(cachedItem.auctions, true);
-	self.auctionTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetTime() - cachedItem.scanTime));
-	self:UpdateInventoryItemPrice(cachedItem.itemId, cachedItem.itemName, cachedItem.auctions[1][4]);
-	self:UnderCutPrices(cachedItem);
+function AuctionFaster:UpdateAuctionTable(cacheItem)
+	self.auctionTab.currentAuctions:SetData(cacheItem.auctions, true);
+	self.auctionTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
+	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
+	self:UnderCutPrices(cacheItem, minBid, minBuy);
+	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
+
 end
 
-function AuctionFaster:UnderCutPrices(cachedItem)
-	if #cachedItem.auctions < 1 then
+function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
+	if #cacheItem.auctions < 1 then
 		return;
 	end
 
-	local lowestBid, lowestBuy = self:FindLowestBidBuy(cachedItem);
+	if not lowestBid or not lowestBuy then
+		lowestBid, lowestBuy = self:FindLowestBidBuy(cacheItem);
+	end
 
 	self:UpdateTabPrices(lowestBid - 1, lowestBuy - 1);
 end
 
-function AuctionFaster:FindLowestBidBuy(cachedItem)
-	if #cachedItem.auctions < 1 then
+function AuctionFaster:GetLowestPrice(itemId, itemName)
+	local cacheKey = itemId .. itemName;
+
+	if not self.db.global.auctionDb[cacheKey] then
+		return nil, nil;
+	end
+
+	local cacheItem = self.db.global.auctionDb[cacheKey];
+
+	return self:FindLowestBidBuy(cacheItem);
+end
+
+function AuctionFaster:FindLowestBidBuy(cacheItem)
+	if #cacheItem.auctions < 1 then
 		return nil, nil;
 	end
 
 	local lowestBid, lowestBuy;
-	for i = 1, #cachedItem.auctions do
-		local auc = cachedItem.auctions[i];
-		if auc[3] > 0 and (not lowestBid or lowestBid > auc[3]) then
-			lowestBid = auc[3];
+	for i = 1, #cacheItem.auctions do
+		local auc = cacheItem.auctions[i];
+		if auc.bid > 0 and (not lowestBid or lowestBid > auc.bid) then
+			lowestBid = auc.bid;
 		end
 
-		if auc[4] > 0 and (not lowestBuy or lowestBuy > auc[4]) then
-			lowestBuy = auc[4];
+		if auc.buy > 0 and (not lowestBuy or lowestBuy > auc.buy) then
+			lowestBuy = auc.buy;
 		end
 	end
 
@@ -158,5 +188,38 @@ function AuctionFaster:SellItem()
 		sellSettings.duration,
 		sellSettings.stackSize,
 		sellSettings.maxStacks);
+end
 
+function AuctionFaster:BuyItem()
+	local selectedId, selectedName = self:GetSelectedItemIdName();
+	if not selectedId then
+		return;
+	end
+
+	local index = self.auctionTab.currentAuctions:GetSelection();
+	if not index then
+		return;
+	end
+	local auctionData = self.auctionTab.currentAuctions:GetRow(index);
+
+	-- maybe index is the same
+	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
+	minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
+	ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', index);
+
+	local bid = floor(minBid / count);
+	local buy = floor(buyoutPrice / count);
+
+	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
+		and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
+		-- same index, we can buy it
+		self:BuyItemByIndex(index);
+	end
+end
+
+function AuctionFaster:BuyItemByIndex(index)
+	local buyPrice = select(10, GetAuctionItemInfo('list', index))
+
+	PlaceAuctionBid('list', index, buyPrice)
+	CloseAuctionStaticPopups();
 end
