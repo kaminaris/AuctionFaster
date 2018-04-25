@@ -1,34 +1,10 @@
 AuctionFaster = LibStub('AceAddon-3.0'):NewAddon('AuctionFaster', 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0');
 local AceGUI = LibStub('AceGUI-3.0');
 
-local options = {
-	type = 'group',
-	name = 'AuctionFaster Options',
-	inline = false,
-	args = {
-		enableIcon = {
-			name = 'Enable AuctionFaster',
-			desc = 'Enable AuctionFaster',
-			type = 'toggle',
-			width = 'full',
-			set = function(info, val)
-				AuctionFaster.db.global.enabled = not val;
-			end,
-			get = function(info) return not AuctionFaster.db.global.enabled end
-		},
-	},
-}
-
-local defaults = {
-	global = {
-		enabled = true,
-	}
-};
-
 function AuctionFaster:OnInitialize()
-	LibStub('AceConfig-3.0'):RegisterOptionsTable('AuctionFaster', options, { '/afconf' });
+	LibStub('AceConfig-3.0'):RegisterOptionsTable('AuctionFaster', self.options, { '/afconf' });
 
-	self.db = LibStub('AceDB-3.0'):New('AuctionFasterDb', defaults);
+	self.db = LibStub('AceDB-3.0'):New('AuctionFasterDb', self.defaults);
 
 	self.optionsFrame = LibStub('AceConfigDialog-3.0'):AddToBlizOptions('AuctionFaster', 'AuctionFaster');
 	--	self:RegisterChatCommand('keystonemanager', 'ShowWindow');

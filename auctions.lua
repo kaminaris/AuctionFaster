@@ -94,8 +94,8 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		end);
 
 		self.db.global.auctionDb[cacheKey] = cacheItem;
-		self:UpdateAuctionTable(cacheItem);
 	end
+	self:UpdateAuctionTable(cacheItem);
 end
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
