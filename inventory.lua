@@ -107,7 +107,7 @@ function AuctionFaster:BAG_UPDATE_DELAYED()
 	self:ScanInventory();
 end
 
-AuctionFaster.freeInventorySlot = {bag = 0, slot = 1};
+AuctionFaster.freeInventorySlot = { bag = 0, slot = 1 };
 function AuctionFaster:FindFirstFreeInventorySlot()
 	local itemId = GetContainerItemID(self.freeInventorySlot.bag, self.freeInventorySlot.slot);
 	if not itemId then
@@ -119,7 +119,7 @@ function AuctionFaster:FindFirstFreeInventorySlot()
 		for slot = 1, GetContainerNumSlots(bag) do
 			local itemId = GetContainerItemID(bag, slot);
 			if not itemId then
-				self.freeInventorySlot = {bag = bag, slot = slot};
+				self.freeInventorySlot = { bag = bag, slot = slot };
 				return bag, slot;
 			end
 		end
@@ -134,12 +134,14 @@ function AuctionFaster:GetItemFromInventory(id, name, qty)
 	for bag = 0, 4 do
 		for slot = 1, GetContainerNumSlots(bag) do
 			local itemId = GetContainerItemID(bag, slot);
-			local link = GetContainerItemLink(bag, slot);
-			local _, count = GetContainerItemInfo(bag, slot);
-			local itemName, _, _, _, _, _, _, itemStackCount = GetItemInfo(link);
+			if itemId then
+				local link = GetContainerItemLink(bag, slot);
+				local _, count = GetContainerItemInfo(bag, slot);
+				local itemName, _, _, _, _, _, _, itemStackCount = GetItemInfo(link);
 
-			if id == itemId and name == itemName then
-				return bag, slot;
+				if id == itemId and name == itemName then
+					return bag, slot;
+				end
 			end
 		end
 	end

@@ -62,7 +62,6 @@ function AuctionFaster:DrawItemsFrame()
 
 end
 
-
 function AuctionFaster:DrawItems()
 	-- Update bag delayed may cause this to happen before we open auction tab
 	if not self.safeToDrawItems then
@@ -132,35 +131,6 @@ function AuctionFaster:DrawItems()
 	end
 end
 
-function AuctionFaster:SelectItem(index)
-	local auctionTab = self.auctionTab;
-	self.selectedItem = self.inventoryItems[index];
-
-	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
-	auctionTab.itemName:SetText(self.selectedItem.name);
-
-
-	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStack .. ')');
-	auctionTab.stackSize:SetText(self.selectedItem.maxStack);
-
-	self:UpdateItemQtyText();
-	self:GetCurrentAuctions();
-end
-
-function AuctionFaster:UpdateItemQtyText()
-	if not self.selectedItem then
-		return
-	end
-
-	local auctionTab = self.auctionTab;
-	local maxStacks, remainingQty = self:CalcMaxStacks();
-	auctionTab.itemQty:SetText(
-		'Qty: ' .. self.selectedItem.count ..
-		', Max Stacks: ' .. maxStacks ..
-		', Remaining: ' .. remainingQty
-	);
-end
-
 function AuctionFaster:DrawRightPane()
 
 	local auctionTab = self.auctionTab;
@@ -216,106 +186,6 @@ function AuctionFaster:DrawRightPane()
 	self:DrawRightPaneCurrentAuctionsTable();
 end
 
-function AuctionFaster:CalcMaxStacks()
-	local auctionTab = self.auctionTab;
-	if not self.selectedItem then
-		return 0, 0;
-	end
-
-	local stackSize = tonumber(auctionTab.stackSize:GetText());
-	local maxStacks = floor(self.selectedItem.count / stackSize);
-	if maxStacks == 0 then
-		maxStacks = 1;
-	end
-	local remainingQty = self.selectedItem.count - (maxStacks * stackSize);
-	if remainingQty < 0 then
-		remainingQty = 0;
-	end
-	return maxStacks, remainingQty;
-end
-
-function AuctionFaster:ValidateMaxStacks(editBox)
-	if not self.selectedItem then
-		return;
-	end
-
-	local maxStacks = tonumber(editBox:GetText());
-	local origMaxStacks = maxStacks;
-
-	local maxStacksPossible = AuctionFaster:CalcMaxStacks();
-
-	-- 0 means no limit
-	if maxStacks < 0 then
-		maxStacks = 0;
-	end
-
-	if maxStacks > maxStacksPossible then
-		maxStacks = maxStacksPossible;
-	end
-
-	if maxStacks ~= origMaxStacks then
-		editBox:SetText(maxStacks);
-	end
-	AuctionFaster:UpdateItemQtyText();
-end
-
-function AuctionFaster:ValidateStackSize(editBox)
-	if not self.selectedItem then
-		return;
-	end
-
-	local stackSize = tonumber(editBox:GetText());
-	local origStackSize = stackSize;
-
-	if stackSize < 1 then
-		stackSize = 1;
-	end
-
-	if stackSize > self.selectedItem.maxStack then
-		stackSize = self.selectedItem.maxStack;
-	end
-
-	if stackSize ~= origStackSize then
-		editBox:SetText(stackSize);
-	end
-	AuctionFaster:UpdateItemQtyText();
-end
-
-function AuctionFaster:GetSellSettings()
-	local auctionTab = self.auctionTab;
-
-	local bidPerItemText = auctionTab.bidPerItem:GetText();
-	local buyPerItemText = auctionTab.buyPerItem:GetText()
-
-	local maxStacks = tonumber(auctionTab.maxStacks:GetText());
-	if maxStacks == 0 then
-		maxStacks = AuctionFaster:CalcMaxStacks();
-	end
-
-	local stackSize = tonumber(auctionTab.stackSize:GetText());
-	if stackSize > self.selectedItem.count then
-		stackSize = self.selectedItem.count;
-	end
-
-	return {
-		bidPerItem = self:ParseMoney(bidPerItemText),
-		buyPerItem = self:ParseMoney(buyPerItemText),
-		stackSize = stackSize,
-		maxStacks = maxStacks,
-		duration = 2
-	};
-end
-
-function AuctionFaster:UpdateTabPrices(bid, buy)
-	local auctionTab = self.auctionTab;
-
-	local bidText = self:FormatMoneyNoColor(bid);
-	local buyText = self:FormatMoneyNoColor(buy);
-
-	auctionTab.bidPerItem:SetText(bidText);
-	auctionTab.buyPerItem:SetText(buyText);
-end
-
 function AuctionFaster:DrawTabButtons()
 	local auctionTab = self.auctionTab;
 
@@ -330,6 +200,9 @@ function AuctionFaster:DrawTabButtons()
 
 	auctionTab.buyItemButton = StdUi:PanelButton(auctionTab, 60, 20, 'Buy Item');
 	StdUi:GlueLeft(auctionTab.buyItemButton, auctionTab.postOneButton, 5);
+	auctionTab.buyItemButton:SetScript('OnClick', function()
+		local index = auctionTab.currentAuctions:GetSelection();
+	end);
 end
 
 function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
@@ -373,6 +246,7 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
 
 	local leftMargin = 360;
 	auctionTab.currentAuctions = ScrollingTable:CreateST(cols, 10, 18, nil, auctionTab);
+	auctionTab.currentAuctions:EnableSelection(true);
 	auctionTab.currentAuctions.frame:SetPoint('TOPLEFT', leftMargin - 5, -220);
 	auctionTab.currentAuctions.frame:SetPoint('BOTTOMRIGHT', 0, 35);
 end

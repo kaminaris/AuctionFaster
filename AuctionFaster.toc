@@ -24,6 +24,8 @@ ui.lua
 
 main.lua
 auctions.lua
-auctionTab.lua
+auctionTab-ui.lua
+auctionTab-functions.lua
+validators.lua
 inventory.lua
 utils.lua

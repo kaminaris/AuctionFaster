@@ -45,7 +45,6 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE(a, b, c, d)
 		return;
 	end
 
-	print(a, b, c, d);
 	local shown, total = GetNumAuctionItems('list');
 
 	-- since we did scan anyway, put it in cache
@@ -53,7 +52,8 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE(a, b, c, d)
 	local cacheKey;
 	local cachedItem = {
 		scanTime = GetTime(),
-		auctions = {}
+		auctions = {},
+		totalItems = total
 	};
 
 	for i = 1, shown do
@@ -68,6 +68,7 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE(a, b, c, d)
 		end
 
 		tinsert(cachedItem.auctions, {
+
 			owner,
 			count,
 			floor(minBid / count),
@@ -152,8 +153,8 @@ function AuctionFaster:SellItem()
 	-- Putem item in slot
 	ClickAuctionSellItemButton();
 
-	StartAuction(sellSettings.bidPerItem,
-		sellSettings.buyPerItem,
+	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
+		sellSettings.buyPerItem * sellSettings.stackSize,
 		sellSettings.duration,
 		sellSettings.stackSize,
 		sellSettings.maxStacks);
