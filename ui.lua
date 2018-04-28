@@ -1,20 +1,37 @@
 local MAJOR, MINOR = 'StdUi-1.0', 1;
-local StdUi = LibStub:NewLibrary(MAJOR, MINOR)
+local StdUi = LibStub:NewLibrary(MAJOR, MINOR);
 
 if not StdUi then
 	return;
 end
 
-StdUi.config = {
-	font = 'Fonts\\FRIZQT__.TTF',
-	fontSize = 12,
-	fontEffect = 'OUTLINE',
-	fontStrata = 'OVERLAY'
-};
+local ScrollingTable = LibStub('ScrollingTable');
 
-function StdUi:SetDefaultFont(font, size)
-	self.config.font = font;
-	self.config.fontSize = size;
+StdUi.config = {};
+
+function StdUi:ResetConfig()
+	self.config = {
+		font = {
+			familly = 'Fonts\\FRIZQT__.TTF',
+			sizeize = 12,
+			effect = 'OUTLINE',
+			strata = 'OVERLAY',
+		},
+
+		backdrop = {
+			panel = { r = 0.1, g = 0.1, b = 0.1, a = 1 },
+			button = { r = 0.25, g = 0.25, b = 0.25, a = 1 },
+			border = { r = 0.8, g = 0.8, b = 0.8, a = 1 }
+		}
+	};
+end
+StdUi:ResetConfig();
+
+function StdUi:SetDefaultFont(font, size, effect, strata)
+	self.config.font.familly = font;
+	self.config.font.size = size;
+	self.config.font.effect = effect;
+	self.config.font.strata = strata;
 end
 
 --
@@ -30,6 +47,29 @@ function StdUi:SetObjSize(obj, width, height)
 	end
 end
 
+function StdUi:ApplyBackdrop(frame, type)
+	frame:SetBackdrop({
+		bgFile = [[Interface\Buttons\WHITE8X8]],
+		edgeFile = [[Interface\Buttons\WHITE8X8]],
+		edgeSize = 1,
+	});
+
+	type = type or 'button';
+
+	frame:SetBackdropColor(
+		self.config.backdrop[type].r,
+		self.config.backdrop[type].g,
+		self.config.backdrop[type].b,
+		self.config.backdrop[type].a
+	);
+	frame:SetBackdropBorderColor(
+		self.config.backdrop.border.r,
+		self.config.backdrop.border.g,
+		self.config.backdrop.border.b,
+		self.config.backdrop.border.a
+	);
+end
+
 --
 -- Positioning functions
 --
@@ -39,6 +79,10 @@ end
 
 function StdUi:GlueAbove(object, referencedObject, x, y)
 	object:SetPoint('BOTTOMLEFT', referencedObject, 'TOPLEFT', x, y);
+end
+
+function StdUi:GlueTop(object, referencedObject, x, y)
+	object:SetPoint('TOP', referencedObject, 'TOP', x, y);
 end
 
 function StdUi:GlueTopRight(object, referencedObject, x, y)
@@ -53,7 +97,19 @@ function StdUi:GlueLeft(object, referencedObject, x, y)
 	object:SetPoint('RIGHT', referencedObject, 'LEFT', x, y);
 end
 
-function StdUi:Label(parent, size, text, inherit, width, height)
+
+--[[
+-- Simple frame panel
+ ]]
+function StdUi:Panel(parent, width, height, inherits)
+	local frame = CreateFrame('Frame', nil, parent, inherits);
+	self:SetObjSize(frame, width, height);
+	self:ApplyBackdrop(frame, 'panel');
+
+	return frame;
+end
+
+function StdUi:Label(parent, text, size, inherit, width, height)
 
 	local fs = parent:CreateFontString(nil, self.config.fontStrata, inherit);
 
@@ -97,11 +153,14 @@ function StdUi:Button(parent, width, height, text, normalTexture, highlightTextu
 		button:SetNormalFontObject('GameFontNormal');
 	end
 
+	self:ApplyBackdrop(button);
+
 	if normalTexture then
-		local normTex = 'Interface/Buttons/UI-Panel-Button-Up';
+		local normTex; --'Interface/Buttons/UI-Panel-Button-Up';
 		if normalTexture ~= true then
 			normTex = normalTexture;
 		end
+
 
 		local ntex = self:Texture(button, nil, nil, normTex);
 		ntex:SetTexCoord(0, 0.625, 0, 0.6875);
@@ -140,8 +199,16 @@ function StdUi:Button(parent, width, height, text, normalTexture, highlightTextu
 end
 
 function StdUi:EditBox(parent, width, height, text)
-	local editBox = CreateFrame('EditBox', nil, parent, 'InputBoxTemplate');
+	local editBox = CreateFrame('EditBox', nil, parent);
+	editBox:SetTextInsets(3, 3, 3, 3);
+	editBox:SetMaxLetters(256);
+	editBox:SetFontObject(ChatFontNormal);
 	editBox:SetAutoFocus(false);
+	editBox:SetScript('OnEscapePressed', function (self)
+		self:ClearFocus();
+	end);
+	self:ApplyBackdrop(editBox);
+
 	self:SetObjSize(editBox, width, height);
 	if text then
 		editBox:SetText(text);
@@ -151,15 +218,10 @@ function StdUi:EditBox(parent, width, height, text)
 end
 
 function StdUi:EditBoxWithLabel(parent, width, height, text, label, labelFontSize, labelPosition, labelWidth)
-	local editBox = CreateFrame('EditBox', nil, parent, 'InputBoxTemplate');
-	editBox:SetAutoFocus(false);
-	self:SetObjSize(editBox, width, height);
-	if text then
-		editBox:SetText(text);
-	end
+	local editBox = self:EditBox(parent, width, height, text);
 
 	local labelHeight = (labelFontSize or 12) + 4;
-	local label = self:Label(parent, labelFontSize or 12, label, nil, labelWidth, labelHeight);
+	local label = self:Label(parent, label, labelFontSize or 12, nil, labelWidth, labelHeight);
 
 	if labelPosition == 'TOP' or labelPosition == nil then
 		self:GlueAbove(label, editBox, 0, 4)
@@ -174,15 +236,22 @@ function StdUi:EditBoxWithLabel(parent, width, height, text, label, labelFontSiz
 end
 
 function StdUi:ActionButton(parent)
-
 end
 
 
 function StdUi:ScrollFrame(parent, name, width, height)
-	local scrollFrame = CreateFrame('ScrollFrame', name, parent, 'UIPanelScrollFrameTemplate');
-	scrollFrame:SetSize(width, height);
+	local panel = self:Panel(parent, width, height);
+
+	local scrollFrame = CreateFrame('ScrollFrame', name, panel, 'UIPanelScrollFrameTemplate');
+	scrollFrame.panel = panel;
+	scrollFrame:SetSize(width - 20, height - 4); -- scrollbar width and margins
+	scrollFrame:SetPoint('TOPLEFT', 0, -2);
+	scrollFrame:SetPoint('BOTTOMRIGHT', -20, 2);
 
 	local scrollBar = _G[name .. 'ScrollBar'];
+	scrollBar:ClearAllPoints();
+	scrollBar:SetPoint('TOPRIGHT', panel, 'TOPRIGHT', 0, -20);
+	scrollBar:SetPoint('BOTTOMLEFT', panel, 'BOTTOMRIGHT', -20, 20);
 
 	local scrollChild = CreateFrame('Frame', name .. 'ScrollChild', scrollFrame);
 	scrollChild:SetWidth(scrollFrame:GetWidth());
@@ -192,6 +261,12 @@ function StdUi:ScrollFrame(parent, name, width, height)
 	scrollFrame:EnableMouse(true);
 	scrollFrame:SetClampedToScreen(true);
 
-	return scrollFrame, scrollChild, scrollBar;
+	return panel, scrollFrame, scrollChild, scrollBar;
 end
 
+function StdUi:ScrollingTable(parent, columns, visibleRows, rowHeight)
+	local scrollingTable = ScrollingTable:CreateST(columns, visibleRows, rowHeight, nil, parent);
+	self:ApplyBackdrop(scrollingTable.frame, 'panel');
+
+	return scrollingTable;
+end

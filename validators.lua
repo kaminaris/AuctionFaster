@@ -28,7 +28,7 @@ function AuctionFaster:ValidateMaxStacks(editBox)
 	local maxStacksPossible = AuctionFaster:CalcMaxStacks();
 
 	-- 0 means no limit
-	if maxStacks < 0 then
+	if not maxStacks or maxStacks < 0 then
 		maxStacks = 0;
 	end
 
@@ -50,7 +50,7 @@ function AuctionFaster:ValidateStackSize(editBox)
 	local stackSize = tonumber(editBox:GetText());
 	local origStackSize = stackSize;
 
-	if stackSize < 1 then
+	if not stackSize or stackSize < 1 then
 		stackSize = 1;
 	end
 

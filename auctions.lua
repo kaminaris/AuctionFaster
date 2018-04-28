@@ -214,7 +214,12 @@ function AuctionFaster:BuyItem()
 		and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
 		-- same index, we can buy it
 		self:BuyItemByIndex(index);
+		-- we need to refresh the auctions
+		self:GetCurrentAuctions();
 	end
+
+	-- item was not found but lets check if it still exists
+
 end
 
 function AuctionFaster:BuyItemByIndex(index)
