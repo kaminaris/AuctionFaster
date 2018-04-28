@@ -1,20 +1,34 @@
 local StdUi = LibStub and LibStub('StdUi', true);
+local ScrollingTable = LibStub('ScrollingTable');
 
-function StdUi:Panel(parent, width, height, inherits)
-	local frame = CreateFrame('Frame', nil, parent, inherits);
-	self:SetObjSize(frame, width, height);
-	self:ApplyBackdrop(frame, 'panel');
+function StdUi:ScrollFrame(parent, name, width, height)
+	local panel = self:Panel(parent, width, height);
 
-	return frame;
+	local scrollFrame = CreateFrame('ScrollFrame', name, panel, 'UIPanelScrollFrameTemplate');
+	scrollFrame.panel = panel;
+	scrollFrame:SetSize(width - 20, height - 4); -- scrollbar width and margins
+	scrollFrame:SetPoint('TOPLEFT', 0, -2);
+	scrollFrame:SetPoint('BOTTOMRIGHT', -20, 2);
+
+	local scrollBar = _G[name .. 'ScrollBar'];
+	scrollBar:ClearAllPoints();
+	scrollBar:SetPoint('TOPRIGHT', panel, 'TOPRIGHT', 0, -20);
+	scrollBar:SetPoint('BOTTOMLEFT', panel, 'BOTTOMRIGHT', -20, 20);
+
+	local scrollChild = CreateFrame('Frame', name .. 'ScrollChild', scrollFrame);
+	scrollChild:SetWidth(scrollFrame:GetWidth());
+	scrollChild:SetHeight(scrollFrame:GetHeight());
+
+	scrollFrame:SetScrollChild(scrollChild);
+	scrollFrame:EnableMouse(true);
+	scrollFrame:SetClampedToScreen(true);
+
+	return panel, scrollFrame, scrollChild, scrollBar;
 end
 
-function StdUi:Texture(parent, width, height, texture)
-	local tex = parent:CreateTexture(nil, 'ARTWORK');
+function StdUi:ScrollTable(parent, columns, visibleRows, rowHeight)
+	local scrollingTable = ScrollingTable:CreateST(columns, visibleRows, rowHeight, nil, parent);
+	self:ApplyBackdrop(scrollingTable.frame, 'panel');
 
-	self:SetObjSize(tex, width, height);
-	if texture then
-		tex:SetTexture(texture);
-	end
-
-	return tex;
+	return scrollingTable;
 end

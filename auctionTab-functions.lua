@@ -2,8 +2,8 @@
 function AuctionFaster:GetSellSettings()
 	local auctionTab = self.auctionTab;
 
-	local bidPerItemText = auctionTab.bidPerItem:GetText();
-	local buyPerItemText = auctionTab.buyPerItem:GetText()
+	local bidPerItem = auctionTab.bidPerItem:GetValue();
+	local buyPerItem = auctionTab.buyPerItem:GetValue()
 
 	local maxStacks = tonumber(auctionTab.maxStacks:GetText());
 	if maxStacks == 0 then
@@ -16,8 +16,8 @@ function AuctionFaster:GetSellSettings()
 	end
 
 	return {
-		bidPerItem = self:ParseMoney(bidPerItemText),
-		buyPerItem = self:ParseMoney(buyPerItemText),
+		bidPerItem = bidPerItem,
+		buyPerItem = buyPerItem,
 		stackSize = stackSize,
 		maxStacks = maxStacks,
 		duration = 2
@@ -27,11 +27,8 @@ end
 function AuctionFaster:UpdateTabPrices(bid, buy)
 	local auctionTab = self.auctionTab;
 
-	local bidText = self:FormatMoneyNoColor(bid);
-	local buyText = self:FormatMoneyNoColor(buy);
-
-	auctionTab.bidPerItem:SetText(bidText);
-	auctionTab.buyPerItem:SetText(buyText);
+	auctionTab.bidPerItem:SetValue(bid);
+	auctionTab.buyPerItem:SetValue(buy);
 end
 
 

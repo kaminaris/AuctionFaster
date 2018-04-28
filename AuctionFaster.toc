@@ -18,8 +18,7 @@ Libs\AceHook-3.0\AceHook-3.0.xml
 Libs\LibTextTable-1.1\Lib.xml
 Libs\lib-st\lib-st.xml
 Libs\LibGratuity-3.0\LibGratuity-3.0.lua
-
-ui.lua
+Libs\StdUi\StdUi.xml
 
 main.lua
 options.lua

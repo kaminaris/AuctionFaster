@@ -1,5 +1,5 @@
 local ScrollingTable = LibStub('ScrollingTable');
-local StdUi = LibStub('StdUi-1.0');
+local StdUi = LibStub('StdUi');
 
 AuctionFaster.itemFramePool = {};
 AuctionFaster.itemFrames = {};
@@ -78,16 +78,6 @@ function AuctionFaster:DrawItems()
 		self.itemFramePool[i]:Hide();
 	end
 
-	-- FOR TEST
-	local xrnd = math.random(100);
---	table.sort(self.inventoryItems, function(a, b)
---		if a.name > b.name then
---			return true;
---		else
---			return false;
---		end
---	end);
-
 	local holdingFrames = {};
 	for i = 1, #self.inventoryItems do
 
@@ -148,6 +138,11 @@ function AuctionFaster:DrawRightPane()
 	local rightMargin = leftMargin + 200;
 	local topMargin = -35;
 
+	--TEST
+	local mb = StdUi:MoneyBox(auctionTab, 200, 30, '20c');
+	mb:SetPoint('TOPLEFT', 0, 0);
+	mb:Validate();
+
 	auctionTab.itemIcon = StdUi:Texture(auctionTab, iconSize, iconSize, '');
 	auctionTab.itemIcon:SetPoint('TOPLEFT', leftMargin, topMargin)
 
@@ -163,19 +158,21 @@ function AuctionFaster:DrawRightPane()
 
 
 	-- Bid per item edit box
-	auctionTab.bidPerItem = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '10g 6s 6c',
-		'Bid Per Item', nil, 'TOP');
+	auctionTab.bidPerItem = StdUi:MoneyBoxWithLabel(auctionTab, 150, 20, '-',
+		'Bid Per Item', 'TOP');
+	auctionTab.bidPerItem:Validate();
 	StdUi:GlueBelow(auctionTab.bidPerItem, auctionTab.itemIcon, 0, -35);
 
 	-- Buy per item edit box
-	auctionTab.buyPerItem = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '12g 10s 10c',
-		'Buy Per Item', nil, 'TOP');
+	auctionTab.buyPerItem = StdUi:MoneyBoxWithLabel(auctionTab, 150, 20, '-',
+		'Buy Per Item', 'TOP');
+	auctionTab.buyPerItem:Validate();
 	StdUi:GlueBelow(auctionTab.buyPerItem, auctionTab.bidPerItem, 0, -20);
 
 
 	-- Stack Size
 	auctionTab.stackSize = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '1',
-		'Stack Size (Max: 20)', nil, 'TOP');
+		'Stack Size (Max: 20)', 'TOP');
 	auctionTab.stackSize:SetNumeric(true);
 	auctionTab.stackSize:SetScript('OnTextChanged', function(self)
 		AuctionFaster:ValidateStackSize(self);
@@ -184,7 +181,7 @@ function AuctionFaster:DrawRightPane()
 
 
 	auctionTab.maxStacks = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '0',
-		'Limit of stacks (0 = no limit)', nil, 'TOP');
+		'Limit of stacks (0 = no limit)', 'TOP');
 	auctionTab.maxStacks:SetNumeric(true);
 	auctionTab.maxStacks:SetScript('OnTextChanged', function(self)
 		AuctionFaster:ValidateMaxStacks(self);
@@ -288,7 +285,7 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable()
 	}
 
 	local leftMargin = 360;
-	auctionTab.currentAuctions = StdUi:ScrollingTable(auctionTab, cols, 10, 18);
+	auctionTab.currentAuctions = StdUi:ScrollTable(auctionTab, cols, 10, 18);
 	auctionTab.currentAuctions:EnableSelection(true);
 	auctionTab.currentAuctions.frame:SetPoint('TOPLEFT', leftMargin - 5, -220);
 	auctionTab.currentAuctions.frame:SetPoint('BOTTOMRIGHT', -20, 35);

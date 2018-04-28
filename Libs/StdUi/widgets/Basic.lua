@@ -7,3 +7,14 @@ function StdUi:Panel(parent, width, height, inherits)
 
 	return frame;
 end
+
+function StdUi:Texture(parent, width, height, texture)
+	local tex = parent:CreateTexture(nil, 'ARTWORK');
+
+	self:SetObjSize(tex, width, height);
+	if texture then
+		tex:SetTexture(texture);
+	end
+
+	return tex;
+end
