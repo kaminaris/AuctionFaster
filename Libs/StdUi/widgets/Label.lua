@@ -19,7 +19,7 @@ function StdUi:AddLabel(parent, object, text, labelPosition, labelWidth)
 	local label = self:Label(parent, text, self.config.font.size, nil, labelWidth, labelHeight);
 
 	if labelPosition == 'TOP' or labelPosition == nil then
-		self:GlueAbove(label, object, 0, 4)
+		self:GlueAbove(label, object, 0, 4, 'LEFT')
 	else -- labelPosition == 'LEFT'
 		label:SetWidth(labelWidth or label:GetStringWidth())
 		self:GlueLeft(label, object, 4, 0);

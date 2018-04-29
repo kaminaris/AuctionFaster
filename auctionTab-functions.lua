@@ -1,3 +1,5 @@
+--- @var StdUi StdUi
+local StdUi = LibStub('StdUi');
 
 function AuctionFaster:GetSellSettings()
 	local auctionTab = self.auctionTab;
@@ -45,6 +47,7 @@ function AuctionFaster:SelectItem(index)
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
+	self:UpdateInfoPaneText();
 end
 
 function AuctionFaster:GetSelectedItemIdName()
@@ -57,7 +60,7 @@ end
 
 function AuctionFaster:UpdateItemQtyText()
 	if not self.selectedItem then
-		return
+		return;
 	end
 
 	local auctionTab = self.auctionTab;
@@ -67,6 +70,21 @@ function AuctionFaster:UpdateItemQtyText()
 				', Max Stacks: ' .. maxStacks ..
 				', Remaining: ' .. remainingQty
 	);
+end
+
+function AuctionFaster:UpdateInfoPaneText()
+	if not self.selectedItem then
+		return;
+	end
+
+	local auctionTab = self.auctionTab;
+	local sellSettings = self:GetSellSettings();
+
+	local total = sellSettings.buyPerItem * sellSettings.stackSize * sellSettings.maxStacks;
+
+	auctionTab.infoPane.totalLabel:SetText('Total: ' .. StdUi.Util.formatMoney(total));
+	auctionTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
+
 end
 
 function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)

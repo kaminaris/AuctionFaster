@@ -8,6 +8,25 @@ function StdUi:Panel(parent, width, height, inherits)
 	return frame;
 end
 
+function StdUi:PanelWithLabel(parent, width, height, inherits, text)
+	local frame = self:Panel(parent, width, height, inherits);
+
+	frame.label = StdUi:Label(frame, text);
+	frame.label:SetAllPoints();
+	frame.label:SetJustifyH('MIDDLE');
+
+	return frame;
+end
+
+function StdUi:InfoPane(parent, width, height, text)
+	local frame = self:Panel(parent, width, height);
+
+	frame.labelPanel = self:PanelWithLabel(frame, 100, 20, nil, text);
+	self:GlueTop(frame.labelPanel, frame, 0, 10);
+
+	return frame;
+end
+
 function StdUi:Texture(parent, width, height, texture)
 	local tex = parent:CreateTexture(nil, 'ARTWORK');
 

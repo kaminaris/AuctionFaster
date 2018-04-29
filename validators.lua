@@ -39,7 +39,9 @@ function AuctionFaster:ValidateMaxStacks(editBox)
 	if maxStacks ~= origMaxStacks then
 		editBox:SetText(maxStacks);
 	end
-	AuctionFaster:UpdateItemQtyText();
+
+	self:UpdateItemQtyText();
+	self:UpdateInfoPaneText();
 end
 
 function AuctionFaster:ValidateStackSize(editBox)
@@ -61,5 +63,7 @@ function AuctionFaster:ValidateStackSize(editBox)
 	if stackSize ~= origStackSize then
 		editBox:SetText(stackSize);
 	end
-	AuctionFaster:UpdateItemQtyText();
+
+	self:UpdateItemQtyText();
+	self:UpdateInfoPaneText();
 end

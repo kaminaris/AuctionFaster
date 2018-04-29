@@ -1,37 +1,79 @@
 local StdUi = LibStub and LibStub('StdUi', true);
 
-function StdUi:GlueBelow(object, referencedObject, x, y)
-	object:SetPoint('TOPLEFT', referencedObject, 'BOTTOMLEFT', x, y);
+-- Points
+local Top = 'TOP';
+local Bottom = 'BOTTOM';
+local Left = 'LEFT';
+local Right = 'RIGHT';
+
+local TopLeft = 'TOPLEFT';
+local TopRight = 'TOPRIGHT';
+local BottomLeft = 'BOTTOMLEFT';
+local BottomRight = 'BOTTOMRIGHT';
+
+--- Glues object below referenced object
+function StdUi:GlueBelow(object, referencedObject, x, y, align)
+	if align == Left then
+		object:SetPoint(TopLeft, referencedObject, BottomLeft, x, y);
+	elseif align == Right then
+		object:SetPoint(TopRight, referencedObject, BottomRight, x, y);
+	else
+		object:SetPoint(Top, referencedObject, Bottom, x, y);
+	end
 end
 
-function StdUi:GlueAbove(object, referencedObject, x, y)
-	object:SetPoint('BOTTOMLEFT', referencedObject, 'TOPLEFT', x, y);
+--- Glues object above referenced object
+function StdUi:GlueAbove(object, referencedObject, x, y, align)
+	if align == Left then
+		object:SetPoint(BottomLeft, referencedObject, TopLeft, x, y);
+	elseif align == Right then
+		object:SetPoint(BottomRight, referencedObject, TopRight, x, y);
+	else
+		object:SetPoint(Bottom, referencedObject, Top, x, y);
+	end
 end
 
 
-function StdUi:GlueTop(object, referencedObject, x, y)
-	object:SetPoint('TOP', referencedObject, 'TOP', x, y);
+function StdUi:GlueTop(object, referencedObject, x, y, align)
+	if align == Left then
+		object:SetPoint(TopLeft, referencedObject, TopLeft, x, y);
+	elseif align == Right then
+		object:SetPoint(TopRight, referencedObject, TopRight, x, y);
+	else
+		object:SetPoint(Top, referencedObject, Top, x, y);
+	end
 end
 
-function StdUi:GlueBottom(object, referencedObject, x, y)
-	object:SetPoint('BOTTOM', referencedObject, 'BOTTOM', x, y);
+function StdUi:GlueBottom(object, referencedObject, x, y, align)
+	if align == Left then
+		object:SetPoint(BottomLeft, referencedObject, BottomLeft, x, y);
+	elseif align == Right then
+		object:SetPoint(BottomRight, referencedObject, BottomRight, x, y);
+	else
+		object:SetPoint(Bottom, referencedObject, Bottom, x, y);
+	end
 end
-
-
-function StdUi:GlueTopRight(object, referencedObject, x, y)
-	object:SetPoint('TOPLEFT', referencedObject, 'BOTTOMLEFT', x, y);
-end
-
-
-function StdUi:GlueBottomRight(object, referencedObject, x, y)
-	object:SetPoint('BOTTOMRIGHT', referencedObject, 'BOTTOMRIGHT', x, y);
-end
-
 
 function StdUi:GlueRight(object, referencedObject, x, y)
-	object:SetPoint('LEFT', referencedObject, 'RIGHT', x, y);
+	object:SetPoint(Left, referencedObject, Right, x, y);
 end
 
 function StdUi:GlueLeft(object, referencedObject, x, y)
-	object:SetPoint('RIGHT', referencedObject, 'LEFT', x, y);
+	object:SetPoint(Right, referencedObject, Left, x, y);
+end
+
+function StdUi:GlueAfter(object, referencedObject, topX, topY, bottomX, bottomY)
+	object:SetPoint(TopLeft, referencedObject, TopRight, topX, topY);
+	object:SetPoint(BottomLeft, referencedObject, BottomRight, bottomX, bottomY);
+end
+
+function StdUi:GlueBefore(object, referencedObject, topX, topY, bottomX, bottomY)
+	object:SetPoint(TopRight, referencedObject, TopLeft, topX, topY);
+	object:SetPoint(BottomRight, referencedObject, BottomLeft, bottomX, bottomY);
+end
+
+-- More advanced positioning functions
+function StdUi:GlueAcross(object, referencedObject, topLeftX, topLeftY, bottomRightX, bottomRightY)
+	object:SetPoint(TopLeft, referencedObject, TopLeft, topLeftX, topLeftY);
+	object:SetPoint(BottomRight, referencedObject, BottomRight, bottomRightX, bottomRightY);
 end

@@ -159,35 +159,59 @@ function AuctionFaster:FindLowestBidBuy(cacheItem)
 	return lowestBid, lowestBuy;
 end
 
+function AuctionFaster:PutItemInSellBox(itemId, itemName)
+	local currentItemName = GetAuctionSellItemInfo();
+	if currentItemName and currentItemName == itemName then
+		return true;
+	end
+
+	local bag, slot = self:GetItemFromInventory(itemId, itemName);
+	if not bag or not slot then
+		return false;
+	end
+
+	PickupContainerItem(bag, slot);
+	if not CursorHasItem() then
+		return false;
+	end
+
+	-- This only puts item in sell slot despite name
+	ClickAuctionSellItemButton();
+
+	return true;
+end
+
+function AuctionFaster:CalculateDeposit(itemId, itemName)
+	if not self:PutItemInSellBox(itemId, itemName) then
+		return 0;
+	end
+
+	local sellSettings = self:GetSellSettings();
+	return CalculateAuctionDeposit(sellSettings.duration, sellSettings.stackSize, sellSettings.maxStacks);
+end
+
 function AuctionFaster:SellItem()
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local name = selectedItem.name;
 
-	local bag, slot = self:GetItemFromInventory(itemId, name);
-	if not bag or not slot then
-		return;
+	if not self:PutItemInSellBox(itemId, name) then
+		return false;
 	end
 
 	local sellSettings = self:GetSellSettings();
 
-	PickupContainerItem(bag, slot);
-	if not CursorHasItem() then
-		return;
-	end
-
 	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = 2
+		AuctionFrameAuctions.duration = sellSettings.duration;
 	end
-
-	-- Putem item in slot
-	ClickAuctionSellItemButton();
 
 	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
 		sellSettings.buyPerItem * sellSettings.stackSize,
 		sellSettings.duration,
 		sellSettings.stackSize,
 		sellSettings.maxStacks);
+
+	return true;
 end
 
 function AuctionFaster:BuyItem()
