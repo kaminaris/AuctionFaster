@@ -6,12 +6,14 @@ function StdUi:EditBox(parent, width, height, text)
 	editBox:SetMaxLetters(256);
 	editBox:SetFontObject(ChatFontNormal);
 	editBox:SetAutoFocus(false);
+
 	editBox:SetScript('OnEscapePressed', function (self)
 		self:ClearFocus();
 	end);
-	self:ApplyBackdrop(editBox);
 
+	self:ApplyBackdrop(editBox);
 	self:SetObjSize(editBox, width, height);
+
 	if text then
 		editBox:SetText(text);
 	end

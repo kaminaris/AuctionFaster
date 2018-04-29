@@ -23,6 +23,11 @@ function StdUi:GlueTopRight(object, referencedObject, x, y)
 end
 
 
+function StdUi:GlueBottomRight(object, referencedObject, x, y)
+	object:SetPoint('BOTTOMRIGHT', referencedObject, 'BOTTOMRIGHT', x, y);
+end
+
+
 function StdUi:GlueRight(object, referencedObject, x, y)
 	object:SetPoint('LEFT', referencedObject, 'RIGHT', x, y);
 end

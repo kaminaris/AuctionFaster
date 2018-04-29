@@ -1,4 +1,5 @@
 local MAJOR, MINOR = 'StdUi', 1;
+--- @class StdUi
 local StdUi = LibStub:NewLibrary(MAJOR, MINOR);
 
 if not StdUi then
@@ -39,5 +40,5 @@ function StdUi:ApplyBackdrop(frame, type)
 end
 
 function StdUi:ClearBackdrop(frame)
-	frame:SetBackdrop();
+	frame:SetBackdrop(nil);
 end
