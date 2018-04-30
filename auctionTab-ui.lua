@@ -180,27 +180,35 @@ function AuctionFaster:DrawRightPaneItemPrices(marginToIcon)
 	auctionTab.buyPerItem = StdUi:MoneyBoxWithLabel(auctionTab, 150, 20, '-', 'Buy Per Item', 'TOP');
 	auctionTab.buyPerItem:Validate();
 	StdUi:GlueBelow(auctionTab.buyPerItem, auctionTab.bidPerItem, 0, -20);
+
+	auctionTab.bidPerItem.OnValueChanged = function(self)
+		AuctionFaster:ValidateBidPerItem(self)
+	end;
+
+	auctionTab.buyPerItem.OnValueChanged = function(self)
+		AuctionFaster:ValidateBuyPerItem(self);
+	end;
 end
 
 function AuctionFaster:DrawRightPaneStackSettings(marginToPrices)
 	local auctionTab = self.auctionTab;
 
 	-- Stack Size
-	auctionTab.stackSize = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '1', 'Stack Size', 'TOP');
-	auctionTab.stackSize:SetNumeric(true);
+	auctionTab.stackSize = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '1', 'Stack Size', 'TOP');
+	auctionTab.stackSize:SetValue(0);
 	StdUi:GlueRight(auctionTab.stackSize, auctionTab.bidPerItem, marginToPrices, 0);
 
-	auctionTab.maxStacks = StdUi:EditBoxWithLabel(auctionTab, 150, 20, '0', 'No. of stacks (0 = no limit)', 'TOP');
-	auctionTab.maxStacks:SetNumeric(true);
+	auctionTab.maxStacks = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '0', 'No. of stacks (0 = no limit)', 'TOP');
+	auctionTab.maxStacks:SetValue(0);
 	StdUi:GlueRight(auctionTab.maxStacks, auctionTab.buyPerItem, marginToPrices, 0);
 
-	auctionTab.stackSize:SetScript('OnTextChanged', function(self)
+	auctionTab.stackSize.OnValueChanged = function(self)
 		AuctionFaster:ValidateStackSize(self);
-	end);
+	end;
 
-	auctionTab.maxStacks:SetScript('OnTextChanged', function(self)
+	auctionTab.maxStacks.OnValueChanged = function(self)
 		AuctionFaster:ValidateMaxStacks(self);
-	end);
+	end;
 end
 
 function AuctionFaster:DrawRightPaneInfoPanel(marginToStacks)
@@ -212,13 +220,14 @@ function AuctionFaster:DrawRightPaneInfoPanel(marginToStacks)
 	local totalLabel = StdUi:Label(auctionTab.infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
 	StdUi:GlueTop(totalLabel, auctionTab.infoPane, 3, -15, 'LEFT');
 
-	local auctionNo = StdUi:Label(auctionTab.infoPane, '# Auctions: 0');
-	StdUi:GlueBelow(auctionNo, totalLabel, 0, -5, 'LEFT');
-
 	local deposit = StdUi:Label(auctionTab.infoPane, 'Deposit: ' .. StdUi.Util.formatMoney(0));
-	StdUi:GlueBelow(deposit, auctionNo, 0, -5, 'LEFT');
+	StdUi:GlueBelow(deposit, totalLabel, 0, -5, 'LEFT');
 
-	local itemSettings = StdUi:Button(auctionTab.infoPane, 50, 20, 'Item Settings');
+	local auctionNo = StdUi:Label(auctionTab.infoPane, '# Auctions: 0');
+	StdUi:GlueBelow(auctionNo, deposit, 0, -5, 'LEFT');
+
+
+	local itemSettings = StdUi:Button(auctionTab.infoPane, 100, 20, 'Item Settings');
 	StdUi:GlueBottom(itemSettings, auctionTab.infoPane, 0, 5);
 
 	itemSettings:SetScript('OnClick', function ()

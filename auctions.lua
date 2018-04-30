@@ -19,6 +19,7 @@ function AuctionFaster:GetCurrentAuctions()
 	local cacheItem = self:GetItemFromCache(itemId, name);
 	if cacheItem and #cacheItem.auctions > 0 then
 		self:UpdateAuctionTable(cacheItem);
+		self:UpdateInfoPaneText();
 		return;
 	end
 
@@ -96,6 +97,7 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		self.db.global.auctionDb[cacheKey] = cacheItem;
 	end
 	self:UpdateAuctionTable(cacheItem);
+	self:UpdateInfoPaneText();
 end
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
@@ -177,6 +179,7 @@ function AuctionFaster:PutItemInSellBox(itemId, itemName)
 
 	-- This only puts item in sell slot despite name
 	ClickAuctionSellItemButton();
+	ClearCursor();
 
 	return true;
 end
@@ -187,7 +190,7 @@ function AuctionFaster:CalculateDeposit(itemId, itemName)
 	end
 
 	local sellSettings = self:GetSellSettings();
-	return CalculateAuctionDeposit(sellSettings.duration, sellSettings.stackSize, sellSettings.maxStacks);
+	return CalculateAuctionDeposit(sellSettings.duration);
 end
 
 function AuctionFaster:SellItem()

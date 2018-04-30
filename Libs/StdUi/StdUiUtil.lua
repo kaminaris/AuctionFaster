@@ -1,14 +1,45 @@
+--- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
 
+--- @param frame Frame
+function StdUi:MarkAsValid(frame, valid)
+	if not valid then
+		frame:SetBackdropBorderColor(1, 0, 0, 1);
+	else
+		frame:SetBackdropBorderColor(
+			self.config.backdrop.border.r,
+			self.config.backdrop.border.g,
+			self.config.backdrop.border.b,
+			self.config.backdrop.border.a
+		);
+	end
+end
 
 StdUi.Util = {};
+
+--- @param self EditBox
+StdUi.Util.editBoxValidator = function(self)
+	self.value = total;
+	if self.button then
+		self.button:Hide();
+	end
+
+	StdUi:MarkAsValid(self, true);
+
+	if self.OnValueChanged then
+		self.OnValueChanged(self);
+	end
+end
+
+--- @param self EditBox
 StdUi.Util.moneyBoxValidator = function(self)
 	local text = self:GetText();
 	local textOrig = text;
 	text = text:trim();
 	local total, gold, silver, copper, isValid = StdUi.Util.parseMoney(text);
-
+	print('validate', self:GetText(), not isValid or total == 0);
 	if not isValid or total == 0 then
+		StdUi:MarkAsValid(self, false);
 		return;
 	end
 
@@ -16,6 +47,40 @@ StdUi.Util.moneyBoxValidator = function(self)
 	self.value = total;
 	if self.button then
 		self.button:Hide();
+	end
+	StdUi:MarkAsValid(self, true);
+end
+
+--- @param self EditBox
+StdUi.Util.numericBoxValidator = function(self)
+	local text = self:GetText();
+	local textOrig = text;
+
+	text = text:trim();
+	local value = tonumber(text);
+
+	if value == nil then
+		StdUi:MarkAsValid(self, false);
+		return;
+	end
+
+	if self.maxValue and self.maxValue < value then
+		StdUi:MarkAsValid(self, false);
+		return;
+	end
+
+	if self.minValue and self.minValue > value then
+		StdUi:MarkAsValid(self, false);
+		return;
+	end
+
+	self.value = value;
+	if self.button then
+		self.button:Hide();
+	end
+	StdUi:MarkAsValid(self, true);
+	if self.OnValueChanged then
+		self.OnValueChanged(self);
 	end
 end
 

@@ -1,25 +1,28 @@
-
 function AuctionFaster:CalcMaxStacks()
 	local auctionTab = self.auctionTab;
 	if not self.selectedItem then
 		return 0, 0;
 	end
 
-	local stackSize = tonumber(auctionTab.stackSize:GetText());
+	local stackSize = tonumber(auctionTab.stackSize:GetValue());
 	local maxStacks = floor(self.selectedItem.count / stackSize);
+
 	if maxStacks == 0 then
 		maxStacks = 1;
 	end
+
 	local remainingQty = self.selectedItem.count - (maxStacks * stackSize);
+
 	if remainingQty < 0 then
 		remainingQty = 0;
 	end
+
 	return maxStacks, remainingQty;
 end
 
 function AuctionFaster:ValidateMaxStacks(editBox)
 	if not self.selectedItem then
-		return;
+		return ;
 	end
 
 	local maxStacks = tonumber(editBox:GetText());
@@ -37,7 +40,7 @@ function AuctionFaster:ValidateMaxStacks(editBox)
 	end
 
 	if maxStacks ~= origMaxStacks then
-		editBox:SetText(maxStacks);
+		editBox:SetValue(maxStacks);
 	end
 
 	self:UpdateItemQtyText();
@@ -46,7 +49,7 @@ end
 
 function AuctionFaster:ValidateStackSize(editBox)
 	if not self.selectedItem then
-		return;
+		return ;
 	end
 
 	local stackSize = tonumber(editBox:GetText());
@@ -61,9 +64,25 @@ function AuctionFaster:ValidateStackSize(editBox)
 	end
 
 	if stackSize ~= origStackSize then
-		editBox:SetText(stackSize);
+		editBox:SetValue(stackSize);
 	end
 
 	self:UpdateItemQtyText();
+	self:UpdateInfoPaneText();
+end
+
+function AuctionFaster:ValidateBidPerItem(editBox)
+	if not editBox:IsValid() then
+		return;
+	end
+
+	self:UpdateInfoPaneText();
+end
+
+function AuctionFaster:ValidateBuyPerItem(editBox)
+	if not editBox:IsValid() then
+		return;
+	end
+
 	self:UpdateInfoPaneText();
 end

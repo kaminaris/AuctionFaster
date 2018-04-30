@@ -5,14 +5,14 @@ function AuctionFaster:GetSellSettings()
 	local auctionTab = self.auctionTab;
 
 	local bidPerItem = auctionTab.bidPerItem:GetValue();
-	local buyPerItem = auctionTab.buyPerItem:GetValue()
+	local buyPerItem = auctionTab.buyPerItem:GetValue();
 
-	local maxStacks = tonumber(auctionTab.maxStacks:GetText());
+	local maxStacks = tonumber(auctionTab.maxStacks:GetValue());
 	if maxStacks == 0 then
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
 
-	local stackSize = tonumber(auctionTab.stackSize:GetText());
+	local stackSize = tonumber(auctionTab.stackSize:GetValue());
 	if stackSize > self.selectedItem.count then
 		stackSize = self.selectedItem.count;
 	end
@@ -33,7 +33,6 @@ function AuctionFaster:UpdateTabPrices(bid, buy)
 	auctionTab.buyPerItem:SetValue(buy);
 end
 
-
 function AuctionFaster:SelectItem(index)
 	local auctionTab = self.auctionTab;
 	self.selectedItem = self.inventoryItems[index];
@@ -41,13 +40,11 @@ function AuctionFaster:SelectItem(index)
 	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
 	auctionTab.itemName:SetText(self.selectedItem.name);
 
-
 	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStack .. ')');
-	auctionTab.stackSize:SetText(self.selectedItem.maxStack);
+	auctionTab.stackSize:SetValue(self.selectedItem.maxStack);
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
-	self:UpdateInfoPaneText();
 end
 
 function AuctionFaster:GetSelectedItemIdName()
@@ -60,30 +57,36 @@ end
 
 function AuctionFaster:UpdateItemQtyText()
 	if not self.selectedItem then
-		return;
+		return ;
 	end
 
 	local auctionTab = self.auctionTab;
 	local maxStacks, remainingQty = self:CalcMaxStacks();
 	auctionTab.itemQty:SetText(
-		'Qty: ' .. self.selectedItem.count ..
-				', Max Stacks: ' .. maxStacks ..
-				', Remaining: ' .. remainingQty
+			'Qty: ' .. self.selectedItem.count ..
+					', Max Stacks: ' .. maxStacks ..
+					', Remaining: ' .. remainingQty
 	);
 end
 
 function AuctionFaster:UpdateInfoPaneText()
 	if not self.selectedItem then
-		return;
+		return ;
 	end
 
 	local auctionTab = self.auctionTab;
 	local sellSettings = self:GetSellSettings();
+	--DevTools_Dump(sellSettings);
+	if not sellSettings.buyPerItem or not sellSettings.stackSize or not sellSettings.maxStacks then
+		return ;
+	end
 
 	local total = sellSettings.buyPerItem * sellSettings.stackSize * sellSettings.maxStacks;
+	local deposit = self:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.name);
 
 	auctionTab.infoPane.totalLabel:SetText('Total: ' .. StdUi.Util.formatMoney(total));
 	auctionTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
+	auctionTab.infoPane.deposit:SetText('Deposit: ' .. StdUi.Util.formatMoney(deposit));
 
 end
 
