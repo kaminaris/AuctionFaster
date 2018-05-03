@@ -49,6 +49,8 @@ function AuctionFaster:SelectItem(index)
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
+	self:PutInventoryItemInCache(self.selectedItem);
+	self:LoadItemSettings();
 end
 
 function AuctionFaster:GetSelectedItemIdName()

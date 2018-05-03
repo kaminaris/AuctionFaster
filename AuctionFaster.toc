@@ -23,6 +23,7 @@ Libs\StdUi\StdUi.xml
 main.lua
 options.lua
 auctions.lua
+itemCache.lua
 auctionTab-ui.lua
 auctionTab-functions.lua
 auctionTab-itemSettings.lua

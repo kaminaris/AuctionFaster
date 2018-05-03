@@ -13,4 +13,5 @@
 	<Script file="widgets\CheckBox.lua"/>
 	<Script file="widgets\Label.lua"/>
 	<Script file="widgets\Scroll.lua"/>
+	<Script file="widgets\Tooltip.lua"/>
 </Ui>

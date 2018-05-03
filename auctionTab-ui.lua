@@ -17,7 +17,14 @@ function AuctionFaster:AddAuctionHouseTab()
 
 	local n = AuctionFrame.numTabs + 1;
 
-	local tab = CreateFrame('Button', 'AuctionFrameTab' .. n, AuctionFrame, 'AuctionTabTemplate')
+	local tab = CreateFrame('Button', 'AuctionFrameTab' .. n, AuctionFrame, 'AuctionTabTemplate');
+	tab:StripTextures();
+	tab.backdrop = CreateFrame('Frame', nil, tab);
+	tab.backdrop:SetTemplate('Default');
+	tab.backdrop:SetFrameLevel(tab:GetFrameLevel() - 1);
+	StdUi:GlueAcross(tab.backdrop, tab, 10, -3, -10, 3);
+	StdUi:ApplyBackdrop(tab.backdrop);
+
 	tab:Hide();
 	tab:SetID(n);
 	tab:SetText('Sell Items');
@@ -205,9 +212,10 @@ function AuctionFaster:DrawRightPaneStackSettings(marginToPrices)
 	auctionTab.stackSize:SetValue(0);
 	StdUi:GlueRight(auctionTab.stackSize, auctionTab.bidPerItem, marginToPrices, 0);
 
-	auctionTab.maxStacks = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '0', 'No. of stacks (0 = no limit)', 'TOP');
+	auctionTab.maxStacks = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '0', '# Stacks', 'TOP');
 	auctionTab.maxStacks:SetValue(0);
 	StdUi:GlueRight(auctionTab.maxStacks, auctionTab.buyPerItem, marginToPrices, 0);
+	StdUi:Tooltip(auctionTab.maxStacks, 'Left text', 'Right text', 'NoStacksTooltip', 'TOPLEFT', true);
 
 	auctionTab.stackSize.OnValueChanged = function(self)
 		AuctionFaster:ValidateStackSize(self);

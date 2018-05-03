@@ -1,26 +1,13 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
-function AuctionFaster:GetItemFromCache(itemId, itemName)
-	if self.db.global.auctionDb[itemId .. itemName] then
-		local item = self.db.global.auctionDb[itemId .. itemName];
-		if ((GetServerTime() - item.scanTime) > 60 * 10) then
-			-- older than 10 minutes
-			return nil;
-		end
-		return item;
-	else
-		return nil;
-	end
-end
-
 function AuctionFaster:GetCurrentAuctions()
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local name = selectedItem.name;
 
 	local cacheItem = self:GetItemFromCache(itemId, name);
-	if cacheItem and #cacheItem.auctions > 0 then
+	if cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
 		self:UpdateAuctionTable(cacheItem);
 		self:UpdateInfoPaneText();
 		return ;
@@ -121,7 +108,6 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	local cacheItem = {
 		scanTime   = GetServerTime(),
 		auctions   = {},
-		settings   = {},
 		totalItems = total
 	};
 
@@ -135,8 +121,6 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		if name == selectedName and itemId == selectedId then
 			addedSome = true;
 			if not cacheKey then
-				cacheItem.itemName = name;
-				cacheItem.itemId = itemId;
 				cacheKey = itemId .. name;
 			end
 
@@ -151,17 +135,19 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		end
 	end
 
-	if cacheKey and (addedSome or not self.db.global.auctionDb[cacheKey]) then
+	if cacheKey and (addedSome or self:CacheItemNeedsUpdate(cacheKey)) then
 		-- only cache it when there is no cache or items were added
 		table.sort(cacheItem.auctions, function(a, b)
 			return a.buy < b.buy;
 		end);
 
-		self.db.global.auctionDb[cacheKey] = cacheItem;
+		self:UpdateItemInCache(cacheKey, cacheItem);
 	end
+
 	self:UpdateAuctionTable(cacheItem);
 	self:UpdateInfoPaneText();
 end
+
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
 	self.auctionTab.currentAuctions:SetData(cacheItem.auctions, true);

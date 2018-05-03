@@ -16,12 +16,16 @@ function StdUi:SetObjSize(obj, width, height)
 	end
 end
 
-function StdUi:ApplyBackdrop(frame, type)
-	frame:SetBackdrop({
+function StdUi:ApplyBackdrop(frame, type, insets)
+	local backdrop = {
 		bgFile = [[Interface\Buttons\WHITE8X8]],
 		edgeFile = [[Interface\Buttons\WHITE8X8]],
 		edgeSize = 1,
-	});
+	};
+	if insets then
+		backdrop.insets = insets;
+	end
+	frame:SetBackdrop(backdrop);
 
 	type = type or 'button';
 
