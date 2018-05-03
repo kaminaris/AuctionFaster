@@ -64,8 +64,12 @@ function StdUi:GlueLeft(object, referencedObject, x, y)
 end
 
 function StdUi:GlueAfter(object, referencedObject, topX, topY, bottomX, bottomY)
-	object:SetPoint(TopLeft, referencedObject, TopRight, topX, topY);
-	object:SetPoint(BottomLeft, referencedObject, BottomRight, bottomX, bottomY);
+	if topX and topY then
+		object:SetPoint(TopLeft, referencedObject, TopRight, topX, topY);
+	end
+	if bottomX and bottomY then
+		object:SetPoint(BottomLeft, referencedObject, BottomRight, bottomX, bottomY);
+	end
 end
 
 function StdUi:GlueBefore(object, referencedObject, topX, topY, bottomX, bottomY)

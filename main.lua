@@ -1,5 +1,4 @@
 AuctionFaster = LibStub('AceAddon-3.0'):NewAddon('AuctionFaster', 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0');
-local AceGUI = LibStub('AceGUI-3.0');
 
 function AuctionFaster:OnInitialize()
 	LibStub('AceConfig-3.0'):RegisterOptionsTable('AuctionFaster', self.options, { '/afconf' });
@@ -13,10 +12,12 @@ function AuctionFaster:OnInitialize()
 	self:RegisterEvent('BAG_UPDATE_DELAYED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+	self:RegisterEvent('AUCTION_MULTISELL_UPDATE');
 
 	if not self.db.global.auctionDb then
 		self.db.global.auctionDb = {};
 	end
+
 end
 
 

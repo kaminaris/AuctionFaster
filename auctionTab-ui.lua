@@ -1,5 +1,4 @@
-
---- @var StdUi StdUi
+--- @type StdUi
 local StdUi = LibStub('StdUi');
 
 AuctionFaster.itemFramePool = {};
@@ -7,10 +6,10 @@ AuctionFaster.itemFrames = {};
 
 function AuctionFaster:AddAuctionHouseTab()
 	if self.TabAdded then
-		return;
+		return ;
 	end
 
-	local auctionTab = StdUi:InfoPane(AuctionFrame, nil, nil, 'Auction Faster');
+	local auctionTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, 'Auction Faster');
 	auctionTab:Hide();
 	auctionTab:SetAllPoints();
 
@@ -35,7 +34,6 @@ function AuctionFaster:AddAuctionHouseTab()
 	self:ScanInventory();
 	self:DrawItemsFrame();
 	self:DrawRightPane();
-	self:DrawTabButtons();
 
 	self:Hook('AuctionFrameTab_OnClick', true);
 end
@@ -61,17 +59,16 @@ function AuctionFaster:DrawItemsFrame()
 
 	self.safeToDrawItems = true;
 	self:DrawItems();
-
 end
 
 function AuctionFaster:DrawItems()
 	-- Update bag delayed may cause this to happen before we open auction tab
 	if not self.safeToDrawItems then
-		return;
+		return ;
 	end
 
 	local scrollChild = self.auctionTab.scrollChild;
-	local lineHeight = 30;
+	local lineHeight = 32;
 	local margin = 5;
 
 	scrollChild:SetHeight(margin * 2 + lineHeight * #self.inventoryItems);
@@ -93,14 +90,10 @@ function AuctionFaster:DrawItems()
 		end
 
 		-- there is a frame so we need to update it
+		self:UpdateItemFrame(holdingFrame, self.inventoryItems[i]);
 		holdingFrame:ClearAllPoints();
 		holdingFrame:SetPoint('TOPLEFT', margin, -(i - 1) * lineHeight - margin);
-		holdingFrame.itemLink = self.inventoryItems[i].link;
-		holdingFrame.item = self.inventoryItems[i];
 		holdingFrame.itemIndex = i;
-		holdingFrame.itemIcon:SetTexture(self.inventoryItems[i].icon);
-		holdingFrame.itemName:SetText(self.inventoryItems[i].name);
-		holdingFrame.itemPrice:SetText(AuctionFaster:FormatMoney(self.inventoryItems[i].price));
 		holdingFrame:Show();
 	end
 end
@@ -125,16 +118,28 @@ function AuctionFaster:CreateItemFrame(lineHeight, margin)
 	end);
 
 	holdingFrame.itemIcon = StdUi:Texture(holdingFrame, lineHeight - 2, lineHeight - 2);
-	holdingFrame.itemIcon:SetPoint('TOPLEFT', holdingFrame, 1, -1)
+	StdUi:GlueTop(holdingFrame.itemIcon, holdingFrame, 1, -1, 'LEFT');
 
-	holdingFrame.itemName = StdUi:Label(holdingFrame, '', nil, nil, 150, 20);
-	holdingFrame.itemName:SetPoint('TOPLEFT', 35, -5);
+	holdingFrame.itemName = StdUi:Label(holdingFrame, '', nil, nil, 150, 12);
+	StdUi:GlueAfter(holdingFrame.itemName, holdingFrame.itemIcon, 5, 0);
 
-	holdingFrame.itemPrice = StdUi:Label(holdingFrame, '', nil, nil, 80, 20);
+	holdingFrame.itemPrice = StdUi:Label(holdingFrame, '', nil, nil, 100, 12);
 	holdingFrame.itemPrice:SetJustifyH('RIGHT');
-	holdingFrame.itemPrice:SetPoint('TOPRIGHT', 0, -5);
+	StdUi:GlueTop(holdingFrame.itemPrice, holdingFrame, 0, 0, 'RIGHT');
+
+	holdingFrame.itemQty = StdUi:Label(holdingFrame, '', nil, nil, 80, 12);
+	StdUi:GlueBelow(holdingFrame.itemQty, holdingFrame.itemName, 0, -2, 'LEFT');
 
 	return holdingFrame;
+end
+
+function AuctionFaster:UpdateItemFrame(holdingFrame, inventoryItem)
+	holdingFrame.itemLink = inventoryItem.link;
+	holdingFrame.item = inventoryItem;
+	holdingFrame.itemIcon:SetTexture(inventoryItem.icon);
+	holdingFrame.itemName:SetText(inventoryItem.name);
+	holdingFrame.itemQty:SetText('#: |cff00f209' .. inventoryItem.count .. '|r');
+	holdingFrame.itemPrice:SetText(AuctionFaster:FormatMoney(inventoryItem.price));
 end
 
 function AuctionFaster:DrawRightPane()
@@ -148,6 +153,7 @@ function AuctionFaster:DrawRightPane()
 	self:DrawRightPaneStackSettings(10);
 	self:DrawRightPaneInfoPanel(10);
 	self:DrawRightPaneCurrentAuctionsTable(leftMargin);
+	self:DrawTabButtons(leftMargin);
 	self:DrawItemSettingsPane();
 end
 
@@ -155,7 +161,8 @@ function AuctionFaster:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	local auctionTab = self.auctionTab;
 
 	auctionTab.itemIcon = StdUi:Texture(auctionTab, iconSize, iconSize, '');
-	auctionTab.itemIcon:SetPoint('TOPLEFT', leftMargin, topMargin)
+	auctionTab.itemIcon:SetPoint('TOPLEFT', leftMargin, topMargin);
+	--StdUi:ApplyBackdrop(auctionTab.itemIcon);
 
 	auctionTab.itemName = StdUi:Label(auctionTab, 'No item selected', 16, nil, 250, 20);
 	auctionTab.itemName:SetPoint('TOPLEFT', leftMargin + iconSize + 5, topMargin);
@@ -214,7 +221,7 @@ end
 function AuctionFaster:DrawRightPaneInfoPanel(marginToStacks)
 	local auctionTab = self.auctionTab;
 
-	auctionTab.infoPane = StdUi:InfoPane(auctionTab, 160, 100, 'Auction Info');
+	auctionTab.infoPane = StdUi:PanelWithTitle(auctionTab, 160, 100, 'Auction Info');
 	StdUi:GlueRight(auctionTab.infoPane, auctionTab.stackSize, marginToStacks, 0);
 
 	local totalLabel = StdUi:Label(auctionTab.infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
@@ -226,11 +233,10 @@ function AuctionFaster:DrawRightPaneInfoPanel(marginToStacks)
 	local auctionNo = StdUi:Label(auctionTab.infoPane, '# Auctions: 0');
 	StdUi:GlueBelow(auctionNo, deposit, 0, -5, 'LEFT');
 
-
 	local itemSettings = StdUi:Button(auctionTab.infoPane, 100, 20, 'Item Settings');
 	StdUi:GlueBottom(itemSettings, auctionTab.infoPane, 0, 5);
 
-	itemSettings:SetScript('OnClick', function ()
+	itemSettings:SetScript('OnClick', function()
 		AuctionFaster:ToggleItemSettingsPane();
 	end)
 
@@ -241,20 +247,24 @@ function AuctionFaster:DrawRightPaneInfoPanel(marginToStacks)
 end
 
 --- Draws tab buttons like Post All, Post One and Buy Item
-function AuctionFaster:DrawTabButtons()
+function AuctionFaster:DrawTabButtons(leftMargin)
 	local auctionTab = self.auctionTab;
 
 	auctionTab.postButton = StdUi:Button(auctionTab, 60, 20, 'Post All');
-	StdUi:GlueBelow(auctionTab.postButton, auctionTab, -20, 20, 'RIGHT');
+	StdUi:GlueBottom(auctionTab.postButton, auctionTab, -20, 20, 'RIGHT');
 
 	auctionTab.postOneButton = StdUi:Button(auctionTab, 60, 20, 'Post One');
 	StdUi:GlueLeft(auctionTab.postOneButton, auctionTab.postButton, -10, 0);
 
 	auctionTab.buyItemButton = StdUi:Button(auctionTab, 60, 20, 'Buy Item');
-	StdUi:GlueLeft(auctionTab.buyItemButton, auctionTab.postOneButton, -10, 0);
+	StdUi:GlueBottom(auctionTab.buyItemButton, auctionTab, leftMargin, 20, 'LEFT');
+
+	auctionTab.postButton:SetScript('OnClick', function()
+		AuctionFaster:SellItem();
+	end);
 
 	auctionTab.postOneButton:SetScript('OnClick', function()
-		AuctionFaster:SellItem();
+		AuctionFaster:SellItem(true);
 	end);
 
 	auctionTab.buyItemButton:SetScript('OnClick', function()
@@ -274,7 +284,7 @@ local function FxHighlightScrollingTableRow(table, realrow, column, rowFrame, co
 	if table.fSelect then
 		if table.selected == realrow then
 			table:SetHighLightColor(rowFrame, highlight or cols[column].highlight
-				or rowdata.highlight or table:GetDefaultHighlight());
+					or rowdata.highlight or table:GetDefaultHighlight());
 		else
 			table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
 		end
@@ -318,40 +328,40 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	local cols = {
 		{
-			name = 'Seller',
-			width = 150,
-			align = 'LEFT',
-			index = 'owner',
-			format = 'string',
+			name         = 'Seller',
+			width        = 150,
+			align        = 'LEFT',
+			index        = 'owner',
+			format       = 'string',
 			DoCellUpdate = FxDoCellUpdate,
-			comparesort = FxCompareSort
+			comparesort  = FxCompareSort
 		},
 		{
-			name = 'Qty',
-			width = 40,
-			align = 'LEFT',
-			index = 'count',
-			format = 'number',
+			name         = 'Qty',
+			width        = 40,
+			align        = 'LEFT',
+			index        = 'count',
+			format       = 'number',
 			DoCellUpdate = FxDoCellUpdate,
-			comparesort = FxCompareSort
+			comparesort  = FxCompareSort
 		},
 		{
-			name = 'Bid / Item',
-			width = 120,
-			align = 'RIGHT',
-			index = 'bid',
-			format = 'money',
+			name         = 'Bid / Item',
+			width        = 120,
+			align        = 'RIGHT',
+			index        = 'bid',
+			format       = 'money',
 			DoCellUpdate = FxDoCellUpdate,
-			comparesort = FxCompareSort
+			comparesort  = FxCompareSort
 		},
 		{
-			name = 'Buy / Item',
-			width = 120,
-			align = 'RIGHT',
-			index = 'buy',
-			format = 'money',
+			name         = 'Buy / Item',
+			width        = 120,
+			align        = 'RIGHT',
+			index        = 'buy',
+			format       = 'money',
 			DoCellUpdate = FxDoCellUpdate,
-			comparesort = FxCompareSort
+			comparesort  = FxCompareSort
 		},
 	}
 

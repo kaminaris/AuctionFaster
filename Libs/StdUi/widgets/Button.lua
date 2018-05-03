@@ -1,3 +1,4 @@
+--- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
 
 
@@ -11,6 +12,7 @@ function StdUi:PanelButton(parent, width, height, text)
 	return button;
 end
 
+--- @return Button
 function StdUi:Button(parent, width, height, text, normalTexture, highlightTexture, pushTexture)
 	local button = CreateFrame('Button', nil, parent)
 	self:SetObjSize(button, width, height);

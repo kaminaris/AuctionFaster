@@ -1,5 +1,7 @@
+--- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
 
+--- @return FontString
 function StdUi:Label(parent, text, size, inherit, width, height)
 	local fs = parent:CreateFontString(nil, self.config.font.strata, inherit);
 
@@ -19,7 +21,9 @@ function StdUi:AddLabel(parent, object, text, labelPosition, labelWidth)
 	local label = self:Label(parent, text, self.config.font.size, nil, labelWidth, labelHeight);
 
 	if labelPosition == 'TOP' or labelPosition == nil then
-		self:GlueAbove(label, object, 0, 4, 'LEFT')
+		self:GlueAbove(label, object, 0, 4, 'LEFT');
+	elseif labelPosition == 'RIGHT' then
+		self:GlueRight(label, object, 4, 0);
 	else -- labelPosition == 'LEFT'
 		label:SetWidth(labelWidth or label:GetStringWidth())
 		self:GlueLeft(label, object, 4, 0);

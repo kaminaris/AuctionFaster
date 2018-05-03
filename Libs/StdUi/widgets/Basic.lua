@@ -1,3 +1,4 @@
+--- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
 
 function StdUi:Panel(parent, width, height, inherits)
@@ -18,11 +19,11 @@ function StdUi:PanelWithLabel(parent, width, height, inherits, text)
 	return frame;
 end
 
-function StdUi:InfoPane(parent, width, height, text)
+function StdUi:PanelWithTitle(parent, width, height, text)
 	local frame = self:Panel(parent, width, height);
 
-	frame.labelPanel = self:PanelWithLabel(frame, 100, 20, nil, text);
-	self:GlueTop(frame.labelPanel, frame, 0, 10);
+	frame.titlePanel = self:PanelWithLabel(frame, 100, 20, nil, text);
+	self:GlueTop(frame.titlePanel, frame, 0, 10);
 
 	return frame;
 end

@@ -24,6 +24,26 @@ function AuctionFaster:ScanInventory()
 	self:DrawItems();
 end
 
+function AuctionFaster:UpdateItemInventory(itemId, itemName)
+	local totalQty = 0;
+
+	local index = false;
+	for i = 1, #self.inventoryItems do
+		local ii = self.inventoryItems[i];
+		if ii.itemId == itemId and ii.name == itemName then
+			index = i;
+			totalQty = ii.count + totalQty;
+			break;
+		end
+	end
+
+	if index then
+		self.inventoryItems[index].count = totalQty;
+	end
+
+	return totalQty;
+end
+
 function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	local canSell = false;
 
@@ -147,6 +167,21 @@ function AuctionFaster:GetItemFromInventory(id, name, qty)
 	end
 
 	return nil, nil;
+end
+
+function AuctionFaster:GetInventoryItemQuantity(itemId, itemName)
+	local qty = 0;
+
+	for i = 1, #self.inventoryItems do
+		local ii = self.inventoryItems[i];
+		if ii.itemId == itemId and ii.name == itemName then
+			found = true;
+			qty = qty + self.inventoryItems[i].count;
+			break;
+		end
+	end
+
+	return qty;
 end
 
 --

@@ -1,3 +1,4 @@
+--- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
 local ScrollingTable = LibStub('ScrollingTable');
 

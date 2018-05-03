@@ -7,10 +7,10 @@ function StdUi:MarkAsValid(frame, valid)
 		frame:SetBackdropBorderColor(1, 0, 0, 1);
 	else
 		frame:SetBackdropBorderColor(
-			self.config.backdrop.border.r,
-			self.config.backdrop.border.g,
-			self.config.backdrop.border.b,
-			self.config.backdrop.border.a
+				self.config.backdrop.border.r,
+				self.config.backdrop.border.g,
+				self.config.backdrop.border.b,
+				self.config.backdrop.border.a
 		);
 	end
 end
@@ -37,10 +37,10 @@ StdUi.Util.moneyBoxValidator = function(self)
 	local textOrig = text;
 	text = text:trim();
 	local total, gold, silver, copper, isValid = StdUi.Util.parseMoney(text);
-	print('validate', self:GetText(), not isValid or total == 0);
+
 	if not isValid or total == 0 then
 		StdUi:MarkAsValid(self, false);
-		return;
+		return ;
 	end
 
 	self:SetText(StdUi.Util.formatMoney(total));
@@ -61,17 +61,17 @@ StdUi.Util.numericBoxValidator = function(self)
 
 	if value == nil then
 		StdUi:MarkAsValid(self, false);
-		return;
+		return ;
 	end
 
 	if self.maxValue and self.maxValue < value then
 		StdUi:MarkAsValid(self, false);
-		return;
+		return ;
 	end
 
 	if self.minValue and self.minValue > value then
 		StdUi:MarkAsValid(self, false);
-		return;
+		return ;
 	end
 
 	self.value = value;
@@ -96,14 +96,14 @@ StdUi.Util.parseMoney = function(text)
 
 	local sFound, _, silver = string.find(text, '(%d+)s$');
 	if sFound then
-		text = string.gsub(text,  '(%d+)s$', '');
+		text = string.gsub(text, '(%d+)s$', '');
 		text = text:trim();
 		total = total + tonumber(silver) * 100;
 	end
 
 	local gFound, _, gold = string.find(text, '(%d+)g$');
 	if gFound then
-		text = string.gsub(text,  '(%d+)g$', '');
+		text = string.gsub(text, '(%d+)g$', '');
 		text = text:trim();
 		total = total + tonumber(gold) * 100 * 100;
 	end
@@ -147,4 +147,16 @@ StdUi.Util.stripColors = function(text)
 	text = string.gsub(text, '|c%x%x%x%x%x%x%x%x', '');
 	text = string.gsub(text, '|r', '');
 	return text;
+end
+
+function StdUi.Util.tableCount(tab)
+	local n = #tab;
+
+	if (n == 0) then
+		for _ in pairs(tab) do
+			n = n + 1;
+		end
+	end
+
+	return n;
 end

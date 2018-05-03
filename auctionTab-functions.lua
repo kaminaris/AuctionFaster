@@ -8,6 +8,7 @@ function AuctionFaster:GetSellSettings()
 	local buyPerItem = auctionTab.buyPerItem:GetValue();
 
 	local maxStacks = tonumber(auctionTab.maxStacks:GetValue());
+	local realMaxStacks = maxStacks;
 	if maxStacks == 0 then
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
@@ -18,13 +19,16 @@ function AuctionFaster:GetSellSettings()
 	end
 
 	return {
-		bidPerItem = bidPerItem,
-		buyPerItem = buyPerItem,
-		stackSize = stackSize,
-		maxStacks = maxStacks,
-		duration = 2
+		bidPerItem    = bidPerItem,
+		buyPerItem    = buyPerItem,
+		stackSize     = stackSize,
+		maxStacks     = maxStacks,
+		realMaxStacks = realMaxStacks,
+		duration      = 2
 	};
 end
+
+
 
 function AuctionFaster:UpdateTabPrices(bid, buy)
 	local auctionTab = self.auctionTab;
@@ -63,9 +67,9 @@ function AuctionFaster:UpdateItemQtyText()
 	local auctionTab = self.auctionTab;
 	local maxStacks, remainingQty = self:CalcMaxStacks();
 	auctionTab.itemQty:SetText(
-			'Qty: ' .. self.selectedItem.count ..
-					', Max Stacks: ' .. maxStacks ..
-					', Remaining: ' .. remainingQty
+		'Qty: ' .. self.selectedItem.count ..
+		', Max Stacks: ' .. maxStacks ..
+		', Remaining: ' .. remainingQty
 	);
 end
 
@@ -94,7 +98,6 @@ function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	for i = 1, #self.itemFramePool do
 		local f = self.itemFramePool[i];
 		if f.item.itemId == itemId and f.item.name == itemName then
-			print('found', itemId, itemName, newPrice);
 			f.itemPrice:SetText(self:FormatMoney(newPrice));
 		end
 	end

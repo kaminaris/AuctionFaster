@@ -42,3 +42,23 @@ end
 function StdUi:ClearBackdrop(frame)
 	frame:SetBackdrop(nil);
 end
+
+function StdUi:MakeDraggable(frame, handle)
+	frame:SetMovable(true);
+	frame:EnableMouse(true);
+	frame:RegisterForDrag('LeftButton');
+	frame:SetScript('OnDragStart', frame.StartMoving);
+	frame:SetScript('OnDragStop', frame.StopMovingOrSizing);
+
+	if handle then
+		handle:EnableMouse(true);
+		handle:SetMovable(true);
+		handle:RegisterForDrag('LeftButton');
+		handle:SetScript('OnDragStart', function(self)
+			frame.StartMoving(frame);
+		end);
+		handle:SetScript('OnDragStop', function(self)
+			frame.StopMovingOrSizing(frame);
+		end);
+	end
+end

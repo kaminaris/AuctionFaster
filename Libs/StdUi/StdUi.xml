@@ -7,8 +7,10 @@
 	<Script file="StdUiUtil.lua"/>
 	<!--Widgets-->
 	<Script file="widgets\Basic.lua"/>
+	<Script file="widgets\Window.lua"/>
 	<Script file="widgets\Button.lua"/>
 	<Script file="widgets\EditBox.lua"/>
+	<Script file="widgets\CheckBox.lua"/>
 	<Script file="widgets\Label.lua"/>
 	<Script file="widgets\Scroll.lua"/>
 </Ui>

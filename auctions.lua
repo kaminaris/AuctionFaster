@@ -1,8 +1,11 @@
+--- @type StdUi
+local StdUi = LibStub('StdUi');
 
 function AuctionFaster:GetItemFromCache(itemId, itemName)
 	if self.db.global.auctionDb[itemId .. itemName] then
 		local item = self.db.global.auctionDb[itemId .. itemName];
-		if ((GetServerTime() - item.scanTime) > 60 * 10) then -- older than 10 minutes
+		if ((GetServerTime() - item.scanTime) > 60 * 10) then
+			-- older than 10 minutes
 			return nil;
 		end
 		return item;
@@ -20,12 +23,12 @@ function AuctionFaster:GetCurrentAuctions()
 	if cacheItem and #cacheItem.auctions > 0 then
 		self:UpdateAuctionTable(cacheItem);
 		self:UpdateInfoPaneText();
-		return;
+		return ;
 	end
 
 	if not CanSendAuctionQuery() then
 		print('cant wut');
-		return;
+		return ;
 	end
 
 	self.currentlySorting = true;
@@ -40,25 +43,85 @@ function AuctionFaster:GetCurrentAuctions()
 	self.currentlyQuerying = false;
 end
 
+function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
+	if current == max then
+		C_Timer.After(0.5, function()
+			AuctionFaster:CheckEverythingSold();
+		end);
+	end
+end
+
+function AuctionFaster:CheckEverythingSold()
+	local sellSettings = self:GetSellSettings();
+
+	--- DISABLED FOR TEST
+	--if sellSettings.realMaxStacks ~= 0 then
+	--	return;
+	--end
+
+	local selectedItem = self.selectedItem;
+	if not selectedItem then
+		return ;
+	end
+
+	local itemId, itemName = selectedItem.itemId, selectedItem.name;
+
+	local currentItemName = GetAuctionSellItemInfo();
+
+	if not currentItemName or currentItemName ~= itemName then
+		self:PutItemInSellBox(itemId, itemName);
+	end
+
+	local qtyLeft = self:UpdateItemInventory(itemId, itemName);
+
+	if qtyLeft == 0 then
+		return ;
+	end
+
+	self:UpdateItemQtyText();
+	self:GetCurrentAuctions();
+	self:DrawItems();
+
+	local btns = {
+		yes = {
+			text    = 'Yes',
+			onClick = function(self)
+				-- todo: make it
+				self:GetParent():Hide();
+			end,
+		},
+		no  = {
+			text    = 'No',
+			onClick = function(self)
+				self:GetParent():Hide();
+			end,
+		}
+	}
+
+	StdUi:Confirm('Incomplete sell', 'You still have ' .. qtyLeft .. ' of ' .. itemName ..
+			' Do you wish to sell rest?', btns, 'incomplete_sell');
+end
+
 function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	if (self.currentlySorting) then
-		return;
+		return ;
 	end
 
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 
 	if not selectedId then
 		-- Not our scan, ignore it
-		return;
-	end;
+		return ;
+	end ;
 
 	local shown, total = GetNumAuctionItems('list');
 
 	-- since we did scan anyway, put it in cache
 	local cacheKey;
 	local cacheItem = {
-		scanTime = GetServerTime(),
-		auctions = {},
+		scanTime   = GetServerTime(),
+		auctions   = {},
+		settings   = {},
 		totalItems = total
 	};
 
@@ -78,12 +141,12 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 			end
 
 			tinsert(cacheItem.auctions, {
-				owner = owner,
-				count = count,
-				itemId = itemId,
+				owner    = owner,
+				count    = count,
+				itemId   = itemId,
 				itemName = name,
-				bid = floor(minBid / count),
-				buy = floor(buyoutPrice / count),
+				bid      = floor(minBid / count),
+				buy      = floor(buyoutPrice / count),
 			});
 		end
 	end
@@ -111,7 +174,7 @@ end
 
 function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
 	if #cacheItem.auctions < 1 then
-		return;
+		return ;
 	end
 
 	if not lowestBid or not lowestBuy then
@@ -177,6 +240,10 @@ function AuctionFaster:PutItemInSellBox(itemId, itemName)
 		return false;
 	end
 
+	if not AuctionFrameAuctions.duration then
+		AuctionFrameAuctions.duration = 2;
+	end
+
 	-- This only puts item in sell slot despite name
 	ClickAuctionSellItemButton();
 	ClearCursor();
@@ -185,15 +252,19 @@ function AuctionFaster:PutItemInSellBox(itemId, itemName)
 end
 
 function AuctionFaster:CalculateDeposit(itemId, itemName)
+	local sellSettings = self:GetSellSettings();
+	if not AuctionFrameAuctions.duration then
+		AuctionFrameAuctions.duration = sellSettings.duration;
+	end
+
 	if not self:PutItemInSellBox(itemId, itemName) then
 		return 0;
 	end
 
-	local sellSettings = self:GetSellSettings();
 	return CalculateAuctionDeposit(sellSettings.duration);
 end
 
-function AuctionFaster:SellItem()
+function AuctionFaster:SellItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local name = selectedItem.name;
@@ -208,11 +279,16 @@ function AuctionFaster:SellItem()
 		AuctionFrameAuctions.duration = sellSettings.duration;
 	end
 
+	local maxStacks = sellSettings.maxStacks;
+	if singleStack then
+		maxStacks = 1;
+	end
+
 	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
-		sellSettings.buyPerItem * sellSettings.stackSize,
-		sellSettings.duration,
-		sellSettings.stackSize,
-		sellSettings.maxStacks);
+			sellSettings.buyPerItem * sellSettings.stackSize,
+			sellSettings.duration,
+			sellSettings.stackSize,
+			maxStacks);
 
 	return true;
 end
@@ -220,12 +296,12 @@ end
 function AuctionFaster:BuyItem()
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 	if not selectedId then
-		return;
+		return ;
 	end
 
 	local index = self.auctionTab.currentAuctions:GetSelection();
 	if not index then
-		return;
+		return ;
 	end
 	local auctionData = self.auctionTab.currentAuctions:GetRow(index);
 
@@ -238,7 +314,7 @@ function AuctionFaster:BuyItem()
 	local buy = floor(buyoutPrice / count);
 
 	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
-		and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
+			and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
 		-- same index, we can buy it
 		self:BuyItemByIndex(index);
 		-- we need to refresh the auctions
@@ -246,7 +322,7 @@ function AuctionFaster:BuyItem()
 	end
 
 	-- item was not found but lets check if it still exists
-
+	-- todo: need to check it
 end
 
 function AuctionFaster:BuyItemByIndex(index)
