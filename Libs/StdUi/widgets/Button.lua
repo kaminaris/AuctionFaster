@@ -12,59 +12,82 @@ function StdUi:PanelButton(parent, width, height, text)
 	return button;
 end
 
+function StdUi:ButtonLabel(parent, text)
+	local label = self:Label(parent, text);
+	label:SetJustifyH('CENTER');
+	self:GlueAcross(label, parent, 2, -2, -2, 2);
+	parent:SetFontString(label);
+
+	return label;
+end
+
+function StdUi:HighlightButtonTexture(button)
+	local hTex = self:Texture(button, nil, nil, nil);
+	hTex:SetColorTexture(
+			self.config.highlight.color.r,
+			self.config.highlight.color.g,
+			self.config.highlight.color.b,
+			self.config.highlight.color.a
+	);
+	hTex:SetAllPoints();
+
+	return hTex;
+end
+
+--- Creates a button with only a highlight
 --- @return Button
-function StdUi:Button(parent, width, height, text, normalTexture, highlightTexture, pushTexture)
+function StdUi:HighlightButton(parent, width, height, text)
 	local button = CreateFrame('Button', nil, parent)
 	self:SetObjSize(button, width, height);
+	button.text = self:ButtonLabel(button, text);
 
-	if text then
-		button:SetText(text);
-		button:SetNormalFontObject('GameFontNormal');
-	end
+	local hTex = self:HighlightButtonTexture(button);
+
+	button:SetHighlightTexture(hTex);
+	button.highlightTexture = hTex;
+
+	return button;
+end
+
+--- @return Button
+function StdUi:Button(parent, width, height, text)
+	local button = CreateFrame('Button', nil, parent)
+	self:SetObjSize(button, width, height);
+	button.text = self:ButtonLabel(button, text);
 
 	self:ApplyBackdrop(button);
 
-	if normalTexture then
-		local normTex; --'Interface/Buttons/UI-Panel-Button-Up';
-		if normalTexture ~= true then
-			normTex = normalTexture;
-		end
+	local hTex = self:HighlightButtonTexture(button);
 
+	button:SetHighlightTexture(hTex);
+	button.highlightTexture = hTex;
 
-		local ntex = self:Texture(button, nil, nil, normTex);
-		ntex:SetTexCoord(0, 0.625, 0, 0.6875);
-		ntex:SetAllPoints();
-
-		button:SetNormalTexture(ntex);
-		button.normalTexture = ntex;
-	end
-
-	if highlightTexture then
-		local highTex = 'Interface/Buttons/UI-Panel-Button-Highlight';
-		if highlightTexture ~= true then
-			highTex = highlightTexture;
-		end
-		local htex = self:Texture(button, nil, nil, highTex);
-		htex:SetTexCoord(0, 0.625, 0, 0.6875)
-		htex:SetAllPoints();
-		button:SetHighlightTexture(htex);
-		button.highlightTexture = htex;
-	end
-
-	if pushTexture then
-		local pushTex = 'Interface/Buttons/UI-Panel-Button-Down';
-		if pushTexture ~= true then
-			pushTex = pushTexture;
-		end
-		local ptex = self:Texture(button, nil, nil, pushTex);
-
-		ptex:SetTexCoord(0, 0.625, 0, 0.6875)
-		ptex:SetAllPoints()
-		button:SetPushedTexture(ptex)
-		button.pushedTexture = ptex;
-	end
-
+	self:ApplyDisabledBackdrop(button);
 	return button;
+end
+
+function StdUi:ApplyDisabledBackdrop(button)
+	hooksecurefunc(button, 'Disable', function(self)
+		StdUi:ApplyBackdrop(self, 'buttonDisabled', 'borderDisabled');
+		if self.label then
+			StdUi:SetTextColor(self.label, 'colorDisabled');
+		end
+
+		if self.text then
+			StdUi:SetTextColor(self.text, 'colorDisabled');
+		end
+	end);
+
+	hooksecurefunc(button, 'Enable', function(self)
+		StdUi:ApplyBackdrop(self, 'button', 'border');
+		if self.label then
+			StdUi:SetTextColor(self.label, 'color');
+		end
+
+		if self.text then
+			StdUi:SetTextColor(self.text, 'color');
+		end
+	end);
 end
 
 

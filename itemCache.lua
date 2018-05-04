@@ -68,6 +68,5 @@ function AuctionFaster:GetSelectedItemFromCache()
 	end
 
 	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.name;
-	print(itemId, itemName);
 	return self:GetItemFromCache(itemId, itemName, true);
 end

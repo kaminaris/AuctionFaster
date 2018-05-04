@@ -24,6 +24,10 @@ function StdUi:ScrollFrame(parent, name, width, height)
 	scrollFrame:EnableMouse(true);
 	scrollFrame:SetClampedToScreen(true);
 
+	panel.scrollFrame = scrollFrame;
+	panel.scrollChild = scrollChild;
+	panel.scrollBar = scrollBar;
+
 	return panel, scrollFrame, scrollChild, scrollBar;
 end
 

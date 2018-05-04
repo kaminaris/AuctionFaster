@@ -11,7 +11,9 @@
 	<Script file="widgets\Button.lua"/>
 	<Script file="widgets\EditBox.lua"/>
 	<Script file="widgets\CheckBox.lua"/>
+	<Script file="widgets\Dropdown.lua"/>
 	<Script file="widgets\Label.lua"/>
 	<Script file="widgets\Scroll.lua"/>
+	<Script file="widgets\Slider.lua"/>
 	<Script file="widgets\Tooltip.lua"/>
 </Ui>

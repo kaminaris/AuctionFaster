@@ -55,12 +55,20 @@ function StdUi:GlueBottom(object, referencedObject, x, y, align)
 	end
 end
 
-function StdUi:GlueRight(object, referencedObject, x, y)
-	object:SetPoint(Left, referencedObject, Right, x, y);
+function StdUi:GlueRight(object, referencedObject, x, y, inside)
+	if inside then
+		object:SetPoint(Right, referencedObject, Right, x, y);
+	else
+		object:SetPoint(Left, referencedObject, Right, x, y);
+	end
 end
 
-function StdUi:GlueLeft(object, referencedObject, x, y)
-	object:SetPoint(Right, referencedObject, Left, x, y);
+function StdUi:GlueLeft(object, referencedObject, x, y, inside)
+	if inside then
+		object:SetPoint(Left, referencedObject, Left, x, y);
+	else
+		object:SetPoint(Right, referencedObject, Left, x, y);
+	end
 end
 
 function StdUi:GlueAfter(object, referencedObject, topX, topY, bottomX, bottomY)
@@ -73,8 +81,12 @@ function StdUi:GlueAfter(object, referencedObject, topX, topY, bottomX, bottomY)
 end
 
 function StdUi:GlueBefore(object, referencedObject, topX, topY, bottomX, bottomY)
-	object:SetPoint(TopRight, referencedObject, TopLeft, topX, topY);
-	object:SetPoint(BottomRight, referencedObject, BottomLeft, bottomX, bottomY);
+	if topX and topY then
+		object:SetPoint(TopRight, referencedObject, TopLeft, topX, topY);
+	end
+	if bottomX and bottomY then
+		object:SetPoint(BottomRight, referencedObject, BottomLeft, bottomX, bottomY);
+	end
 end
 
 -- More advanced positioning functions

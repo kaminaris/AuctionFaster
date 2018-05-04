@@ -16,7 +16,7 @@ function StdUi:SetObjSize(obj, width, height)
 	end
 end
 
-function StdUi:ApplyBackdrop(frame, type, insets)
+function StdUi:ApplyBackdrop(frame, type, border, insets)
 	local backdrop = {
 		bgFile = [[Interface\Buttons\WHITE8X8]],
 		edgeFile = [[Interface\Buttons\WHITE8X8]],
@@ -28,6 +28,7 @@ function StdUi:ApplyBackdrop(frame, type, insets)
 	frame:SetBackdrop(backdrop);
 
 	type = type or 'button';
+	border = border or 'border';
 
 	frame:SetBackdropColor(
 		self.config.backdrop[type].r,
@@ -36,10 +37,10 @@ function StdUi:ApplyBackdrop(frame, type, insets)
 		self.config.backdrop[type].a
 	);
 	frame:SetBackdropBorderColor(
-		self.config.backdrop.border.r,
-		self.config.backdrop.border.g,
-		self.config.backdrop.border.b,
-		self.config.backdrop.border.a
+		self.config.backdrop[border].r,
+		self.config.backdrop[border].g,
+		self.config.backdrop[border].b,
+		self.config.backdrop[border].a
 	);
 end
 

@@ -107,10 +107,7 @@ end
 
 function AuctionFaster:CreateItemFrame(lineHeight, margin)
 	local scrollChild = self.auctionTab.scrollChild;
-	local holdingFrame = StdUi:Button(scrollChild, scrollChild:GetWidth() - margin * 2,
-			lineHeight, nil, false, true, false);
-	StdUi:ClearBackdrop(holdingFrame);
-	holdingFrame.highlightTexture:SetColorTexture(1, 0.9, 0, 0.5);
+	local holdingFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - margin * 2, lineHeight);
 
 	holdingFrame:EnableMouse();
 	holdingFrame:RegisterForClicks('AnyUp');

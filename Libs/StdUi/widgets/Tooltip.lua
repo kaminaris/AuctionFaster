@@ -3,7 +3,7 @@ local StdUi = LibStub and LibStub('StdUi', true);
 
 
 StdUi.tooltips = {}
-function StdUi:Tooltip(owner, textL, textR, tooltipName, anchor, automatic)
+function StdUi:Tooltip(owner, text, tooltipName, anchor, automatic)
 	--- @type GameTooltip
 	local tip;
 	if tooltipName and StdUi.tooltips[tooltipName] then
@@ -18,14 +18,17 @@ function StdUi:Tooltip(owner, textL, textR, tooltipName, anchor, automatic)
 		owner:SetScript('OnEnter', function ()
 			tip:SetOwner(owner);
 			tip:SetPoint(anchor);
+			if type(text) == 'string' then
+				tip:SetText(text,
+						StdUi.config.font.color.r,
+						StdUi.config.font.color.g,
+						StdUi.config.font.color.b,
+						StdUi.config.font.color.a
+				);
+			elseif type(text) == 'function' then
+				text(tip);
+			end
 
-			tip:SetText(textL,
-				StdUi.config.font.color.r,
-				StdUi.config.font.color.g,
-				StdUi.config.font.color.b,
-				StdUi.config.font.color.a
-			);
-			--tip:AddDoubleLine(textL, textR);
 			tip:Show();
 		end);
 		owner:SetScript('OnLeave', function ()
