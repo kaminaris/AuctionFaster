@@ -1,4 +1,3 @@
-
 function AuctionFaster:GetItemFromCache(itemId, itemName, skipOldCheck)
 	if self.db.global.auctionDb[itemId .. itemName] then
 		local item = self.db.global.auctionDb[itemId .. itemName];
@@ -13,19 +12,26 @@ function AuctionFaster:GetItemFromCache(itemId, itemName, skipOldCheck)
 end
 
 --- Puts a blank item in cache as template
-function AuctionFaster:PutInventoryItemInCache(selectedItem)
-	local cacheKey = selectedItem.itemId .. selectedItem.name;
+function AuctionFaster:FindOrCreateCacheItem(itemId, itemName)
+	local cacheKey = itemId .. itemName;
 
 	if self.db.global.auctionDb[cacheKey] then
-		return;
+		return self.db.global.auctionDb[cacheKey];
 	end
 
 	self.db.global.auctionDb[cacheKey] = {
-		itemName = selectedItem.itemName,
-		itemId = selectedItem.itemId,
-		icon = selectedItem.icon,
-		settings = self:GetDefaultItemSettings()
+		itemName   = itemName,
+		itemId     = itemId,
+		icon       = GetItemIcon(itemId),
+		settings   = self:GetDefaultItemSettings(),
+		scanTime   = nil,
+		auctions   = {},
+		totalItems = 0,
+		bid        = nil,
+		buy        = nil
 	};
+
+	return self.db.global.auctionDb[cacheKey];
 end
 
 function AuctionFaster:CacheItemNeedsUpdate(cacheKey)
@@ -38,21 +44,9 @@ function AuctionFaster:CacheItemNeedsUpdate(cacheKey)
 	return not cacheItem.scanTime;
 end
 
-function AuctionFaster:UpdateItemInCache(cacheKey, cacheItem)
-	if not self.db.global.auctionDb[cacheKey] then
-		self.db.global.auctionDb[cacheKey] = cacheItem;
-	else
-		self.db.global.auctionDb[cacheKey].scanTime = cacheItem.scanTime;
-		self.db.global.auctionDb[cacheKey].totalItems = cacheItem.totalItems;
-		self.db.global.auctionDb[cacheKey].auctions = cacheItem.auctions;
-		self.db.global.auctionDb[cacheKey].itemName = cacheItem.itemName;
-		self.db.global.auctionDb[cacheKey].itemId = cacheItem.itemId;
-	end
-end
-
 function AuctionFaster:UpdateItemSettingsInCache(cacheKey, settingName, settingValue)
 	if not self.db.global.auctionDb[cacheKey] then
-		return;
+		return ;
 	end
 
 	self.db.global.auctionDb[cacheKey].settings[settingName] = settingValue;
@@ -67,6 +61,6 @@ function AuctionFaster:GetSelectedItemFromCache()
 		return nil;
 	end
 
-	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.name;
+	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.itemName;
 	return self:GetItemFromCache(itemId, itemName, true);
 end

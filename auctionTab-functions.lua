@@ -28,13 +28,46 @@ function AuctionFaster:GetSellSettings()
 	};
 end
 
+function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
+	if not editBox:IsValid() then
+		print('notvalid');
+		return;
+	end
 
+	local cacheItem = self:GetSelectedItemFromCache();
+
+	cacheItem[variable] = editBox:GetValue();
+	print('var',variable,  cacheItem[variable])
+end
 
 function AuctionFaster:UpdateTabPrices(bid, buy)
 	local auctionTab = self.auctionTab;
 
-	auctionTab.bidPerItem:SetValue(bid);
-	auctionTab.buyPerItem:SetValue(buy);
+	if bid then
+		auctionTab.bidPerItem:SetValue(bid);
+	else
+		auctionTab.bidPerItem:SetText('-');
+		auctionTab.bidPerItem:Validate();
+	end
+
+	if buy then
+		auctionTab.buyPerItem:SetValue(buy);
+	else
+		auctionTab.buyPerItem:SetText('-');
+		auctionTab.buyPerItem:Validate();
+	end
+end
+
+function AuctionFaster:UpdateStackSettings(maxStacks, stackSize)
+	local auctionTab = self.auctionTab;
+
+	if maxStacks then
+		auctionTab.maxStacks:SetValue(maxStacks);
+	end
+
+	if stackSize then
+		auctionTab.stackSize:SetValue(stackSize);
+	end
 end
 
 function AuctionFaster:SelectItem(index)
@@ -42,14 +75,25 @@ function AuctionFaster:SelectItem(index)
 	self.selectedItem = self.inventoryItems[index];
 
 	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
-	auctionTab.itemName:SetText(self.selectedItem.name);
+	auctionTab.itemName:SetText(self.selectedItem.link);
 
-	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStack .. ')');
-	auctionTab.stackSize:SetValue(self.selectedItem.maxStack);
+	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
+
+
+	local cacheItem = self:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+
+	-- Clear prices
+	self:UpdateTabPrices(nil, nil);
+
+	if cacheItem.settings.rememberStack then
+		print('remember', cacheItem.maxStacks, cacheItem.stackSize);
+		self:UpdateStackSettings(cacheItem.maxStacks, cacheItem.stackSize)
+	else
+		self:UpdateStackSettings(0, self.selectedItem.maxStackSize);
+	end
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
-	self:PutInventoryItemInCache(self.selectedItem);
 	self:LoadItemSettings();
 end
 
@@ -58,7 +102,7 @@ function AuctionFaster:GetSelectedItemIdName()
 		return nil, nil;
 	end
 
-	return self.selectedItem.itemId, self.selectedItem.name;
+	return self.selectedItem.itemId, self.selectedItem.itemName;
 end
 
 function AuctionFaster:UpdateItemQtyText()
@@ -75,31 +119,12 @@ function AuctionFaster:UpdateItemQtyText()
 	);
 end
 
-function AuctionFaster:UpdateInfoPaneText()
-	if not self.selectedItem then
-		return ;
-	end
 
-	local auctionTab = self.auctionTab;
-	local sellSettings = self:GetSellSettings();
-	--DevTools_Dump(sellSettings);
-	if not sellSettings.buyPerItem or not sellSettings.stackSize or not sellSettings.maxStacks then
-		return ;
-	end
-
-	local total = sellSettings.buyPerItem * sellSettings.stackSize * sellSettings.maxStacks;
-	local deposit = self:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.name);
-
-	auctionTab.infoPane.totalLabel:SetText('Total: ' .. StdUi.Util.formatMoney(total));
-	auctionTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
-	auctionTab.infoPane.deposit:SetText('Deposit: ' .. StdUi.Util.formatMoney(deposit));
-
-end
 
 function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	for i = 1, #self.itemFramePool do
 		local f = self.itemFramePool[i];
-		if f.item.itemId == itemId and f.item.name == itemName then
+		if f.item.itemId == itemId and f.item.itemName == itemName then
 			f.itemPrice:SetText(self:FormatMoney(newPrice));
 		end
 	end

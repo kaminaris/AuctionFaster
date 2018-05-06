@@ -34,7 +34,6 @@ function StdUi:GlueAbove(object, referencedObject, x, y, align)
 	end
 end
 
-
 function StdUi:GlueTop(object, referencedObject, x, y, align)
 	if align == Left then
 		object:SetPoint(TopLeft, referencedObject, TopLeft, x, y);
@@ -93,4 +92,18 @@ end
 function StdUi:GlueAcross(object, referencedObject, topLeftX, topLeftY, bottomRightX, bottomRightY)
 	object:SetPoint(TopLeft, referencedObject, TopLeft, topLeftX, topLeftY);
 	object:SetPoint(BottomRight, referencedObject, BottomRight, bottomRightX, bottomRightY);
+end
+
+-- Glues object to opposite side of anchor
+function StdUi:GlueOpposite(object, referencedObject, x, y, anchor)
+	if anchor == 'TOP' then 			object:SetPoint('BOTTOM', referencedObject, anchor, x, y);
+	elseif anchor == 'BOTTOM' then		object:SetPoint('TOP', referencedObject, anchor, x, y);
+	elseif anchor == 'LEFT' then		object:SetPoint('RIGHT', referencedObject, anchor, x, y);
+	elseif anchor == 'RIGHT' then		object:SetPoint('LEFT', referencedObject, anchor, x, y);
+	elseif anchor == 'TOPLEFT' then		object:SetPoint('BOTTOMRIGHT', referencedObject, anchor, x, y);
+	elseif anchor == 'TOPRIGHT' then	object:SetPoint('BOTTOMLEFT', referencedObject, anchor, x, y);
+	elseif anchor == 'BOTTOMLEFT' then	object:SetPoint('TOPRIGHT', referencedObject, anchor, x, y);
+	elseif anchor == 'BOTTOMRIGHT' then	object:SetPoint('TOPLEFT', referencedObject, anchor, x, y);
+	else								object:SetPoint('CENTER', referencedObject, anchor, x, y);
+	end
 end

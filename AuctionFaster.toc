@@ -26,6 +26,7 @@ auctions.lua
 itemCache.lua
 auctionTab-ui.lua
 auctionTab-functions.lua
+auctionTab-infoPane.lua
 auctionTab-itemSettings.lua
 validators.lua
 inventory.lua

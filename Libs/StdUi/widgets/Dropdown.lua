@@ -11,13 +11,13 @@ function StdUi:Dropdown(parent, name, width, height, options, value)
 	local dropdown = self:Button(parent, width, height, '');
 	dropdown.text:SetJustifyH('LEFT');
 	
-	local dropTex = self:Texture(dropdown, 20, 20, 'Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up');
+	local dropTex = self:Texture(dropdown, 15, 15, 'Interface\\Buttons\\SquareButtonTextures');
+	dropTex:SetTexCoord(0.45312500, 0.64062500, 0.20312500, 0.01562500);
 	self:GlueRight(dropTex, dropdown, -2, 0, true);
 
 	local optionsHeight = #options * 20;
 
-	local optsFrame = self:ScrollFrame(dropdown, name .. 'Items', dropdown:GetWidth(),
-			math.min(optionsHeight + 4, 200));
+	local optsFrame = self:ScrollFrame(dropdown, dropdown:GetWidth(), math.min(optionsHeight + 4, 200));
 	self:GlueBelow(optsFrame, dropdown, 0, 0, 'LEFT');
 	optsFrame:Hide();
 	optsFrame.scrollChild:SetHeight(optionsHeight);

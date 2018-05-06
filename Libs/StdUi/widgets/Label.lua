@@ -13,21 +13,29 @@ function StdUi:SetTextColor(fontString, colorType)
 end
 
 --- @return FontString
-function StdUi:Label(parent, text, size, inherit, width, height)
+function StdUi:FontString(parent, text, inherit)
 	local fs = parent:CreateFontString(nil, self.config.font.strata, inherit);
-
-	fs:SetFont(self.config.font.familly, size or self.config.font.size, self.config.font.effect);
+	fs:SetFont(self.config.font.familly, self.config.font.size, self.config.font.effect);
 	fs:SetText(text);
-	self:SetTextColor(fs, 'color');
-	self:SetObjSize(fs, width, height);
-
 	fs:SetJustifyH('LEFT');
 	fs:SetJustifyV('MIDDLE');
 
 	return fs;
 end
 
+--- @return FontString
+function StdUi:Label(parent, text, size, inherit, width, height)
+	local fs = self:FontString(parent, text, inherit);
+	if size then
+		fs:SetFont(self.config.font.familly, size, self.config.font.effect);
+	end
+	self:SetTextColor(fs, 'color');
+	self:SetObjSize(fs, width, height);
 
+	return fs;
+end
+
+--- @return FontString
 function StdUi:AddLabel(parent, object, text, labelPosition, labelWidth)
 	local labelHeight = (self.config.font.size) + 4;
 	local label = self:Label(parent, text, self.config.font.size, nil, labelWidth, labelHeight);
@@ -42,4 +50,6 @@ function StdUi:AddLabel(parent, object, text, labelPosition, labelWidth)
 	end
 
 	object.label = label;
+
+	return label;
 end

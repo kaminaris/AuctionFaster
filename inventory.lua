@@ -30,10 +30,10 @@ function AuctionFaster:UpdateItemInventory(itemId, itemName)
 	local index = false;
 	for i = 1, #self.inventoryItems do
 		local ii = self.inventoryItems[i];
-		if ii.itemId == itemId and ii.name == itemName then
+		if ii.itemId == itemId and ii.itemName == itemName then
 			index = i;
 			totalQty = ii.count + totalQty;
-			break;
+			break ;
 		end
 	end
 
@@ -68,7 +68,7 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 						or strfind(line, ITEM_BIND_QUEST) or strfind(line, ITEM_CONJURED));
 
 				if strfind(line, USE_COLON) then
-					break;
+					break ;
 				end
 			end
 
@@ -84,10 +84,10 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	local found = false;
 	for i = 1, #self.inventoryItems do
 		local ii = self.inventoryItems[i];
-		if ii.itemId == itemId and ii.name == itemName then
+		if ii.itemId == itemId and ii.itemName == itemName then
 			found = true;
 			self.inventoryItems[i].count = self.inventoryItems[i].count + count;
-			break;
+			break ;
 		end
 	end
 
@@ -98,13 +98,13 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 
 		tinsert(self.inventoryItems, {
-			icon = itemIcon,
-			count = count,
-			maxStack = itemStackCount,
-			name = itemName,
-			link = itemLink,
-			itemId = itemId,
-			price = scanPrice
+			icon         = itemIcon,
+			count        = count,
+			maxStackSize = itemStackCount,
+			itemName     = itemName,
+			link         = itemLink,
+			itemId       = itemId,
+			price        = scanPrice
 		});
 	end
 end
@@ -112,16 +112,15 @@ end
 function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 	for i = 1, #self.inventoryItems do
 		local ii = self.inventoryItems[i];
-		if ii.itemId == itemId and ii.name == itemName then
+		if ii.itemId == itemId and ii.itemName == itemName then
 			self.inventoryItems[i].price = newPrice;
-			break;
+			break ;
 		end
 	end
 
 	-- update the UI
 	self:UpdateItemsTabPrice(itemId, itemName, newPrice);
 end
-
 
 function AuctionFaster:BAG_UPDATE_DELAYED()
 	self:ScanInventory();
@@ -177,7 +176,7 @@ function AuctionFaster:GetInventoryItemQuantity(itemId, itemName)
 		if ii.itemId == itemId and ii.name == itemName then
 			found = true;
 			qty = qty + self.inventoryItems[i].count;
-			break;
+			break ;
 		end
 	end
 

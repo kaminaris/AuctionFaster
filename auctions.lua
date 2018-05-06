@@ -1,35 +1,6 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
-function AuctionFaster:GetCurrentAuctions()
-	local selectedItem = self.selectedItem;
-	local itemId = selectedItem.itemId;
-	local name = selectedItem.name;
-
-	local cacheItem = self:GetItemFromCache(itemId, name);
-	if cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
-		self:UpdateAuctionTable(cacheItem);
-		self:UpdateInfoPaneText();
-		return ;
-	end
-
-	if not CanSendAuctionQuery() then
-		print('cant wut');
-		return ;
-	end
-
-	self.currentlySorting = true;
-	SortAuctionItems('list', 'buyout')
-	if IsAuctionSortReversed('list', 'buyout') then
-		SortAuctionItems('list', 'buyout')
-	end
-	self.currentlySorting = false;
-
-	self.currentlyQuerying = true;
-	QueryAuctionItems(name, nil, nil, 0, 0, 0, false, true);
-	self.currentlyQuerying = false;
-end
-
 function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
 	if current == max then
 		C_Timer.After(0.5, function()
@@ -38,6 +9,7 @@ function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
 	end
 end
 
+--- Check if all items has been sold, if not, propose to sell last incomplete stack
 function AuctionFaster:CheckEverythingSold()
 	local sellSettings = self:GetSellSettings();
 
@@ -51,7 +23,7 @@ function AuctionFaster:CheckEverythingSold()
 		return ;
 	end
 
-	local itemId, itemName = selectedItem.itemId, selectedItem.name;
+	local itemId, itemName = selectedItem.itemId, selectedItem.itemName;
 
 	local currentItemName = GetAuctionSellItemInfo();
 
@@ -89,6 +61,37 @@ function AuctionFaster:CheckEverythingSold()
 			' Do you wish to sell rest?', btns, 'incomplete_sell');
 end
 
+
+function AuctionFaster:GetCurrentAuctions()
+	local selectedItem = self.selectedItem;
+	local itemId = selectedItem.itemId;
+	local itemName = selectedItem.itemName;
+
+	local cacheItem = self:GetItemFromCache(itemId, itemName);
+	-- We still have pretty recent results from auction house, no need to scan again
+	if cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
+		self:UpdateAuctionTable(cacheItem);
+		self:UpdateInfoPaneText();
+		return ;
+	end
+
+	if not CanSendAuctionQuery() then
+		StdUi:Dialog('Error', 'Cannot query auction house, please reload UI', 'AFError');
+		return ;
+	end
+
+	self.currentlySorting = true;
+	SortAuctionItems('list', 'buyout')
+	if IsAuctionSortReversed('list', 'buyout') then
+		SortAuctionItems('list', 'buyout')
+	end
+	self.currentlySorting = false;
+
+	self.currentlyQuerying = true;
+	QueryAuctionItems(itemName, nil, nil, 0, 0, 0, false, true);
+	self.currentlyQuerying = false;
+end
+
 function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	if (self.currentlySorting) then
 		return ;
@@ -105,13 +108,8 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 
 	-- since we did scan anyway, put it in cache
 	local cacheKey;
-	local cacheItem = {
-		scanTime   = GetServerTime(),
-		auctions   = {},
-		totalItems = total
-	};
 
-	local addedSome = false;
+	local auctions = {}
 	for i = 1, shown do
 		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
 		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
@@ -119,12 +117,11 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 
 		-- this function runs for every AH scan so make sure to ignore it if item does not match selected one
 		if name == selectedName and itemId == selectedId then
-			addedSome = true;
 			if not cacheKey then
 				cacheKey = itemId .. name;
 			end
 
-			tinsert(cacheItem.auctions, {
+			tinsert(auctions, {
 				owner    = owner,
 				count    = count,
 				itemId   = itemId,
@@ -135,27 +132,37 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		end
 	end
 
-	if cacheKey and (addedSome or self:CacheItemNeedsUpdate(cacheKey)) then
+	if cacheKey then
 		-- only cache it when there is no cache or items were added
-		table.sort(cacheItem.auctions, function(a, b)
+		table.sort(auctions, function(a, b)
 			return a.buy < b.buy;
 		end);
 
-		self:UpdateItemInCache(cacheKey, cacheItem);
-	end
+		-- we skip any auctions that are not the same as selected item so no problem
+		local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
 
-	self:UpdateAuctionTable(cacheItem);
-	self:UpdateInfoPaneText();
+		cacheItem.scanTime = GetServerTime();
+		cacheItem.auctions = auctions;
+		cacheItem.totalItems = #auctions;
+
+		self:UpdateAuctionTable(cacheItem);
+		self:UpdateInfoPaneText();
+	end
 end
 
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
 	self.auctionTab.currentAuctions:SetData(cacheItem.auctions, true);
 	self.auctionTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
-	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
-	self:UnderCutPrices(cacheItem, minBid, minBuy);
-	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
 
+	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
+	if cacheItem.settings.alwaysUndercut then
+		self:UnderCutPrices(cacheItem, minBid, minBuy);
+	elseif cacheItem.settings.remember then
+		self:UpdateTabPrices(cacheItem.bid, cacheItem.buy);
+	end
+
+	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
 end
 
 function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
@@ -166,6 +173,9 @@ function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
 	if not lowestBid or not lowestBuy then
 		lowestBid, lowestBuy = self:FindLowestBidBuy(cacheItem);
 	end
+
+	cacheItem.bid = lowestBid - 1;
+	cacheItem.buy = lowestBuy - 1;
 
 	self:UpdateTabPrices(lowestBid - 1, lowestBuy - 1);
 end
@@ -253,9 +263,9 @@ end
 function AuctionFaster:SellItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
-	local name = selectedItem.name;
+	local itemName = selectedItem.itemName;
 
-	if not self:PutItemInSellBox(itemId, name) then
+	if not self:PutItemInSellBox(itemId, itemName) then
 		return false;
 	end
 

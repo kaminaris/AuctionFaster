@@ -1,6 +1,26 @@
 --- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
+local SquarewButtonCoords = {
+	["UP"] = {     0.45312500,    0.64062500,     0.01562500,     0.20312500};
+	["DOWN"] = {   0.45312500,    0.64062500,     0.20312500,     0.01562500};
+	["LEFT"] = {   0.23437500,    0.42187500,     0.01562500,     0.20312500};
+	["RIGHT"] = {  0.42187500,    0.23437500,     0.01562500,     0.20312500};
+	["DELETE"] = { 0.01562500,    0.20312500,     0.01562500,     0.20312500};
+};
 
+function StdUi:SquareButton(parent, width, height, icon)
+	local button = CreateFrame('Button', nil, parent)
+	self:SetObjSize(button, width, height);
+	button.icon = self:Texture(button, button:GetWidth(), button:GetHeight(),
+			'Interface\\Buttons\\SquareButtonTextures');
+
+	local coords = SquarewButtonCoords[icon];
+	if coords then
+		button.icon:SetTexCoord(coords[1], coords[2], coords[3], coords[4]);
+	end
+
+	return button;
+end
 
 function StdUi:PanelButton(parent, width, height, text)
 	local button = CreateFrame('Button', nil, parent, 'UIPanelButtonTemplate');

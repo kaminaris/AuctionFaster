@@ -18,8 +18,8 @@ end
 
 function StdUi:ApplyBackdrop(frame, type, border, insets)
 	local backdrop = {
-		bgFile = [[Interface\Buttons\WHITE8X8]],
-		edgeFile = [[Interface\Buttons\WHITE8X8]],
+		bgFile = self.config.backdrop.texture,
+		edgeFile = self.config.backdrop.texture,
 		edgeSize = 1,
 	};
 	if insets then
@@ -30,18 +30,23 @@ function StdUi:ApplyBackdrop(frame, type, border, insets)
 	type = type or 'button';
 	border = border or 'border';
 
-	frame:SetBackdropColor(
-		self.config.backdrop[type].r,
-		self.config.backdrop[type].g,
-		self.config.backdrop[type].b,
-		self.config.backdrop[type].a
-	);
-	frame:SetBackdropBorderColor(
-		self.config.backdrop[border].r,
-		self.config.backdrop[border].g,
-		self.config.backdrop[border].b,
-		self.config.backdrop[border].a
-	);
+	if self.config.backdrop[type] then
+		frame:SetBackdropColor(
+			self.config.backdrop[type].r,
+			self.config.backdrop[type].g,
+			self.config.backdrop[type].b,
+			self.config.backdrop[type].a
+		);
+	end
+
+	if self.config.backdrop[border] then
+		frame:SetBackdropBorderColor(
+			self.config.backdrop[border].r,
+			self.config.backdrop[border].g,
+			self.config.backdrop[border].b,
+			self.config.backdrop[border].a
+		);
+	end
 end
 
 function StdUi:ClearBackdrop(frame)

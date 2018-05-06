@@ -21,7 +21,13 @@ function StdUi:EditBox(parent, width, height, text, validator)
 
 	function editBox:Validate()
 		self.isValidated = true;
-		validator(self);
+		self.isValid = validator(self);
+
+		print('checking validator');
+		if self.OnValueChanged then
+			print('validator fired');
+			self.OnValueChanged(self);
+		end
 	end;
 
 	local button = self:Button(editBox, 40, height - 4, 'OK');
@@ -104,15 +110,6 @@ function StdUi:MoneyBox(parent, width, height, text, validator)
 		local formatted = formatMoney(value);
 		self:SetText(formatted);
 		self:Validate();
-	end;
-
-	function editBox:IsValid()
-		return self.isValid;
-	end;
-
-	function editBox:Validate()
-		self.isValidated = true;
-		validator(self);
 	end;
 
 	return editBox;

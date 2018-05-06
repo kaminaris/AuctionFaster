@@ -28,5 +28,6 @@ function StdUi:Checkbox(parent, text, tooltip, width, height)
 
 	checkbox.tooltip = tooltip;
 
+	self:ApplyDisabledBackdrop(checkbox);
 	return checkbox;
 end

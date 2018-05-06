@@ -25,22 +25,18 @@ StdUi.Util.editBoxValidator = function(self)
 	end
 
 	StdUi:MarkAsValid(self, true);
-
-	if self.OnValueChanged then
-		self.OnValueChanged(self);
-	end
+	return true;
 end
 
 --- @param self EditBox
 StdUi.Util.moneyBoxValidator = function(self)
 	local text = self:GetText();
-	local textOrig = text;
 	text = text:trim();
 	local total, gold, silver, copper, isValid = StdUi.Util.parseMoney(text);
 
 	if not isValid or total == 0 then
 		StdUi:MarkAsValid(self, false);
-		return ;
+		return false;
 	end
 
 	self:SetText(StdUi.Util.formatMoney(total));
@@ -49,29 +45,29 @@ StdUi.Util.moneyBoxValidator = function(self)
 		self.button:Hide();
 	end
 	StdUi:MarkAsValid(self, true);
+	return true;
 end
 
 --- @param self EditBox
 StdUi.Util.numericBoxValidator = function(self)
 	local text = self:GetText();
-	local textOrig = text;
-
 	text = text:trim();
+
 	local value = tonumber(text);
 
 	if value == nil then
 		StdUi:MarkAsValid(self, false);
-		return ;
+		return false;
 	end
 
 	if self.maxValue and self.maxValue < value then
 		StdUi:MarkAsValid(self, false);
-		return ;
+		return false;
 	end
 
 	if self.minValue and self.minValue > value then
 		StdUi:MarkAsValid(self, false);
-		return ;
+		return false;
 	end
 
 	self.value = value;
@@ -79,9 +75,8 @@ StdUi.Util.numericBoxValidator = function(self)
 		self.button:Hide();
 	end
 	StdUi:MarkAsValid(self, true);
-	if self.OnValueChanged then
-		self.OnValueChanged(self);
-	end
+
+	return true;
 end
 
 StdUi.Util.parseMoney = function(text)
@@ -149,7 +144,19 @@ StdUi.Util.stripColors = function(text)
 	return text;
 end
 
-function StdUi.Util.tableCount(tab)
+StdUi.Util.WrapTextInColor = function(text, r, g, b, a)
+	local hex = string.format(
+		'%02x%02x%02x%02x',
+		Clamp(a * 255, 0, 255),
+		Clamp(r * 255, 0, 255),
+		Clamp(g * 255, 0, 255),
+		Clamp(b * 255, 0, 255)
+	);
+
+	return WrapTextInColorCode(text, hex);
+end
+
+StdUi.Util.tableCount = function(tab)
 	local n = #tab;
 
 	if (n == 0) then

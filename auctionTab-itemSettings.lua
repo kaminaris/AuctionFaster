@@ -4,8 +4,8 @@ local StdUi = LibStub('StdUi');
 function AuctionFaster:DrawItemSettingsPane()
 	local auctionTab = self.auctionTab;
 
-	local pane = StdUi:PanelWithTitle(auctionTab, 300, 100, 'Item Settings');
-	StdUi:GlueAfter(pane, auctionTab, 0, 0, 0, 0);
+	local pane = StdUi:PanelWithTitle(auctionTab, 200, 100, 'Item Settings');
+	StdUi:GlueAfter(pane, auctionTab, 0, -200, 0, 0);
 	pane:Hide();
 
 	auctionTab.itemSettingsPane = pane;
@@ -18,7 +18,7 @@ function AuctionFaster:DrawItemSettings()
 	local icon = StdUi:Texture(pane, 30, 30, nil);
 	StdUi:GlueTop(icon, pane, 10, -20, 'LEFT');
 
-	local itemName = StdUi:Label(pane, 'No Item selected', 14);
+	local itemName = StdUi:Label(pane, 'No Item selected', 14, nil, 150);
 	StdUi:GlueAfter(itemName, icon, 10, 0);
 
 	local rememberStack = StdUi:Checkbox(pane, 'Remember Stack Settings');
@@ -52,6 +52,8 @@ function AuctionFaster:DrawItemSettings()
 
 	self:InitItemSettingsScripts();
 	self:InitItemSettingsTooltips();
+	-- this will mark all settings disabled
+	self:LoadItemSettings();
 end
 
 function AuctionFaster:InitItemSettingsScripts()
@@ -92,14 +94,14 @@ end
 function AuctionFaster:InitItemSettingsTooltips()
 	local pane = self.auctionTab.itemSettingsPane;
 
-	StdUi:Tooltip(
+	StdUi:FrameTooltip(
 		pane.rememberStack,
 		'Checking this option will make\nAuctionFaster remember how much\n' ..
 		'stacks you wish to sell at once\nand how big is stack',
 		'AFInfoTT', 'TOPLEFT', true
 	);
 
-	StdUi:Tooltip(
+	StdUi:FrameTooltip(
 		pane.rememberLastPrice, function(tip)
 			tip:AddLine('If there is no auctions of this item,');
 			tip:AddLine('remember last price.');
@@ -123,18 +125,22 @@ function AuctionFaster:LoadItemSettings()
 
 	if not self.selectedItem then
 		pane.icon:SetTexture(nil);
+
 		pane.itemName:SetText('No Item selected');
 		pane.rememberStack:SetChecked(true);
 		pane.rememberLastPrice:SetChecked(false);
 		pane.alwaysUndercut:SetChecked(true);
 		pane.useCustomDuration:SetChecked(false);
 		pane.duration:SetValue(2);
+		self:EnableDisableItemSettings(false);
+		return;
 	end
 
 	local item = self:GetSelectedItemFromCache();
 
+	self:EnableDisableItemSettings(true);
 	pane.icon:SetTexture(self.selectedItem.icon);
-	pane.itemName:SetText(self.selectedItem.name);
+	pane.itemName:SetText(self.selectedItem.link);
 	pane.rememberStack:SetChecked(item.settings.rememberStack);
 	pane.rememberLastPrice:SetChecked(item.settings.rememberLastPrice);
 	pane.alwaysUndercut:SetChecked(item.settings.alwaysUndercut);
@@ -144,14 +150,30 @@ function AuctionFaster:LoadItemSettings()
 	AuctionFaster:UpdateItemSettingsCustomDuration(item.settings.useCustomDuration);
 end
 
+function AuctionFaster:EnableDisableItemSettings(enable)
+	local pane = self.auctionTab.itemSettingsPane;
+	if enable then
+		pane.rememberStack:Enable();
+		pane.rememberLastPrice:Enable();
+		pane.alwaysUndercut:Enable();
+		pane.useCustomDuration:Enable();
+		pane.duration:Enable();
+	else
+		pane.rememberStack:Disable();
+		pane.rememberLastPrice:Disable();
+		pane.alwaysUndercut:Disable();
+		pane.useCustomDuration:Disable();
+		pane.duration:Disable();
+
+	end
+end
+
 function AuctionFaster:UpdateItemSettings(settingName, settingValue)
 	if not self.selectedItem then
 		return;
 	end
 
-	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.name;
-	local cacheKey = itemId .. itemName;
-
+	local cacheKey = self.selectedItem.itemId .. self.selectedItem.itemName;
 	self:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
 end
 
@@ -167,6 +189,8 @@ function AuctionFaster:GetDefaultItemSettings()
 	return {
 		rememberStack = true,
 		rememberLastPrice = false,
-		alwaysUndercut = true
+		alwaysUndercut = true,
+		useCustomDuration = false,
+		duration = 2,
 	}
 end

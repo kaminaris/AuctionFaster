@@ -59,8 +59,8 @@ function AuctionFaster:ValidateStackSize(editBox)
 		stackSize = 1;
 	end
 
-	if stackSize > self.selectedItem.maxStack then
-		stackSize = self.selectedItem.maxStack;
+	if stackSize > self.selectedItem.maxStackSize then
+		stackSize = self.selectedItem.maxStackSize;
 	end
 
 	if stackSize ~= origStackSize then
@@ -71,15 +71,7 @@ function AuctionFaster:ValidateStackSize(editBox)
 	self:UpdateInfoPaneText();
 end
 
-function AuctionFaster:ValidateBidPerItem(editBox)
-	if not editBox:IsValid() then
-		return;
-	end
-
-	self:UpdateInfoPaneText();
-end
-
-function AuctionFaster:ValidateBuyPerItem(editBox)
+function AuctionFaster:ValidateItemPrice(editBox)
 	if not editBox:IsValid() then
 		return;
 	end
