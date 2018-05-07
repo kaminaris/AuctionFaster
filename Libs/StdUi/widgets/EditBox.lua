@@ -23,9 +23,7 @@ function StdUi:EditBox(parent, width, height, text, validator)
 		self.isValidated = true;
 		self.isValid = validator(self);
 
-		print('checking validator');
 		if self.OnValueChanged then
-			print('validator fired');
 			self.OnValueChanged(self);
 		end
 	end;

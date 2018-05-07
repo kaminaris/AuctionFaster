@@ -30,14 +30,13 @@ end
 
 function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
 	if not editBox:IsValid() then
-		print('notvalid');
 		return;
 	end
 
 	local cacheItem = self:GetSelectedItemFromCache();
 
 	cacheItem[variable] = editBox:GetValue();
-	print('var',variable,  cacheItem[variable])
+	print('saved ', variable, '=', cacheItem[variable])
 end
 
 function AuctionFaster:UpdateTabPrices(bid, buy)
@@ -79,14 +78,12 @@ function AuctionFaster:SelectItem(index)
 
 	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
 
-
 	local cacheItem = self:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
 	-- Clear prices
 	self:UpdateTabPrices(nil, nil);
 
 	if cacheItem.settings.rememberStack then
-		print('remember', cacheItem.maxStacks, cacheItem.stackSize);
 		self:UpdateStackSettings(cacheItem.maxStacks, cacheItem.stackSize)
 	else
 		self:UpdateStackSettings(0, self.selectedItem.maxStackSize);

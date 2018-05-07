@@ -156,9 +156,10 @@ function AuctionFaster:UpdateAuctionTable(cacheItem)
 	self.auctionTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
 
 	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
+
 	if cacheItem.settings.alwaysUndercut then
 		self:UnderCutPrices(cacheItem, minBid, minBuy);
-	elseif cacheItem.settings.remember then
+	elseif cacheItem.settings.rememberLastPrice then
 		self:UpdateTabPrices(cacheItem.bid, cacheItem.buy);
 	end
 
