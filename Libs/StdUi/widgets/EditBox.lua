@@ -26,6 +26,7 @@ function StdUi:EditBox(parent, width, height, text, validator)
 		if self.OnValueChanged then
 			self.OnValueChanged(self);
 		end
+		self.isValidated = false;
 	end;
 
 	local button = self:Button(editBox, 40, height - 4, 'OK');
@@ -42,14 +43,13 @@ function StdUi:EditBox(parent, width, height, text, validator)
 		self:Validate();
 	end)
 
-	editBox:SetScript('OnTextChanged', function(self)
+	editBox:SetScript('OnTextChanged', function(self, isUserInput)
 		local value = StdUi.Util.stripColors(self:GetText());
 		if tostring(value) ~= tostring(self.lastValue) then
 			self.lastValue = value;
-			if not self.isValidated and self.button then
+			if not self.isValidated and self.button and isUserInput then
 				self.button:Show();
 			end
-			self.isValidated = false;
 		end
 	end);
 
@@ -77,6 +77,7 @@ function StdUi:NumericBox(parent, width, height, text, validator)
 		self.value = value;
 		self:SetText(value);
 		self:Validate();
+		self.button:Hide();
 	end;
 
 	function editBox:SetMaxValue(value)
@@ -108,6 +109,7 @@ function StdUi:MoneyBox(parent, width, height, text, validator)
 		local formatted = formatMoney(value);
 		self:SetText(formatted);
 		self:Validate();
+		self.button:Hide();
 	end;
 
 	return editBox;

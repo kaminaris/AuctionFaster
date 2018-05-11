@@ -4,6 +4,8 @@ local StdUi = LibStub('StdUi');
 function AuctionFaster:GetSellSettings()
 	local auctionTab = self.auctionTab;
 
+	local cacheItem = self:GetSelectedItemFromCache();
+
 	local bidPerItem = auctionTab.bidPerItem:GetValue();
 	local buyPerItem = auctionTab.buyPerItem:GetValue();
 
@@ -18,13 +20,18 @@ function AuctionFaster:GetSellSettings()
 		stackSize = self.selectedItem.count;
 	end
 
+	local duration = 2;
+	if cacheItem.settings.duration and cacheItem.settings.useCustomDuration then
+		duration = cacheItem.settings.duration;
+	end
+
 	return {
 		bidPerItem    = bidPerItem,
 		buyPerItem    = buyPerItem,
 		stackSize     = stackSize,
 		maxStacks     = maxStacks,
 		realMaxStacks = realMaxStacks,
-		duration      = 2
+		duration      = duration
 	};
 end
 
@@ -36,7 +43,6 @@ function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
 	local cacheItem = self:GetSelectedItemFromCache();
 
 	cacheItem[variable] = editBox:GetValue();
-	print('saved ', variable, '=', cacheItem[variable])
 end
 
 function AuctionFaster:UpdateTabPrices(bid, buy)

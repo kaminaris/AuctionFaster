@@ -248,18 +248,25 @@ end
 function AuctionFaster:DrawRightPaneButtons()
 	local auctionTab = self.auctionTab;
 
-	local itemSettings = StdUi:Button(auctionTab, 100, 20, 'Item Settings');
-	StdUi:GlueRight(itemSettings, auctionTab.stackSize, 20, 0);
+	local itemSettings = StdUi:Button(auctionTab, 120, 20, 'Item Settings');
+	StdUi:GlueRight(itemSettings, auctionTab.stackSize, 20, 20);
+
+	local infoPane = StdUi:Button(auctionTab, 120, 20, 'Auction Info');
+	StdUi:GlueBelow(infoPane, itemSettings, 0, -5);
+
+	local refresh = StdUi:Button(auctionTab, 120, 20, 'Refresh Auctions');
+	StdUi:GlueBelow(refresh, infoPane, 0, -5);
 
 	itemSettings:SetScript('OnClick', function()
 		AuctionFaster:ToggleItemSettingsPane();
 	end)
 
-	local infoPane = StdUi:Button(auctionTab, 100, 20, 'Auction Info');
-	StdUi:GlueBelow(infoPane, itemSettings, 0, -10);
-
 	infoPane:SetScript('OnClick', function()
 		AuctionFaster:ToggleInfoPane();
+	end)
+
+	refresh:SetScript('OnClick', function()
+		AuctionFaster:GetCurrentAuctions(true);
 	end)
 end
 

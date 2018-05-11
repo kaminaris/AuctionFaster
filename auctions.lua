@@ -62,14 +62,14 @@ function AuctionFaster:CheckEverythingSold()
 end
 
 
-function AuctionFaster:GetCurrentAuctions()
+function AuctionFaster:GetCurrentAuctions(force)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
 
 	local cacheItem = self:GetItemFromCache(itemId, itemName);
 	-- We still have pretty recent results from auction house, no need to scan again
-	if cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
+	if not force and cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
 		self:UpdateAuctionTable(cacheItem);
 		self:UpdateInfoPaneText();
 		return ;
@@ -88,12 +88,13 @@ function AuctionFaster:GetCurrentAuctions()
 	self.currentlySorting = false;
 
 	self.currentlyQuerying = true;
+	self.afScan = true;
 	QueryAuctionItems(itemName, nil, nil, 0, 0, 0, false, true);
 	self.currentlyQuerying = false;
 end
 
 function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
-	if (self.currentlySorting) then
+	if self.currentlySorting or not self.afScan then
 		return ;
 	end
 
@@ -132,23 +133,24 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 		end
 	end
 
-	if cacheKey then
-		-- only cache it when there is no cache or items were added
-		table.sort(auctions, function(a, b)
-			return a.buy < b.buy;
-		end);
+	-- we skip any auctions that are not the same as selected item so no problem
+	local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
 
-		-- we skip any auctions that are not the same as selected item so no problem
-		local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
+	table.sort(auctions, function(a, b)
+		return a.buy < b.buy;
+	end);
 
-		cacheItem.scanTime = GetServerTime();
-		cacheItem.auctions = auctions;
-		cacheItem.totalItems = #auctions;
+	cacheItem.scanTime = GetServerTime();
+	cacheItem.auctions = auctions;
+	cacheItem.totalItems = #auctions;
 
-		self:UpdateAuctionTable(cacheItem);
-		self:UpdateInfoPaneText();
-	end
+	self:UpdateAuctionTable(cacheItem);
+	self:UpdateInfoPaneText();
+
+	-- no longer our scan
+	self.afScan = false;
 end
+
 
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)

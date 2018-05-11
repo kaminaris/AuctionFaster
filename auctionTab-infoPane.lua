@@ -9,7 +9,7 @@ function AuctionFaster:DrawInfoPane()
 	StdUi:GlueAfter(auctionTab.infoPane, auctionTab, 0, 0, 0, auctionTab:GetHeight() - 200);
 
 	local totalLabel = StdUi:Label(auctionTab.infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
-	StdUi:GlueTop(totalLabel, auctionTab.infoPane, 3, -15, 'LEFT');
+	StdUi:GlueTop(totalLabel, auctionTab.infoPane, 5, -15, 'LEFT');
 
 	local deposit = StdUi:Label(auctionTab.infoPane, 'Deposit: ' .. StdUi.Util.formatMoney(0));
 	StdUi:GlueBelow(deposit, totalLabel, 0, -5, 'LEFT');
@@ -17,10 +17,13 @@ function AuctionFaster:DrawInfoPane()
 	local auctionNo = StdUi:Label(auctionTab.infoPane, '# Auctions: 0');
 	StdUi:GlueBelow(auctionNo, deposit, 0, -5, 'LEFT');
 
+	local duration = StdUi:Label(auctionTab.infoPane, 'Duration: 24h');
+	StdUi:GlueBelow(duration, auctionNo, 0, -5, 'LEFT');
+
 	auctionTab.infoPane.totalLabel = totalLabel;
 	auctionTab.infoPane.auctionNo = auctionNo;
 	auctionTab.infoPane.deposit = deposit;
-	auctionTab.infoPane.itemSettings = itemSettings;
+	auctionTab.infoPane.duration = duration;
 end
 
 function AuctionFaster:UpdateInfoPaneText()
@@ -38,9 +41,10 @@ function AuctionFaster:UpdateInfoPaneText()
 	local total = sellSettings.buyPerItem * sellSettings.stackSize;
 	local deposit = self:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.itemName);
 
-	auctionTab.infoPane.totalLabel:SetText('Total per auction: ' .. StdUi.Util.formatMoney(total));
+	auctionTab.infoPane.totalLabel:SetText('Per auction: ' .. StdUi.Util.formatMoney(total));
 	auctionTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
 	auctionTab.infoPane.deposit:SetText('Deposit: ' .. StdUi.Util.formatMoney(deposit));
+	auctionTab.infoPane.duration:SetText('Duration: ' .. self:FormatAuctionDuration(sellSettings.duration));
 end
 
 function AuctionFaster:ToggleInfoPane()

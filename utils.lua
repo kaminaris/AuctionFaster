@@ -62,3 +62,15 @@ function AuctionFaster:FormatDuration(duration)
 		return format('%.1f %s', duration/60, 'minutes ago')
 	end
 end
+
+function AuctionFaster:FormatAuctionDuration(duration)
+	if duration == 1 then
+		return '12h';
+	elseif duration == 2 then
+		return '24h';
+	elseif duration == 3 then
+		return '48h';
+	else
+		return '---';
+	end
+end
