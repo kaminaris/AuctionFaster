@@ -24,6 +24,20 @@ function AuctionFaster:DrawInfoPane()
 	auctionTab.infoPane.auctionNo = auctionNo;
 	auctionTab.infoPane.deposit = deposit;
 	auctionTab.infoPane.duration = duration;
+
+
+	local columns = {
+		{header = 'Name', dataIndex = 'name', width = 80, align = 'RIGHT'},
+		{header = 'Price', dataIndex = 'price', width = 80},
+	};
+	local data = {
+		{name = 'Item one', price = StdUi.Util.formatMoney(random(10000, 999999))},
+		{name = 'Item two', price = StdUi.Util.formatMoney(random(10000, 999999))},
+		{name = 'Item three', price = StdUi.Util.formatMoney(random(10000, 999999))},
+	}
+
+	local tab = StdUi:Table(auctionTab.infoPane, 160, 80, 20, columns, data);
+	StdUi:GlueTop(tab, auctionTab.infoPane, 10, -20, 'RIGHT');
 end
 
 function AuctionFaster:UpdateInfoPaneText()

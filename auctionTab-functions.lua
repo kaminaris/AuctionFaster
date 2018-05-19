@@ -98,6 +98,7 @@ function AuctionFaster:SelectItem(index)
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
 	self:LoadItemSettings();
+	self:EnableAuctionTabControls(true);
 end
 
 function AuctionFaster:GetSelectedItemIdName()
@@ -122,6 +123,27 @@ function AuctionFaster:UpdateItemQtyText()
 	);
 end
 
+function AuctionFaster:EnableAuctionTabControls(enable)
+	local auctionTab = self.auctionTab;
+
+	if enable then
+		auctionTab.bidPerItem:Enable();
+		auctionTab.buyPerItem:Enable();
+		auctionTab.maxStacks:Enable();
+		auctionTab.stackSize:Enable();
+		for k, button in pairs(auctionTab.buttons) do
+			button:Enable();
+		end
+	else
+		auctionTab.bidPerItem:Disable();
+		auctionTab.buyPerItem:Disable();
+		auctionTab.maxStacks:Disable();
+		auctionTab.stackSize:Disable();
+		for k, button in pairs(auctionTab.buttons) do
+			button:Disable();
+		end
+	end
+end
 
 
 function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)

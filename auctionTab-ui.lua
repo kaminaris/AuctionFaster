@@ -41,6 +41,7 @@ function AuctionFaster:AddAuctionHouseTab()
 	self:ScanInventory();
 	self:DrawItemsFrame();
 	self:DrawRightPane();
+	self:EnableAuctionTabControls(false);
 
 	self:Hook('AuctionFrameTab_OnClick', true);
 end
@@ -259,41 +260,51 @@ function AuctionFaster:DrawRightPaneButtons()
 
 	itemSettings:SetScript('OnClick', function()
 		AuctionFaster:ToggleItemSettingsPane();
-	end)
+	end);
 
 	infoPane:SetScript('OnClick', function()
 		AuctionFaster:ToggleInfoPane();
-	end)
+	end);
 
 	refresh:SetScript('OnClick', function()
 		AuctionFaster:GetCurrentAuctions(true);
-	end)
+	end);
+
+	auctionTab.buttons = {
+		itemSettings = itemSettings,
+		infoPane = infoPane,
+		refresh = refresh,
+	};
 end
 
 --- Draws tab buttons like Post All, Post One and Buy Item
 function AuctionFaster:DrawTabButtons(leftMargin)
 	local auctionTab = self.auctionTab;
 
-	auctionTab.postButton = StdUi:Button(auctionTab, 60, 20, 'Post All');
-	StdUi:GlueBottom(auctionTab.postButton, auctionTab, -20, 20, 'RIGHT');
+	local postButton = StdUi:Button(auctionTab, 60, 20, 'Post All');
+	StdUi:GlueBottom(postButton, auctionTab, -20, 20, 'RIGHT');
 
-	auctionTab.postOneButton = StdUi:Button(auctionTab, 60, 20, 'Post One');
-	StdUi:GlueLeft(auctionTab.postOneButton, auctionTab.postButton, -10, 0);
+	local postOneButton = StdUi:Button(auctionTab, 60, 20, 'Post One');
+	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
 
-	auctionTab.buyItemButton = StdUi:Button(auctionTab, 60, 20, 'Buy Item');
-	StdUi:GlueBottom(auctionTab.buyItemButton, auctionTab, leftMargin, 20, 'LEFT');
+	local buyItemButton = StdUi:Button(auctionTab, 60, 20, 'Buy Item');
+	StdUi:GlueBottom(buyItemButton, auctionTab, leftMargin, 20, 'LEFT');
 
-	auctionTab.postButton:SetScript('OnClick', function()
+	postButton:SetScript('OnClick', function()
 		AuctionFaster:SellItem();
 	end);
 
-	auctionTab.postOneButton:SetScript('OnClick', function()
+	postOneButton:SetScript('OnClick', function()
 		AuctionFaster:SellItem(true);
 	end);
 
-	auctionTab.buyItemButton:SetScript('OnClick', function()
+	buyItemButton:SetScript('OnClick', function()
 		AuctionFaster:BuyItem();
 	end);
+
+	auctionTab.buttons.postButton = postButton;
+	auctionTab.buttons.postOneButton = postOneButton;
+	auctionTab.buttons.buyItemButton = buyItemButton;
 end
 
 local function FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols)

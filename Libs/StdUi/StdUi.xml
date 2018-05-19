@@ -16,4 +16,5 @@
 	<Script file="widgets\Scroll.lua"/>
 	<Script file="widgets\Slider.lua"/>
 	<Script file="widgets\Tooltip.lua"/>
+	<Script file="widgets\Table.lua"/>
 </Ui>

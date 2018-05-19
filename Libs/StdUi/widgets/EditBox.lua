@@ -1,5 +1,8 @@
 --- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
+if not StdUi then
+	return;
+end
 
 --- @return EditBox
 function StdUi:EditBox(parent, width, height, text, validator)
@@ -59,6 +62,8 @@ function StdUi:EditBox(parent, width, height, text, validator)
 	if text then
 		editBox:SetText(text);
 	end
+
+	self:ApplyDisabledBackdrop(editBox);
 
 	return editBox;
 end

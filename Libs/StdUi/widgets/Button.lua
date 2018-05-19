@@ -1,5 +1,9 @@
 --- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
+if not StdUi then
+	return;
+end
+
 local SquarewButtonCoords = {
 	["UP"] = {     0.45312500,    0.64062500,     0.01562500,     0.20312500};
 	["DOWN"] = {   0.45312500,    0.64062500,     0.20312500,     0.01562500};
@@ -86,29 +90,7 @@ function StdUi:Button(parent, width, height, text)
 	return button;
 end
 
-function StdUi:ApplyDisabledBackdrop(button)
-	hooksecurefunc(button, 'Disable', function(self)
-		StdUi:ApplyBackdrop(self, 'buttonDisabled', 'borderDisabled');
-		if self.label then
-			StdUi:SetTextColor(self.label, 'colorDisabled');
-		end
 
-		if self.text then
-			StdUi:SetTextColor(self.text, 'colorDisabled');
-		end
-	end);
-
-	hooksecurefunc(button, 'Enable', function(self)
-		StdUi:ApplyBackdrop(self, 'button', 'border');
-		if self.label then
-			StdUi:SetTextColor(self.label, 'color');
-		end
-
-		if self.text then
-			StdUi:SetTextColor(self.text, 'color');
-		end
-	end);
-end
 
 
 function StdUi:ActionButton(parent)

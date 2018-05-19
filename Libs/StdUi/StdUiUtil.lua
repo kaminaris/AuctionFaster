@@ -1,16 +1,18 @@
 --- @type StdUi
 local StdUi = LibStub and LibStub('StdUi', true);
-
+if not StdUi then
+	return;
+end
 --- @param frame Frame
 function StdUi:MarkAsValid(frame, valid)
 	if not valid then
 		frame:SetBackdropBorderColor(1, 0, 0, 1);
 	else
 		frame:SetBackdropBorderColor(
-				self.config.backdrop.border.r,
-				self.config.backdrop.border.g,
-				self.config.backdrop.border.b,
-				self.config.backdrop.border.a
+			self.config.backdrop.border.r,
+			self.config.backdrop.border.g,
+			self.config.backdrop.border.b,
+			self.config.backdrop.border.a
 		);
 	end
 end
@@ -114,7 +116,7 @@ StdUi.Util.formatMoney = function(money)
 		return money;
 	end
 
-	local money = tonumber(money);
+	money = tonumber(money);
 	local goldColor = '|cfffff209';
 	local silverColor = '|cff7b7b7a';
 	local copperColor = '|cffac7248';

@@ -53,6 +53,30 @@ function StdUi:ClearBackdrop(frame)
 	frame:SetBackdrop(nil);
 end
 
+function StdUi:ApplyDisabledBackdrop(frame)
+	hooksecurefunc(frame, 'Disable', function(self)
+		StdUi:ApplyBackdrop(self, 'buttonDisabled', 'borderDisabled');
+		if self.label then
+			StdUi:SetTextColor(self.label, 'colorDisabled');
+		end
+
+		if self.text then
+			StdUi:SetTextColor(self.text, 'colorDisabled');
+		end
+	end);
+
+	hooksecurefunc(frame, 'Enable', function(self)
+		StdUi:ApplyBackdrop(self, 'button', 'border');
+		if self.label then
+			StdUi:SetTextColor(self.label, 'color');
+		end
+
+		if self.text then
+			StdUi:SetTextColor(self.text, 'color');
+		end
+	end);
+end
+
 function StdUi:MakeDraggable(frame, handle)
 	frame:SetMovable(true);
 	frame:EnableMouse(true);
