@@ -6,9 +6,7 @@ function AuctionFaster:OnInitialize()
 	self.db = LibStub('AceDB-3.0'):New('AuctionFasterDb', self.defaults);
 
 	self.optionsFrame = LibStub('AceConfigDialog-3.0'):AddToBlizOptions('AuctionFaster', 'AuctionFaster');
-	--	self:RegisterChatCommand('keystonemanager', 'ShowWindow');
-	--	self:RegisterChatCommand('keylist', 'ShowWindow');
-	--	self:RegisterChatCommand('keyprint', 'PrintKeystone');
+
 	self:RegisterEvent('BAG_UPDATE_DELAYED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
@@ -20,6 +18,25 @@ function AuctionFaster:OnInitialize()
 
 end
 
+function AuctionFaster:AUCTION_HOUSE_SHOW()
+	if self.db.global.enabled then
+		self:AddSellAuctionHouseTab();
+		self:AddBuyAuctionHouseTab();
+
+		if not self.onTabClickHooked then
+			self:Hook('AuctionFrameTab_OnClick', true);
+			self.onTabClickHooked = true;
+		end
+	end
+end
+
+function AuctionFaster:AuctionFrameTab_OnClick(tab)
+	self.sellTab:Hide();
+	self.buyTab:Hide();
+	if tab.auctionFasterTab then
+		tab.auctionFasterTab:Show();
+	end
+end
 
 function AuctionFaster:ShowTooltip(frame, link, show)
 	if show then
@@ -30,8 +47,4 @@ function AuctionFaster:ShowTooltip(frame, link, show)
 	else
 		GameTooltip:Hide();
 	end
-end
-
-function AuctionFaster:AUCTION_HOUSE_SHOW()
-	self:AddAuctionHouseTab();
 end

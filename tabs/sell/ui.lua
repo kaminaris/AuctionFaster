@@ -4,16 +4,16 @@ local StdUi = LibStub('StdUi');
 AuctionFaster.itemFramePool = {};
 AuctionFaster.itemFrames = {};
 
-function AuctionFaster:AddAuctionHouseTab()
-	if self.TabAdded then
+function AuctionFaster:AddSellAuctionHouseTab()
+	if self.sellTabAdded then
 		return ;
 	end
 
-	local auctionTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, 'Auction Faster');
-	auctionTab:Hide();
-	auctionTab:SetAllPoints();
+	local sellTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, 'Auction Faster - Sell', 160);
+	sellTab:Hide();
+	sellTab:SetAllPoints();
 
-	self.auctionTab = auctionTab;
+	self.sellTab = sellTab;
 
 	local n = AuctionFrame.numTabs + 1;
 
@@ -31,39 +31,38 @@ function AuctionFaster:AddAuctionHouseTab()
 	tab:SetNormalFontObject(GameFontHighlightSmall);
 	tab:SetPoint('LEFT', _G['AuctionFrameTab' .. n - 1], 'RIGHT', -8, 0);
 	tab:Show();
-	tab.auctionFaster = true;
+	-- reference the actual tab
+	tab.auctionFasterTab = sellTab;
 
 	PanelTemplates_SetNumTabs(AuctionFrame, n);
 	PanelTemplates_EnableTab(AuctionFrame, n);
 
-	self.TabAdded = true;
+	self.sellTabAdded = true;
 
 	self:ScanInventory();
 	self:DrawItemsFrame();
 	self:DrawRightPane();
 	self:EnableAuctionTabControls(false);
-
-	self:Hook('AuctionFrameTab_OnClick', true);
 end
 
 function AuctionFaster:DrawItemsFrame()
 	local marginTop = -35;
-	local auctionTab = self.auctionTab;
-	local panel, scrollFrame, scrollChild = StdUi:ScrollFrame(auctionTab, 300, 300);
+	local sellTab = self.sellTab;
+	local panel, scrollFrame, scrollChild = StdUi:ScrollFrame(sellTab, 300, 300);
 	panel:SetPoint('TOPLEFT', 25, marginTop);
 	panel:SetPoint('BOTTOMLEFT', 300, 38);
 
-	StdUi:AddLabel(auctionTab, panel, 'Inventory Items', 'TOP');
+	StdUi:AddLabel(sellTab, panel, 'Inventory Items', 'TOP');
 
-	local refreshInventory = StdUi:Button(auctionTab, 100, 20, 'Refresh');
+	local refreshInventory = StdUi:Button(sellTab, 100, 20, 'Refresh');
 	StdUi:GlueAbove(refreshInventory, panel, 0, 5, 'RIGHT');
 
 	refreshInventory:SetScript('OnClick', function()
 		AuctionFaster:ScanInventory();
 	end);
 
-	auctionTab.scrollFrame = scrollFrame;
-	auctionTab.scrollChild = scrollChild;
+	sellTab.scrollFrame = scrollFrame;
+	sellTab.scrollChild = scrollChild;
 
 	self.safeToDrawItems = true;
 	self:DrawItems();
@@ -75,7 +74,7 @@ function AuctionFaster:DrawItems()
 		return ;
 	end
 
-	local scrollChild = self.auctionTab.scrollChild;
+	local scrollChild = self.sellTab.scrollChild;
 	local lineHeight = 32;
 	local margin = 5;
 
@@ -107,7 +106,7 @@ function AuctionFaster:DrawItems()
 end
 
 function AuctionFaster:CreateItemFrame(lineHeight, margin)
-	local scrollChild = self.auctionTab.scrollChild;
+	local scrollChild = self.sellTab.scrollChild;
 	local holdingFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - margin * 2, lineHeight);
 
 	holdingFrame:SetScript('OnEnter', function(self)
@@ -166,96 +165,96 @@ function AuctionFaster:DrawRightPane()
 end
 
 function AuctionFaster:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
-	local iconBackdrop = StdUi:Panel(auctionTab, iconSize, iconSize);
-	StdUi:GlueTop(iconBackdrop, auctionTab, leftMargin, topMargin, 'LEFT');
+	local iconBackdrop = StdUi:Panel(sellTab, iconSize, iconSize);
+	StdUi:GlueTop(iconBackdrop, sellTab, leftMargin, topMargin, 'LEFT');
 
-	auctionTab.itemIcon = StdUi:Texture(iconBackdrop, iconSize, iconSize, '');
-	StdUi:GlueAcross(auctionTab.itemIcon, iconBackdrop, 1, -1, -1, 1);
+	sellTab.itemIcon = StdUi:Texture(iconBackdrop, iconSize, iconSize, '');
+	StdUi:GlueAcross(sellTab.itemIcon, iconBackdrop, 1, -1, -1, 1);
 
-	auctionTab.itemName = StdUi:Label(auctionTab, 'No item selected', 16, nil, 250, 20);
-	StdUi:GlueAfter(auctionTab.itemName, auctionTab.itemIcon, 5, 0);
+	sellTab.itemName = StdUi:Label(sellTab, 'No item selected', 16, nil, 250, 20);
+	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
-	auctionTab.itemQty = StdUi:Label(auctionTab, 'Qty: O, Max Stacks: 0', 14, nil, 250, 20);
-	StdUi:GlueBelow(auctionTab.itemQty, auctionTab.itemName, 0, 5);
+	sellTab.itemQty = StdUi:Label(sellTab, 'Qty: O, Max Stacks: 0', 14, nil, 250, 20);
+	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
-	auctionTab.lastScan = StdUi:Label(auctionTab, 'Last scan: ---', 12);
-	StdUi:GlueRight(auctionTab.lastScan, auctionTab.itemName, 5, 0);
+	sellTab.lastScan = StdUi:Label(sellTab, 'Last scan: ---', 12);
+	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 
 function AuctionFaster:DrawRightPaneItemPrices(marginToIcon)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	-- Bid per item edit box
-	auctionTab.bidPerItem = StdUi:MoneyBoxWithLabel(auctionTab, 150, 20, '-', 'Bid Per Item', 'TOP');
-	auctionTab.bidPerItem:Validate();
-	StdUi:GlueBelow(auctionTab.bidPerItem, auctionTab.itemIcon, 0, marginToIcon, 'LEFT');
+	sellTab.bidPerItem = StdUi:MoneyBoxWithLabel(sellTab, 150, 20, '-', 'Bid Per Item', 'TOP');
+	sellTab.bidPerItem:Validate();
+	StdUi:GlueBelow(sellTab.bidPerItem, sellTab.itemIcon, 0, marginToIcon, 'LEFT');
 
 	-- Buy per item edit box
-	auctionTab.buyPerItem = StdUi:MoneyBoxWithLabel(auctionTab, 150, 20, '-', 'Buy Per Item', 'TOP');
-	auctionTab.buyPerItem:Validate();
-	StdUi:GlueBelow(auctionTab.buyPerItem, auctionTab.bidPerItem, 0, -20);
+	sellTab.buyPerItem = StdUi:MoneyBoxWithLabel(sellTab, 150, 20, '-', 'Buy Per Item', 'TOP');
+	sellTab.buyPerItem:Validate();
+	StdUi:GlueBelow(sellTab.buyPerItem, sellTab.bidPerItem, 0, -20);
 
-	auctionTab.bidPerItem:SetScript('OnTabPressed', function(self)
-		auctionTab.buyPerItem:SetFocus();
+	sellTab.bidPerItem:SetScript('OnTabPressed', function(self)
+		sellTab.buyPerItem:SetFocus();
 	end);
 
-	auctionTab.buyPerItem:SetScript('OnTabPressed', function(self)
-		auctionTab.stackSize:SetFocus();
+	sellTab.buyPerItem:SetScript('OnTabPressed', function(self)
+		sellTab.stackSize:SetFocus();
 	end);
 
-	auctionTab.bidPerItem.OnValueChanged = function(self)
+	sellTab.bidPerItem.OnValueChanged = function(self)
 		AuctionFaster:ValidateItemPrice(self)
 		AuctionFaster:UpdateCacheItemVariable(self, 'bid');
 	end;
 
-	auctionTab.buyPerItem.OnValueChanged = function(self)
+	sellTab.buyPerItem.OnValueChanged = function(self)
 		AuctionFaster:ValidateItemPrice(self);
 		AuctionFaster:UpdateCacheItemVariable(self, 'buy');
 	end;
 end
 
 function AuctionFaster:DrawRightPaneStackSettings(marginToPrices)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	-- Stack Size
-	auctionTab.stackSize = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '1', 'Stack Size', 'TOP');
-	auctionTab.stackSize:SetValue(0);
-	StdUi:GlueRight(auctionTab.stackSize, auctionTab.bidPerItem, marginToPrices, 0);
+	sellTab.stackSize = StdUi:NumericBoxWithLabel(sellTab, 150, 20, '1', 'Stack Size', 'TOP');
+	sellTab.stackSize:SetValue(0);
+	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
-	auctionTab.maxStacks = StdUi:NumericBoxWithLabel(auctionTab, 150, 20, '0', '# Stacks', 'TOP');
-	auctionTab.maxStacks:SetValue(0);
-	StdUi:GlueRight(auctionTab.maxStacks, auctionTab.buyPerItem, marginToPrices, 0);
+	sellTab.maxStacks = StdUi:NumericBoxWithLabel(sellTab, 150, 20, '0', '# Stacks', 'TOP');
+	sellTab.maxStacks:SetValue(0);
+	StdUi:GlueRight(sellTab.maxStacks, sellTab.buyPerItem, marginToPrices, 0);
 
-	auctionTab.stackSize.OnValueChanged = function(self)
+	sellTab.stackSize.OnValueChanged = function(self)
 		AuctionFaster:ValidateStackSize(self);
 		AuctionFaster:UpdateCacheItemVariable(self, 'stackSize');
 	end;
 
-	auctionTab.maxStacks.OnValueChanged = function(self)
+	sellTab.maxStacks.OnValueChanged = function(self)
 		AuctionFaster:ValidateMaxStacks(self);
 		AuctionFaster:UpdateCacheItemVariable(self, 'maxStacks');
 	end;
 end
 
 function AuctionFaster:InitEditboxTooltips()
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
-	StdUi:FrameTooltip(auctionTab.maxStacks, 'Left text', 'NoStacksTooltip', 'TOPLEFT', true);
+	StdUi:FrameTooltip(sellTab.maxStacks, 'Left text', 'NoStacksTooltip', 'TOPLEFT', true);
 end
 
 function AuctionFaster:DrawRightPaneButtons()
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
-	local itemSettings = StdUi:Button(auctionTab, 120, 20, 'Item Settings');
-	StdUi:GlueRight(itemSettings, auctionTab.stackSize, 20, 20);
+	local itemSettings = StdUi:Button(sellTab, 120, 20, 'Item Settings');
+	StdUi:GlueRight(itemSettings, sellTab.stackSize, 20, 20);
 
-	local infoPane = StdUi:Button(auctionTab, 120, 20, 'Auction Info');
+	local infoPane = StdUi:Button(sellTab, 120, 20, 'Auction Info');
 	StdUi:GlueBelow(infoPane, itemSettings, 0, -5);
 
-	local refresh = StdUi:Button(auctionTab, 120, 20, 'Refresh Auctions');
+	local refresh = StdUi:Button(sellTab, 120, 20, 'Refresh Auctions');
 	StdUi:GlueBelow(refresh, infoPane, 0, -5);
 
 	itemSettings:SetScript('OnClick', function()
@@ -270,7 +269,7 @@ function AuctionFaster:DrawRightPaneButtons()
 		AuctionFaster:GetCurrentAuctions(true);
 	end);
 
-	auctionTab.buttons = {
+	sellTab.buttons = {
 		itemSettings = itemSettings,
 		infoPane = infoPane,
 		refresh = refresh,
@@ -279,16 +278,16 @@ end
 
 --- Draws tab buttons like Post All, Post One and Buy Item
 function AuctionFaster:DrawTabButtons(leftMargin)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
-	local postButton = StdUi:Button(auctionTab, 60, 20, 'Post All');
-	StdUi:GlueBottom(postButton, auctionTab, -20, 20, 'RIGHT');
+	local postButton = StdUi:Button(sellTab, 60, 20, 'Post All');
+	StdUi:GlueBottom(postButton, sellTab, -20, 20, 'RIGHT');
 
-	local postOneButton = StdUi:Button(auctionTab, 60, 20, 'Post One');
+	local postOneButton = StdUi:Button(sellTab, 60, 20, 'Post One');
 	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
 
-	local buyItemButton = StdUi:Button(auctionTab, 60, 20, 'Buy Item');
-	StdUi:GlueBottom(buyItemButton, auctionTab, leftMargin, 20, 'LEFT');
+	local buyItemButton = StdUi:Button(sellTab, 60, 20, 'Buy Item');
+	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()
 		AuctionFaster:SellItem();
@@ -302,9 +301,9 @@ function AuctionFaster:DrawTabButtons(leftMargin)
 		AuctionFaster:BuyItem();
 	end);
 
-	auctionTab.buttons.postButton = postButton;
-	auctionTab.buttons.postOneButton = postOneButton;
-	auctionTab.buttons.buyItemButton = buyItemButton;
+	sellTab.buttons.postButton = postButton;
+	sellTab.buttons.postOneButton = postOneButton;
+	sellTab.buttons.buyItemButton = buyItemButton;
 end
 
 local function FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols)
@@ -359,7 +358,7 @@ local function FxCompareSort(table, rowA, rowB, sortBy)
 end
 
 function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	local cols = {
 		{
@@ -400,15 +399,7 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 		},
 	}
 
-	auctionTab.currentAuctions = StdUi:ScrollTable(auctionTab, cols, 10, 18);
-	auctionTab.currentAuctions:EnableSelection(true);
-	StdUi:GlueAcross(auctionTab.currentAuctions.frame, auctionTab, leftMargin, -200, -20, 55);
-end
-
-function AuctionFaster:AuctionFrameTab_OnClick(tab)
-	if tab.auctionFaster then
-		self.auctionTab:Show();
-	else
-		self.auctionTab:Hide();
-	end
+	sellTab.currentAuctions = StdUi:ScrollTable(sellTab, cols, 10, 18);
+	sellTab.currentAuctions:EnableSelection(true);
+	StdUi:GlueAcross(sellTab.currentAuctions.frame, sellTab, leftMargin, -200, -20, 55);
 end

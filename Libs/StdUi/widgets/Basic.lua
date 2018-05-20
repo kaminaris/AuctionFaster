@@ -22,15 +22,16 @@ function StdUi:PanelWithLabel(parent, width, height, inherits, text)
 	return frame;
 end
 
-function StdUi:PanelWithTitle(parent, width, height, text)
+function StdUi:PanelWithTitle(parent, width, height, text, titleWidth, titleHeight)
 	local frame = self:Panel(parent, width, height);
 
-	frame.titlePanel = self:PanelWithLabel(frame, 100, 20, nil, text);
+	frame.titlePanel = self:PanelWithLabel(frame, titleWidth or 100, titleHeight or 20, nil, text);
 	self:GlueTop(frame.titlePanel, frame, 0, 10);
 
 	return frame;
 end
 
+--- @return Texture
 function StdUi:Texture(parent, width, height, texture)
 	local tex = parent:CreateTexture(nil, 'ARTWORK');
 

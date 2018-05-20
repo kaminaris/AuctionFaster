@@ -9,19 +9,9 @@ AuctionFaster.options = {
 			type = 'toggle',
 			width = 'full',
 			set = function(info, val)
-				AuctionFaster.db.global.enabled = not val;
+				AuctionFaster.db.global.enabled = val;
 			end,
 			get = function(info) return not AuctionFaster.db.global.enabled end
-		},
-		wipe = {
-			name = 'Wipe AuctionFaster item cache and settings',
-			desc = 'Wipe AuctionFaster item cache and settings',
-			type = 'execute',
-			--width = 'full',
-			func = function(info, val)
-				AuctionFaster:WipeItemCache();
-				print('Settins wiped!');
-			end,
 		},
 		auctionDuration = {
 			name = 'Auction Duration',
@@ -35,6 +25,16 @@ AuctionFaster.options = {
 				AuctionFaster.db.global.auctionDuration = val;
 			end,
 			get = function(info) return AuctionFaster.db.global.auctionDuration end
+		},
+		wipe = {
+			name = 'Wipe AuctionFaster item cache and settings',
+			desc = 'Wipe AuctionFaster item cache and settings',
+			type = 'execute',
+			--width = 'full',
+			func = function(info, val)
+				AuctionFaster:WipeItemCache();
+				print('Settins wiped!');
+			end,
 		},
 	},
 }

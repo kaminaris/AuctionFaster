@@ -2,18 +2,18 @@
 local StdUi = LibStub('StdUi');
 
 function AuctionFaster:DrawItemSettingsPane()
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
-	local pane = StdUi:PanelWithTitle(auctionTab, 200, 100, 'Item Settings');
-	StdUi:GlueAfter(pane, auctionTab, 0, -200, 0, 0);
+	local pane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Item Settings');
+	StdUi:GlueAfter(pane, sellTab, 0, -200, 0, 0);
 	pane:Hide();
 
-	auctionTab.itemSettingsPane = pane;
+	sellTab.itemSettingsPane = pane;
 	self:DrawItemSettings();
 end
 
 function AuctionFaster:DrawItemSettings()
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 
 	local icon = StdUi:Texture(pane, 30, 30, nil);
 	StdUi:GlueTop(icon, pane, 10, -20, 'LEFT');
@@ -57,7 +57,7 @@ function AuctionFaster:DrawItemSettings()
 end
 
 function AuctionFaster:InitItemSettingsScripts()
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 
 	pane.rememberStack:SetScript('OnClick', function(self)
 		AuctionFaster:UpdateItemSettings('rememberStack', self:GetChecked());
@@ -82,7 +82,7 @@ function AuctionFaster:InitItemSettingsScripts()
 end
 
 function AuctionFaster:UpdateItemSettingsCustomDuration(useCustomDuration)
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 
 	if useCustomDuration then
 		pane.duration:Enable();
@@ -92,7 +92,7 @@ function AuctionFaster:UpdateItemSettingsCustomDuration(useCustomDuration)
 end
 
 function AuctionFaster:InitItemSettingsTooltips()
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 
 	StdUi:FrameTooltip(
 		pane.rememberStack,
@@ -121,7 +121,7 @@ function AuctionFaster:InitItemSettingsTooltips()
 end
 
 function AuctionFaster:LoadItemSettings()
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 
 	if not self.selectedItem then
 		pane.icon:SetTexture(nil);
@@ -151,7 +151,7 @@ function AuctionFaster:LoadItemSettings()
 end
 
 function AuctionFaster:EnableDisableItemSettings(enable)
-	local pane = self.auctionTab.itemSettingsPane;
+	local pane = self.sellTab.itemSettingsPane;
 	if enable then
 		pane.rememberStack:Enable();
 		pane.rememberLastPrice:Enable();
@@ -178,10 +178,10 @@ function AuctionFaster:UpdateItemSettings(settingName, settingValue)
 end
 
 function AuctionFaster:ToggleItemSettingsPane()
-	if self.auctionTab.itemSettingsPane:IsShown() then
-		self.auctionTab.itemSettingsPane:Hide();
+	if self.sellTab.itemSettingsPane:IsShown() then
+		self.sellTab.itemSettingsPane:Hide();
 	else
-		self.auctionTab.itemSettingsPane:Show();
+		self.sellTab.itemSettingsPane:Show();
 	end
 end
 

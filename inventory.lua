@@ -126,28 +126,7 @@ function AuctionFaster:BAG_UPDATE_DELAYED()
 	self:ScanInventory();
 end
 
-AuctionFaster.freeInventorySlot = { bag = 0, slot = 1 };
-function AuctionFaster:FindFirstFreeInventorySlot()
-	local itemId = GetContainerItemID(self.freeInventorySlot.bag, self.freeInventorySlot.slot);
-	if not itemId then
-		return self.freeInventorySlot.bag, self.freeInventorySlot.slot;
-	end
-
-	-- cached free slot is not available anymore, find another one
-	for bag = 0, 4 do
-		for slot = 1, GetContainerNumSlots(bag) do
-			local itemId = GetContainerItemID(bag, slot);
-			if not itemId then
-				self.freeInventorySlot = { bag = bag, slot = slot };
-				return bag, slot;
-			end
-		end
-	end
-
-	return nil, nil;
-end
-
-function AuctionFaster:GetItemFromInventory(id, name, qty)
+function AuctionFaster:GetItemFromInventory(id, name)
 	local firstBag, firstSlot, remainingQty;
 
 	for bag = 0, 4 do
@@ -182,6 +161,28 @@ function AuctionFaster:GetInventoryItemQuantity(itemId, itemName)
 
 	return qty;
 end
+
+
+--AuctionFaster.freeInventorySlot = { bag = 0, slot = 1 };
+--function AuctionFaster:FindFirstFreeInventorySlot()
+--	local itemId = GetContainerItemID(self.freeInventorySlot.bag, self.freeInventorySlot.slot);
+--	if not itemId then
+--		return self.freeInventorySlot.bag, self.freeInventorySlot.slot;
+--	end
+--
+--	-- cached free slot is not available anymore, find another one
+--	for bag = 0, 4 do
+--		for slot = 1, GetContainerNumSlots(bag) do
+--			local itemId = GetContainerItemID(bag, slot);
+--			if not itemId then
+--				self.freeInventorySlot = { bag = bag, slot = slot };
+--				return bag, slot;
+--			end
+--		end
+--	end
+--
+--	return nil, nil;
+--end
 
 --
 --function AuctionFaster:GetItemFromInventory(id, name, qty)

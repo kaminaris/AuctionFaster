@@ -1,10 +1,10 @@
 function AuctionFaster:CalcMaxStacks()
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 	if not self.selectedItem then
 		return 0, 0;
 	end
 
-	local stackSize = tonumber(auctionTab.stackSize:GetValue());
+	local stackSize = tonumber(sellTab.stackSize:GetValue());
 	local maxStacks = floor(self.selectedItem.count / stackSize);
 
 	if maxStacks == 0 then

@@ -5,18 +5,74 @@ if not StdUi then
 end
 
 --- @return EditBox
-function StdUi:EditBox(parent, width, height, text, validator)
-	validator = validator or StdUi.Util.editBoxValidator;
-
+function StdUi:SimpleEditBox(parent, width, height, text)
 	local editBox = CreateFrame('EditBox', nil, parent);
 	editBox:SetTextInsets(3, 3, 3, 3);
 	editBox:SetMaxLetters(256);
-	editBox:SetFontObject(ChatFontNormal);
+	editBox:SetFont(self.config.font.familly, self.config.font.size, self.config.font.effect);
 	editBox:SetAutoFocus(false);
 
 	editBox:SetScript('OnEscapePressed', function (self)
 		self:ClearFocus();
 	end);
+
+	function editBox:SetFontSize(newSize)
+		self:SetFont(StdUi.config.font.familly, newSize, StdUi.config.font.effect);
+	end
+
+	if text then
+		editBox:SetText(text);
+	end
+
+	self:ApplyDisabledBackdrop(editBox);
+
+	self:ApplyBackdrop(editBox);
+	self:SetObjSize(editBox, width, height);
+
+	return editBox;
+end
+
+function StdUi:SearchEditBox(parent, width, height, placeholderText)
+	local editBox = self:SimpleEditBox(parent, width, height, '');
+
+	local icon = self:Texture(editBox, 20, 20, [[Interface\Common\UI-Searchbox-Icon]]);
+	icon:SetVertexColor(
+			self.config.font.colorDisabled.r,
+			self.config.font.colorDisabled.g,
+			self.config.font.colorDisabled.b,
+			self.config.font.colorDisabled.a
+	);
+	local label = self:Label(editBox, placeholderText);
+	label:SetFont(self.config.font.familly, self.config.font.size, 'NONE');
+	StdUi:SetTextColor(label, 'colorDisabled');
+
+	self:GlueLeft(icon, editBox, 5, 0, true);
+	self:GlueRight(label, icon, 5, 0);
+
+	editBox.placeholder = {
+		icon = icon,
+		label = label
+	};
+
+	editBox:SetScript('OnTextChanged', function(self)
+		if strlen(self:GetText()) > 0 then
+			print('hide');
+			self.placeholder.icon:Hide();
+			self.placeholder.label:Hide();
+		else
+			self.placeholder.icon:Show();
+			self.placeholder.label:Show();
+		end
+	end);
+
+	return editBox;
+end
+
+--- @return EditBox
+function StdUi:EditBox(parent, width, height, text, validator)
+	validator = validator or StdUi.Util.editBoxValidator;
+
+	local editBox = self:SimpleEditBox(parent, width, height, text);
 
 	function editBox:IsValid()
 		return self.isValid;
@@ -55,15 +111,6 @@ function StdUi:EditBox(parent, width, height, text, validator)
 			end
 		end
 	end);
-
-	self:ApplyBackdrop(editBox);
-	self:SetObjSize(editBox, width, height);
-
-	if text then
-		editBox:SetText(text);
-	end
-
-	self:ApplyDisabledBackdrop(editBox);
 
 	return editBox;
 end

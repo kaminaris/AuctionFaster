@@ -2,20 +2,20 @@
 local StdUi = LibStub('StdUi');
 
 function AuctionFaster:GetSellSettings()
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	local cacheItem = self:GetSelectedItemFromCache();
 
-	local bidPerItem = auctionTab.bidPerItem:GetValue();
-	local buyPerItem = auctionTab.buyPerItem:GetValue();
+	local bidPerItem = sellTab.bidPerItem:GetValue();
+	local buyPerItem = sellTab.buyPerItem:GetValue();
 
-	local maxStacks = tonumber(auctionTab.maxStacks:GetValue());
+	local maxStacks = tonumber(sellTab.maxStacks:GetValue());
 	local realMaxStacks = maxStacks;
 	if maxStacks == 0 then
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
 
-	local stackSize = tonumber(auctionTab.stackSize:GetValue());
+	local stackSize = tonumber(sellTab.stackSize:GetValue());
 	if stackSize > self.selectedItem.count then
 		stackSize = self.selectedItem.count;
 	end
@@ -46,43 +46,43 @@ function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
 end
 
 function AuctionFaster:UpdateTabPrices(bid, buy)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	if bid then
-		auctionTab.bidPerItem:SetValue(bid);
+		sellTab.bidPerItem:SetValue(bid);
 	else
-		auctionTab.bidPerItem:SetText('-');
-		auctionTab.bidPerItem:Validate();
+		sellTab.bidPerItem:SetText('-');
+		sellTab.bidPerItem:Validate();
 	end
 
 	if buy then
-		auctionTab.buyPerItem:SetValue(buy);
+		sellTab.buyPerItem:SetValue(buy);
 	else
-		auctionTab.buyPerItem:SetText('-');
-		auctionTab.buyPerItem:Validate();
+		sellTab.buyPerItem:SetText('-');
+		sellTab.buyPerItem:Validate();
 	end
 end
 
 function AuctionFaster:UpdateStackSettings(maxStacks, stackSize)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	if maxStacks then
-		auctionTab.maxStacks:SetValue(maxStacks);
+		sellTab.maxStacks:SetValue(maxStacks);
 	end
 
 	if stackSize then
-		auctionTab.stackSize:SetValue(stackSize);
+		sellTab.stackSize:SetValue(stackSize);
 	end
 end
 
 function AuctionFaster:SelectItem(index)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 	self.selectedItem = self.inventoryItems[index];
 
-	auctionTab.itemIcon:SetTexture(self.selectedItem.icon);
-	auctionTab.itemName:SetText(self.selectedItem.link);
+	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
+	sellTab.itemName:SetText(self.selectedItem.link);
 
-	auctionTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
+	sellTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
 
 	local cacheItem = self:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
@@ -114,9 +114,9 @@ function AuctionFaster:UpdateItemQtyText()
 		return ;
 	end
 
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 	local maxStacks, remainingQty = self:CalcMaxStacks();
-	auctionTab.itemQty:SetText(
+	sellTab.itemQty:SetText(
 		'Qty: ' .. self.selectedItem.count ..
 		', Max Stacks: ' .. maxStacks ..
 		', Remaining: ' .. remainingQty
@@ -124,22 +124,22 @@ function AuctionFaster:UpdateItemQtyText()
 end
 
 function AuctionFaster:EnableAuctionTabControls(enable)
-	local auctionTab = self.auctionTab;
+	local sellTab = self.sellTab;
 
 	if enable then
-		auctionTab.bidPerItem:Enable();
-		auctionTab.buyPerItem:Enable();
-		auctionTab.maxStacks:Enable();
-		auctionTab.stackSize:Enable();
-		for k, button in pairs(auctionTab.buttons) do
+		sellTab.bidPerItem:Enable();
+		sellTab.buyPerItem:Enable();
+		sellTab.maxStacks:Enable();
+		sellTab.stackSize:Enable();
+		for k, button in pairs(sellTab.buttons) do
 			button:Enable();
 		end
 	else
-		auctionTab.bidPerItem:Disable();
-		auctionTab.buyPerItem:Disable();
-		auctionTab.maxStacks:Disable();
-		auctionTab.stackSize:Disable();
-		for k, button in pairs(auctionTab.buttons) do
+		sellTab.bidPerItem:Disable();
+		sellTab.buyPerItem:Disable();
+		sellTab.maxStacks:Disable();
+		sellTab.stackSize:Disable();
+		for k, button in pairs(sellTab.buttons) do
 			button:Disable();
 		end
 	end

@@ -154,8 +154,8 @@ end
 
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
-	self.auctionTab.currentAuctions:SetData(cacheItem.auctions, true);
-	self.auctionTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
+	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
+	self.sellTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
 
 	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
 
@@ -298,11 +298,11 @@ function AuctionFaster:BuyItem()
 		return ;
 	end
 
-	local index = self.auctionTab.currentAuctions:GetSelection();
+	local index = self.sellTab.currentAuctions:GetSelection();
 	if not index then
 		return ;
 	end
-	local auctionData = self.auctionTab.currentAuctions:GetRow(index);
+	local auctionData = self.sellTab.currentAuctions:GetRow(index);
 
 	-- maybe index is the same
 	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
