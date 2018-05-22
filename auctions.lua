@@ -61,6 +61,23 @@ function AuctionFaster:CheckEverythingSold()
 			' Do you wish to sell rest?', btns, 'incomplete_sell');
 end
 
+function AuctionFaster:SetAuctionSort()
+	self.currentlySorting = true;
+	SortAuctionItems('list', 'unitprice')
+	if IsAuctionSortReversed('list', 'unitprice') then
+		SortAuctionItems('list', 'unitprice')
+	end
+	self.currentlySorting = false;
+end
+
+function AuctionFaster:CanSendAuctionQuery()
+	if not CanSendAuctionQuery() then
+		StdUi:Dialog('Error', 'Cannot query auction house, please reload UI', 'AFError');
+		return false;
+	end
+	return true;
+end
+
 
 function AuctionFaster:GetCurrentAuctions(force)
 	local selectedItem = self.selectedItem;
@@ -75,21 +92,29 @@ function AuctionFaster:GetCurrentAuctions(force)
 		return ;
 	end
 
-	if not CanSendAuctionQuery() then
-		StdUi:Dialog('Error', 'Cannot query auction house, please reload UI', 'AFError');
+	if self.currentlyQuerying or not self:CanSendAuctionQuery() then
 		return ;
 	end
 
-	self.currentlySorting = true;
-	SortAuctionItems('list', 'buyout')
-	if IsAuctionSortReversed('list', 'buyout') then
-		SortAuctionItems('list', 'buyout')
-	end
-	self.currentlySorting = false;
+	self:SetAuctionSort();
 
 	self.currentlyQuerying = true;
-	self.afScan = true;
+	self.afScan = 'CurrentAuctions';
 	QueryAuctionItems(itemName, nil, nil, 0, 0, 0, false, true);
+	self.currentlyQuerying = false;
+end
+
+function AuctionFaster:SearchAuctions(name, exact, page)
+	if self.currentlyQuerying or not self:CanSendAuctionQuery() then
+		return ;
+	end
+
+	self:SetAuctionSort();
+
+	self.currentlyQuerying = true;
+	self.afScan = 'SearchAuctions';
+	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
+	QueryAuctionItems(name, nil, nil, page or 0, 0, 0, false, exact or false);
 	self.currentlyQuerying = false;
 end
 
@@ -97,6 +122,18 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	if self.currentlySorting or not self.afScan then
 		return ;
 	end
+
+	if self.afScan == 'CurrentAuctions' then
+		self:CurrentAuctionsCallback();
+	elseif self.afScan == 'SearchAuctions' then
+		self:SearchAuctionsCallback();
+	end
+
+	-- no longer our scan
+	self.afScan = false;
+end
+
+function AuctionFaster:CurrentAuctionsCallback()
 
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 
@@ -146,12 +183,7 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 
 	self:UpdateAuctionTable(cacheItem);
 	self:UpdateInfoPaneText();
-
-	-- no longer our scan
-	self.afScan = false;
 end
-
-
 
 function AuctionFaster:UpdateAuctionTable(cacheItem)
 	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
@@ -263,7 +295,7 @@ function AuctionFaster:CalculateDeposit(itemId, itemName)
 	return CalculateAuctionDeposit(sellSettings.duration);
 end
 
-function AuctionFaster:SellItem(singleStack)
+function AuctionFaster:SellCurrentItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
@@ -282,7 +314,8 @@ function AuctionFaster:SellItem(singleStack)
 	if singleStack then
 		maxStacks = 1;
 	end
-
+	print(
+			maxStacks);
 	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
 			sellSettings.buyPerItem * sellSettings.stackSize,
 			sellSettings.duration,
@@ -292,41 +325,9 @@ function AuctionFaster:SellItem(singleStack)
 	return true;
 end
 
-function AuctionFaster:BuyItem()
-	local selectedId, selectedName = self:GetSelectedItemIdName();
-	if not selectedId then
-		return ;
-	end
-
-	local index = self.sellTab.currentAuctions:GetSelection();
-	if not index then
-		return ;
-	end
-	local auctionData = self.sellTab.currentAuctions:GetRow(index);
-
-	-- maybe index is the same
-	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-	minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-	ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', index);
-
-	local bid = floor(minBid / count);
-	local buy = floor(buyoutPrice / count);
-
-	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
-			and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
-		-- same index, we can buy it
-		self:BuyItemByIndex(index);
-		-- we need to refresh the auctions
-		self:GetCurrentAuctions();
-	end
-
-	-- item was not found but lets check if it still exists
-	-- todo: need to check it
-end
-
 function AuctionFaster:BuyItemByIndex(index)
 	local buyPrice = select(10, GetAuctionItemInfo('list', index))
 
-	PlaceAuctionBid('list', index, buyPrice)
+	PlaceAuctionBid('list', index, buyPrice);
 	CloseAuctionStaticPopups();
 end

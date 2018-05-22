@@ -290,11 +290,11 @@ function AuctionFaster:DrawTabButtons(leftMargin)
 	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()
-		AuctionFaster:SellItem();
+		AuctionFaster:SellCurrentItem();
 	end);
 
 	postOneButton:SetScript('OnClick', function()
-		AuctionFaster:SellItem(true);
+		AuctionFaster:SellCurrentItem(true);
 	end);
 
 	buyItemButton:SetScript('OnClick', function()

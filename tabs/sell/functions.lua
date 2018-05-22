@@ -10,11 +10,12 @@ function AuctionFaster:GetSellSettings()
 	local buyPerItem = sellTab.buyPerItem:GetValue();
 
 	local maxStacks = tonumber(sellTab.maxStacks:GetValue());
+	print('m1', maxStacks);
 	local realMaxStacks = maxStacks;
 	if maxStacks == 0 then
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
-
+	print('m1', maxStacks);
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
 	if stackSize > self.selectedItem.count then
 		stackSize = self.selectedItem.count;
@@ -90,7 +91,7 @@ function AuctionFaster:SelectItem(index)
 	self:UpdateTabPrices(nil, nil);
 
 	if cacheItem.settings.rememberStack then
-		self:UpdateStackSettings(cacheItem.maxStacks, cacheItem.stackSize)
+		self:UpdateStackSettings(cacheItem.maxStacks, cacheItem.stackSize or self.selectedItem.maxStackSize)
 	else
 		self:UpdateStackSettings(0, self.selectedItem.maxStackSize);
 	end
@@ -145,7 +146,6 @@ function AuctionFaster:EnableAuctionTabControls(enable)
 	end
 end
 
-
 function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	for i = 1, #self.itemFramePool do
 		local f = self.itemFramePool[i];
@@ -153,4 +153,36 @@ function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 			f.itemPrice:SetText(self:FormatMoney(newPrice));
 		end
 	end
+end
+
+function AuctionFaster:BuyItem()
+	local selectedId, selectedName = self:GetSelectedItemIdName();
+	if not selectedId then
+		return ;
+	end
+
+	local index = self.sellTab.currentAuctions:GetSelection();
+	if not index then
+		return ;
+	end
+	local auctionData = self.sellTab.currentAuctions:GetRow(index);
+
+	-- maybe index is the same
+	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
+	minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
+	ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', index);
+
+	local bid = floor(minBid / count);
+	local buy = floor(buyoutPrice / count);
+
+	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
+			and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
+		-- same index, we can buy it
+		self:BuyItemByIndex(index);
+		-- we need to refresh the auctions
+		self:GetCurrentAuctions();
+	end
+
+	-- item was not found but lets check if it still exists
+	-- todo: need to check it
 end
