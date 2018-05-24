@@ -13,10 +13,17 @@ local SquarewButtonCoords = {
 };
 
 function StdUi:SquareButton(parent, width, height, icon)
-	local button = CreateFrame('Button', nil, parent)
+	local button = CreateFrame('Button', nil, parent);
 	self:SetObjSize(button, width, height);
-	button.icon = self:Texture(button, button:GetWidth(), button:GetHeight(),
-			'Interface\\Buttons\\SquareButtonTextures');
+
+	self:ApplyBackdrop(button);
+
+	button.icon = self:Texture(button, 16, 16, 'Interface\\Buttons\\SquareButtonTextures');
+	button.icon:SetPoint('CENTER', 0, 0);
+
+	local hTex = self:HighlightButtonTexture(button);
+	button:SetHighlightTexture(hTex);
+	button.highlightTexture = hTex;
 
 	local coords = SquarewButtonCoords[icon];
 	if coords then
@@ -82,7 +89,6 @@ function StdUi:Button(parent, width, height, text)
 	self:ApplyBackdrop(button);
 
 	local hTex = self:HighlightButtonTexture(button);
-
 	button:SetHighlightTexture(hTex);
 	button.highlightTexture = hTex;
 

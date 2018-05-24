@@ -10,13 +10,14 @@ function AuctionFaster:GetSellSettings()
 	local buyPerItem = sellTab.buyPerItem:GetValue();
 
 	local maxStacks = tonumber(sellTab.maxStacks:GetValue());
-	print('m1', maxStacks);
+
 	local realMaxStacks = maxStacks;
 	if maxStacks == 0 then
 		maxStacks = AuctionFaster:CalcMaxStacks();
 	end
-	print('m1', maxStacks);
+
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
+	print('self.selectedItem.count', self.selectedItem.count);
 	if stackSize > self.selectedItem.count then
 		stackSize = self.selectedItem.count;
 	end
@@ -78,7 +79,12 @@ end
 
 function AuctionFaster:SelectItem(index)
 	local sellTab = self.sellTab;
+	if not self.inventoryItems[index] then
+		return;
+	end
+
 	self.selectedItem = self.inventoryItems[index];
+	self.selectedItemIndex = index;
 
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
 	sellTab.itemName:SetText(self.selectedItem.link);
@@ -185,4 +191,33 @@ function AuctionFaster:BuyItem()
 
 	-- item was not found but lets check if it still exists
 	-- todo: need to check it
+end
+
+function AuctionFaster:SellCurrentItem(singleStack)
+	local selectedItem = self.selectedItem;
+	local itemId = selectedItem.itemId;
+	local itemName = selectedItem.itemName;
+
+	if not self:PutItemInSellBox(itemId, itemName) then
+		return false;
+	end
+
+	local sellSettings = self:GetSellSettings();
+
+	if not AuctionFrameAuctions.duration then
+		AuctionFrameAuctions.duration = sellSettings.duration;
+	end
+
+	local maxStacks = sellSettings.maxStacks;
+	if singleStack then
+		maxStacks = 1;
+	end
+
+	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
+			sellSettings.buyPerItem * sellSettings.stackSize,
+			sellSettings.duration,
+			sellSettings.stackSize,
+			maxStacks);
+
+	return true;
 end

@@ -1,6 +1,107 @@
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
 
+----------------------------------------------------------------------------
+--- Searching functions
+----------------------------------------------------------------------------
+
+function AuctionFaster:SearchAuctions(name, exact, page)
+	if self.currentlyQuerying or not self:CanSendAuctionQuery() then
+		return ;
+	end
+
+	self:SetAuctionSort();
+
+	self.currentlyQuerying = true;
+	self.afScan = 'SearchAuctions';
+
+	self.currentQuery = {
+		name = name,
+		page = page or 0,
+		exact = exact or false,
+	};
+
+	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
+	QueryAuctionItems(name, nil, nil, page or 0, 0, 0, false, exact or false);
+	self.currentlyQuerying = false;
+end
+
+function AuctionFaster:SearchNextPage()
+	-- if last page is not yet defined or it would be over last page, just abandon
+	if not self.currentQuery.lastPage or self.currentQuery.page + 1 > self.currentQuery.lastPage then
+		return;
+	end
+
+	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page + 1);
+end
+
+function AuctionFaster:SearchPreviousPage()
+	-- just in case there are no search results abort
+	if not self.currentQuery.lastPage or self.currentQuery.page - 1 < 0 then
+		return;
+	end
+
+	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page - 1);
+end
+
+----------------------------------------------------------------------------
+--- Searching callback function
+----------------------------------------------------------------------------
+
+function AuctionFaster:SearchAuctionsCallback()
+	local shown, total = GetNumAuctionItems('list');
+
+	self.currentQuery.lastPage = ceil(total / 50) - 1;
+
+	local auctions = {}
+	for i = 1, shown do
+		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
+		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
+		ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
+
+		local _, itemLink = GetItemInfo(itemId);
+
+		tinsert(auctions, {
+			owner     = owner,
+			count     = count,
+			icon      = texture,
+			itemId    = itemId,
+			itemName  = name,
+			itemLink  = itemLink,
+			itemIndex = i,
+			bid       = floor(minBid / count),
+			buy       = floor(buyoutPrice / count),
+		});
+	end
+
+	table.sort(auctions, function(a, b)
+		return a.buy < b.buy;
+	end);
+
+	self.buyTab.auctions = auctions;
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
+	self:UpdatePager();
+end
+
+function AuctionFaster:UpdateStateText()
+	if #self.buyTab.auctions == 0 then
+		self.buyTab.stateLabel:SetText('Nothing was found for query:');
+		self.buyTab.stateLabel:Show();
+	else
+		self.buyTab.stateLabel:Hide();
+	end
+end
+
+function AuctionFaster:UpdatePager()
+	local p = self.currentQuery.page + 1;
+	local lp = self.currentQuery.lastPage + 1;
+	self.buyTab.pager.pageText:SetText('Page ' .. p ..' of ' .. lp);
+
+	--@TODO: update buttons left right
+end
+
 function AuctionFaster:InterceptLinkClick()
 	local origChatEdit_InsertLink = ChatEdit_InsertLink;
 	local origHandleModifiedItemClick = HandleModifiedItemClick;
@@ -62,39 +163,6 @@ function AuctionFaster:SetFavoriteAsSearch(i)
 	end
 end
 
-function AuctionFaster:SearchAuctionsCallback()
-	local shown, total = GetNumAuctionItems('list');
-
-	local auctions = {}
-	for i = 1, shown do
-		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-		ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
-
-		local _, itemLink = GetItemInfo(itemId);
-
-		tinsert(auctions, {
-			owner     = owner,
-			count     = count,
-			icon      = texture,
-			itemId    = itemId,
-			itemName  = name,
-			itemLink  = itemLink,
-			itemIndex = i,
-			bid       = floor(minBid / count),
-			buy       = floor(buyoutPrice / count),
-		});
-	end
-
-	table.sort(auctions, function(a, b)
-		return a.buy < b.buy;
-	end);
-
-	self.buyTab.auctions = auctions;
-
-	self:UpdateSearchAuctions();
-end
-
 function AuctionFaster:RemoveCurrentSearchAuction()
 	local index = self.buyTab.searchResults:GetSelection();
 	if not index then
@@ -134,52 +202,43 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 	if not auctionData then
 		return;
 	end
-	local itemIndex = auctionData.itemIndex;
 
-	-- maybe index is the same
-	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-	minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-	ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', itemIndex);
+	local auctionIndex, name, count = self:FindAuctionIndex(auctionData);
 
-	local bid = floor(minBid / count);
-	local buy = floor(buyoutPrice / count);
-
-	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
-			and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
-
-		local buttons = {
-			ok     = {
-				text    = 'Yes',
-				onClick = function(self)
-					-- same index, we can buy it
-					self:GetParent():Hide();
-
-					--Simulate
-					AuctionFaster:BuyItemByIndex(itemIndex);
-					AuctionFaster:RemoveCurrentSearchAuction();
-
-					AuctionFaster:BuySelectedItem(self:GetParent().count);
-				end
-			},
-			cancel = {
-				text    = 'No',
-				onClick = function(self)
-					self:GetParent():Hide();
-				end
-			}
-		};
-
-		local confirmFrame = StdUi:Confirm(
-			'Confirm Buy',
-			'Buying ' .. name .. '\n#: ' .. count .. '\n\nBought so far: ' .. alreadyBought,
-			buttons,
-			'afConfirmBuy'
-		);
-		confirmFrame.count = count;
-		--
-		---- same index, we can buy it
-		--self:BuyItemByIndex(index);
-		---- we need to refresh the auctions
-		--self:GetCurrentAuctions();
+	if not auctionIndex then
+		-- @TODO: show some error
+		print('Auction not found');
+		DevTools_Dump(auctionData);
+		return;
 	end
+
+	local buttons = {
+		ok     = {
+			text    = 'Yes',
+			onClick = function(self)
+				-- same index, we can buy it
+				self:GetParent():Hide();
+
+				AuctionFaster:BuyItemByIndex(index);
+				AuctionFaster:RemoveCurrentSearchAuction();
+
+				AuctionFaster:BuySelectedItem(self:GetParent().count);
+
+			end
+		},
+		cancel = {
+			text    = 'No',
+			onClick = function(self)
+				self:GetParent():Hide();
+			end
+		}
+	};
+
+	local confirmFrame = StdUi:Confirm(
+		'Confirm Buy',
+		'Buying ' .. name .. '\n#: ' .. count .. '\n\nBought so far: ' .. alreadyBought,
+		buttons,
+		'afConfirmBuy'
+	);
+	confirmFrame.count = count;
 end

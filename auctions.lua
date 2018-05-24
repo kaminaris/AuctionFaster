@@ -36,17 +36,23 @@ function AuctionFaster:CheckEverythingSold()
 	if qtyLeft == 0 then
 		return ;
 	end
+	self:SelectItem(self.selectedItemIndex);
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
 	self:DrawItems();
 
-	local btns = {
+	local buttons = {
 		yes = {
 			text    = 'Yes',
 			onClick = function(self)
 				-- todo: make it
 				self:GetParent():Hide();
+				qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
+				if qtyLeft == 0 then
+					return ;
+				end
+				AuctionFaster:SellCurrentItem(false);
 			end,
 		},
 		no  = {
@@ -58,7 +64,7 @@ function AuctionFaster:CheckEverythingSold()
 	}
 
 	StdUi:Confirm('Incomplete sell', 'You still have ' .. qtyLeft .. ' of ' .. itemName ..
-			' Do you wish to sell rest?', btns, 'incomplete_sell');
+			' Do you wish to sell rest?', buttons, 'incomplete_sell');
 end
 
 function AuctionFaster:SetAuctionSort()
@@ -76,6 +82,29 @@ function AuctionFaster:CanSendAuctionQuery()
 		return false;
 	end
 	return true;
+end
+
+function AuctionFaster:FindAuctionIndex(auctionData)
+	for index = 1, 50 do
+		local name, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner, _, _, itemId =
+			GetAuctionItemInfo('list', index);
+
+		local bid = floor(minBid / count);
+		local buy = floor(buyoutPrice / count);
+
+		if
+			name == auctionData.itemName and
+			itemId == auctionData.itemId and
+			owner == auctionData.owner and
+			bid == auctionData.bid and
+			buy == auctionData.buy and
+			count == auctionData.count
+		then
+			return index, name, count;
+		end
+	end
+
+	return false, '', 0;
 end
 
 
@@ -101,20 +130,6 @@ function AuctionFaster:GetCurrentAuctions(force)
 	self.currentlyQuerying = true;
 	self.afScan = 'CurrentAuctions';
 	QueryAuctionItems(itemName, nil, nil, 0, 0, 0, false, true);
-	self.currentlyQuerying = false;
-end
-
-function AuctionFaster:SearchAuctions(name, exact, page)
-	if self.currentlyQuerying or not self:CanSendAuctionQuery() then
-		return ;
-	end
-
-	self:SetAuctionSort();
-
-	self.currentlyQuerying = true;
-	self.afScan = 'SearchAuctions';
-	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
-	QueryAuctionItems(name, nil, nil, page or 0, 0, 0, false, exact or false);
 	self.currentlyQuerying = false;
 end
 
@@ -293,36 +308,6 @@ function AuctionFaster:CalculateDeposit(itemId, itemName)
 	end
 
 	return CalculateAuctionDeposit(sellSettings.duration);
-end
-
-function AuctionFaster:SellCurrentItem(singleStack)
-	local selectedItem = self.selectedItem;
-	local itemId = selectedItem.itemId;
-	local itemName = selectedItem.itemName;
-
-	if not self:PutItemInSellBox(itemId, itemName) then
-		return false;
-	end
-
-	local sellSettings = self:GetSellSettings();
-
-	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = sellSettings.duration;
-	end
-
-	local maxStacks = sellSettings.maxStacks;
-	if singleStack then
-		maxStacks = 1;
-	end
-	print(
-			maxStacks);
-	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
-			sellSettings.buyPerItem * sellSettings.stackSize,
-			sellSettings.duration,
-			sellSettings.stackSize,
-			maxStacks);
-
-	return true;
 end
 
 function AuctionFaster:BuyItemByIndex(index)

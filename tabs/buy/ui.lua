@@ -44,6 +44,7 @@ function AuctionFaster:AddBuyAuctionHouseTab()
 	self:DrawFavorites(20);
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
+	self:DrawPager();
 	self:InterceptLinkClick();
 end
 
@@ -68,6 +69,10 @@ function AuctionFaster:DrawSearchPane()
 		AuctionFaster:AddToFavorites();
 	end);
 
+	searchBox:SetScript('OnEnterPressed', function()
+		AuctionFaster:SearchAuctions(searchBox:GetText(), false, 0);
+	end);
+
 	searchButton:SetScript('OnClick', function()
 		AuctionFaster:SearchAuctions(searchBox:GetText(), false, 0);
 	end);
@@ -79,18 +84,45 @@ function AuctionFaster:DrawSearchButtons()
 	local buyTab = self.buyTab;
 
 	local buyButton = StdUi:Button(buyTab, 80, 20, 'Buy');
-	StdUi:GlueBottom(buyButton, buyTab, 300, 30, 'LEFT');
+	StdUi:GlueBottom(buyButton, buyTab, 300, 50, 'LEFT');
 
 	buyButton:SetScript('OnClick', function ()
 		AuctionFaster:BuySelectedItem(0, true);
 	end);
 end
 
+function AuctionFaster:DrawPager()
+	local buyTab = self.buyTab;
+
+	local leftButton = StdUi:SquareButton(buyTab, 20, 20, 'LEFT');
+	StdUi:GlueBottom(leftButton, buyTab, 80, 50, 'LEFT');
+
+	local rightButton = StdUi:SquareButton(buyTab, 20, 20, 'RIGHT');
+	StdUi:GlueBottom(rightButton, buyTab, 105, 50, 'LEFT');
+
+	local pageText = StdUi:Label(buyTab, 'Page 1 of 0');
+	StdUi:GlueBottom(pageText, buyTab, 10, 50, 'LEFT');
+
+	leftButton:SetScript('OnClick', function()
+		AuctionFaster:SearchPreviousPage();
+	end);
+
+	rightButton:SetScript('OnClick', function()
+		AuctionFaster:SearchNextPage();
+	end);
+
+	buyTab.pager = {
+		leftButton = leftButton,
+		rightButton = rightButton,
+		pageText = pageText,
+	};
+end
+
 function AuctionFaster:DrawFavoritesPane()
 	local buyTab = self.buyTab;
 
-	local favorites = StdUi:ScrollFrame(buyTab, 200, 400);
-	StdUi:GlueTop(favorites, buyTab, -10, -30, 'RIGHT');
+	local favorites = StdUi:ScrollFrame(buyTab, 200, 270);
+	StdUi:GlueTop(favorites, buyTab, -10, -100, 'RIGHT');
 	StdUi:AddLabel(buyTab, favorites, 'Favorite Searches', 'TOP');
 
 	buyTab.favorites = favorites;
@@ -281,7 +313,10 @@ function AuctionFaster:DrawSearchResultsTable()
 		},
 	}
 
-	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 9, 32);
+	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 8, 32);
 	buyTab.searchResults:EnableSelection(true);
-	StdUi:GlueAcross(buyTab.searchResults.frame, buyTab, 10, -100, -220, 50);
+	StdUi:GlueAcross(buyTab.searchResults.frame, buyTab, 10, -100, -220, 80);
+
+	buyTab.stateLabel = StdUi:Label(buyTab.searchResults.frame, 'Chose your search criteria nad press "Search"');
+	StdUi:GlueTop(buyTab.stateLabel, buyTab.searchResults.frame, 0, -40, 'CENTER');
 end
