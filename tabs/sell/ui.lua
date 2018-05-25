@@ -18,7 +18,7 @@ function AuctionFaster:AddSellAuctionHouseTab()
 	local n = AuctionFrame.numTabs + 1;
 
 	local tab = CreateFrame('Button', 'AuctionFrameTab' .. n, AuctionFrame, 'AuctionTabTemplate');
-	tab:StripTextures();
+	StdUi:StripTextures(tab);
 	tab.backdrop = CreateFrame('Frame', nil, tab);
 	tab.backdrop:SetTemplate('Default');
 	tab.backdrop:SetFrameLevel(tab:GetFrameLevel() - 1);

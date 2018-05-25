@@ -213,11 +213,80 @@ function AuctionFaster:SellCurrentItem(singleStack)
 		maxStacks = 1;
 	end
 
-	StartAuction(sellSettings.bidPerItem * sellSettings.stackSize,
-			sellSettings.buyPerItem * sellSettings.stackSize,
-			sellSettings.duration,
-			sellSettings.stackSize,
-			maxStacks);
+	local success, multisell = AuctionFaster:SellItem(sellSettings.bidPerItem * sellSettings.stackSize,
+		sellSettings.buyPerItem * sellSettings.stackSize,
+		sellSettings.duration,
+		sellSettings.stackSize,
+		maxStacks
+	);
 
-	return true;
+	if success and not multisell then
+		C_Timer.After(0.5, function()
+			self:CheckEverythingSold();
+		end);
+	end
+
+	return success;
+end
+
+
+--- Check if all items has been sold, if not, propose to sell last incomplete stack
+function AuctionFaster:CheckEverythingSold()
+	local sellSettings = self:GetSellSettings();
+
+	--- DISABLED FOR TEST
+	--if sellSettings.realMaxStacks ~= 0 then
+	--	return;
+	--end
+
+	local selectedItem = self.selectedItem;
+	if not selectedItem then
+		return ;
+	end
+
+	local itemId, itemName, itemLink = selectedItem.itemId, selectedItem.itemName, selectedItem.link;
+
+	local currentItemName = GetAuctionSellItemInfo();
+
+	if not currentItemName or currentItemName ~= itemName then
+		self:PutItemInSellBox(itemId, itemName);
+	end
+
+	-- Check if item is still in inventory
+	local qtyLeft = self:UpdateItemInventory(itemId, itemName);
+	if qtyLeft == 0 then
+		return ;
+	end
+
+	self:SelectItem(self.selectedItemIndex);
+
+	self:UpdateItemQtyText();
+	self:GetCurrentAuctions();
+	self:DrawItems();
+
+	local buttons = {
+		yes = {
+			text    = 'Yes',
+			onClick = function(self)
+				self:GetParent():Hide();
+
+				-- Double check if item is still in inventory
+				qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
+				if qtyLeft == 0 then
+					return ;
+				end
+
+				AuctionFaster:SellCurrentItem(false);
+			end,
+		},
+		no  = {
+			text    = 'No',
+			onClick = function(self)
+				self:GetParent():Hide();
+			end,
+		}
+	}
+
+	StdUi:Confirm('Incomplete sell', 'You still have ' .. qtyLeft .. ' of ' .. itemLink ..
+		' Do you wish to sell rest?', buttons, 'incomplete_sell');
 end

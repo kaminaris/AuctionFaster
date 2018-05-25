@@ -9,64 +9,6 @@ function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
 	end
 end
 
---- Check if all items has been sold, if not, propose to sell last incomplete stack
-function AuctionFaster:CheckEverythingSold()
-	local sellSettings = self:GetSellSettings();
-
-	--- DISABLED FOR TEST
-	--if sellSettings.realMaxStacks ~= 0 then
-	--	return;
-	--end
-
-	local selectedItem = self.selectedItem;
-	if not selectedItem then
-		return ;
-	end
-
-	local itemId, itemName = selectedItem.itemId, selectedItem.itemName;
-
-	local currentItemName = GetAuctionSellItemInfo();
-
-	if not currentItemName or currentItemName ~= itemName then
-		self:PutItemInSellBox(itemId, itemName);
-	end
-
-	local qtyLeft = self:UpdateItemInventory(itemId, itemName);
-
-	if qtyLeft == 0 then
-		return ;
-	end
-	self:SelectItem(self.selectedItemIndex);
-
-	self:UpdateItemQtyText();
-	self:GetCurrentAuctions();
-	self:DrawItems();
-
-	local buttons = {
-		yes = {
-			text    = 'Yes',
-			onClick = function(self)
-				-- todo: make it
-				self:GetParent():Hide();
-				qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
-				if qtyLeft == 0 then
-					return ;
-				end
-				AuctionFaster:SellCurrentItem(false);
-			end,
-		},
-		no  = {
-			text    = 'No',
-			onClick = function(self)
-				self:GetParent():Hide();
-			end,
-		}
-	}
-
-	StdUi:Confirm('Incomplete sell', 'You still have ' .. qtyLeft .. ' of ' .. itemName ..
-			' Do you wish to sell rest?', buttons, 'incomplete_sell');
-end
-
 function AuctionFaster:SetAuctionSort()
 	self.currentlySorting = true;
 	SortAuctionItems('list', 'unitprice')
@@ -86,19 +28,18 @@ end
 
 function AuctionFaster:FindAuctionIndex(auctionData)
 	for index = 1, 50 do
-		local name, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner, _, _, itemId =
-			GetAuctionItemInfo('list', index);
+		local name, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner, _, _, itemId = GetAuctionItemInfo('list', index);
 
 		local bid = floor(minBid / count);
 		local buy = floor(buyoutPrice / count);
 
 		if
-			name == auctionData.itemName and
-			itemId == auctionData.itemId and
-			owner == auctionData.owner and
-			bid == auctionData.bid and
-			buy == auctionData.buy and
-			count == auctionData.count
+		name == auctionData.itemName and
+				itemId == auctionData.itemId and
+				owner == auctionData.owner and
+				bid == auctionData.bid and
+				buy == auctionData.buy and
+				count == auctionData.count
 		then
 			return index, name, count;
 		end
@@ -106,7 +47,6 @@ function AuctionFaster:FindAuctionIndex(auctionData)
 
 	return false, '', 0;
 end
-
 
 function AuctionFaster:GetCurrentAuctions(force)
 	local selectedItem = self.selectedItem;
@@ -315,4 +255,34 @@ function AuctionFaster:BuyItemByIndex(index)
 
 	PlaceAuctionBid('list', index, buyPrice);
 	CloseAuctionStaticPopups();
+end
+
+local failedAuctionErrors = {
+	[ERR_NOT_ENOUGH_MONEY]              = 'ERR_NOT_ENOUGH_MONEY',
+	[ERR_AUCTION_BAG]                   = 'ERR_AUCTION_BAG',
+	[ERR_AUCTION_BOUND_ITEM]            = 'ERR_AUCTION_BOUND_ITEM',
+	[ERR_AUCTION_CONJURED_ITEM]         = 'ERR_AUCTION_CONJURED_ITEM',
+	[ERR_AUCTION_DATABASE_ERROR]        = 'ERR_AUCTION_DATABASE_ERROR',
+	[ERR_AUCTION_ENOUGH_ITEMS]          = 'ERR_AUCTION_ENOUGH_ITEMS',
+	[ERR_AUCTION_HOUSE_DISABLED]        = 'ERR_AUCTION_HOUSE_DISABLED',
+	[ERR_AUCTION_LIMITED_DURATION_ITEM] = 'ERR_AUCTION_LIMITED_DURATION_ITEM',
+	[ERR_AUCTION_LOOT_ITEM]             = 'ERR_AUCTION_LOOT_ITEM',
+	[ERR_AUCTION_QUEST_ITEM]            = 'ERR_AUCTION_QUEST_ITEM',
+	[ERR_AUCTION_REPAIR_ITEM]           = 'ERR_AUCTION_REPAIR_ITEM',
+	[ERR_AUCTION_USED_CHARGES]          = 'ERR_AUCTION_USED_CHARGES',
+	[ERR_AUCTION_WRAPPED_ITEM]          = 'ERR_AUCTION_WRAPPED_ITEM',
+	[ERR_AUCTION_REPAIR_ITEM]           = 'ERR_AUCTION_REPAIR_ITEM',
+}
+
+function AuctionFaster:SellItem(bid, buy, duration, stackSize, numStacks)
+	self.lastUIError = nil;
+	StartAuction(bid, buy, duration, stackSize, numStacks);
+
+	local isMultisell = numStacks > 1;
+
+	if self.lastUIError and failedAuctionErrors[self.lastUIError] then
+		return false, false;
+	end
+
+	return true, isMultisell;
 end

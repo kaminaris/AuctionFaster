@@ -11,6 +11,7 @@ function AuctionFaster:OnInitialize()
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
 	self:RegisterEvent('AUCTION_MULTISELL_UPDATE');
+	self:RegisterEvent('UI_ERROR_MESSAGE');
 
 	if not self.db.global.auctionDb then
 		self.db.global.auctionDb = {};
@@ -28,6 +29,11 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 			self.onTabClickHooked = true;
 		end
 	end
+end
+
+function AuctionFaster:UI_ERROR_MESSAGE(_, message)
+	print(message);
+	self.lastUIError = message;
 end
 
 function AuctionFaster:AuctionFrameTab_OnClick(tab)

@@ -38,7 +38,7 @@ function AuctionFaster:DrawItemSettings()
 		{text = '24h', value = 2},
 		{text = '48h', value = 3},
 	}
-	local duration = StdUi:Dropdown(pane, 'AFDuration', 150, 20, options);
+	local duration = StdUi:Dropdown(pane, 150, 20, options);
 	StdUi:GlueBelow(duration, useCustomDuration, 0, -30, 'LEFT');
 	StdUi:AddLabel(pane, duration, 'Auction Duration', 'TOP');
 
