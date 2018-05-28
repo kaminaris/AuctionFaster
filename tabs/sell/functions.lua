@@ -17,7 +17,7 @@ function AuctionFaster:GetSellSettings()
 	end
 
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
-	print('self.selectedItem.count', self.selectedItem.count);
+
 	if stackSize > self.selectedItem.count then
 		stackSize = self.selectedItem.count;
 	end

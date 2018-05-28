@@ -306,57 +306,6 @@ function AuctionFaster:DrawTabButtons(leftMargin)
 	sellTab.buttons.buyItemButton = buyItemButton;
 end
 
-local function FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols)
-	local rowdata = table:GetRow(realrow);
-	local celldata = table:GetCell(rowdata, column);
-	local highlight;
-
-	if type(celldata) == 'table' then
-		highlight = celldata.highlight;
-	end
-
-	if table.fSelect then
-		if table.selected == realrow then
-			table:SetHighLightColor(rowFrame, highlight or cols[column].highlight
-					or rowdata.highlight or table:GetDefaultHighlight());
-		else
-			table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
-		end
-	end
-end
-
-local function FxDoCellUpdate(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table)
-	if fShow then
-		local idx = cols[column].index;
-		local format = cols[column].format;
-
-		local val = data[realrow][idx];
-		if (format == 'money') then
-			val = StdUi.Util.formatMoney(val);
-		elseif (format == 'number') then
-			val = tostring(val);
-		end
-
-		cellFrame.text:SetText(val);
-		FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols);
-	end
-end
-
-local function FxCompareSort(table, rowA, rowB, sortBy)
-	local a = table:GetRow(rowA);
-	local b = table:GetRow(rowB);
-	local column = table.cols[sortBy];
-	local idx = column.index;
-
-	local direction = column.sort or column.defaultsort or 'asc';
-
-	if direction:lower() == 'asc' then
-		return a[idx] > b[idx];
-	else
-		return a[idx] < b[idx];
-	end
-end
-
 function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	local sellTab = self.sellTab;
 
@@ -367,8 +316,6 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Qty',
@@ -376,8 +323,6 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Bid / Item',
@@ -385,8 +330,6 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			align        = 'RIGHT',
 			index        = 'bid',
 			format       = 'money',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Buy / Item',
@@ -394,8 +337,6 @@ function AuctionFaster:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			align        = 'RIGHT',
 			index        = 'buy',
 			format       = 'money',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 	}
 

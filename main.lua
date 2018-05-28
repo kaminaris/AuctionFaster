@@ -32,7 +32,7 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 end
 
 function AuctionFaster:UI_ERROR_MESSAGE(_, message)
-	print(message);
+	print('ERROR', message);
 	self.lastUIError = message;
 end
 

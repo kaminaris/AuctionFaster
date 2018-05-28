@@ -182,78 +182,6 @@ function AuctionFaster:UpdateFavoriteFrame(favoriteFrame, fav, i, lineHeight)
 	favoriteFrame:Show();
 end
 
-local function FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols)
-	local rowdata = table:GetRow(realrow);
-	local celldata = table:GetCell(rowdata, column);
-	local highlight;
-
-	if type(celldata) == 'table' then
-		highlight = celldata.highlight;
-	end
-
-	if table.fSelect then
-		if table.selected == realrow then
-			table:SetHighLightColor(
-				rowFrame,
-				highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight()
-			);
-		else
-			table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank());
-		end
-	end
-end
-
-local function FxDoCellUpdate(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table)
-	if fShow then
-		local idx = cols[column].index;
-		local format = cols[column].format;
-
-		local val = data[realrow][idx];
-		if (format == 'money') then
-			val = StdUi.Util.formatMoney(val);
-			cellFrame.text:SetText(val);
-		elseif (format == 'number') then
-			val = tostring(val);
-			cellFrame.text:SetText(val);
-		elseif (format == 'icon') then
-			if cellFrame.texture then
-				cellFrame.texture:SetTexture(val);
-				cellFrame.texture.itemLink = data[realrow].itemLink;
-			else
-				cellFrame.texture = StdUi:Texture(cellFrame, cols[column].width, cols[column].width, val);
-				cellFrame.texture:SetPoint('CENTER', 0, 0);
-				cellFrame.texture.itemLink = data[realrow].itemLink;
-
-				cellFrame:SetScript('OnEnter', function(self)
-					AuctionFaster:ShowTooltip(self, self.texture.itemLink, true);
-				end);
-				cellFrame:SetScript('OnLeave', function(self)
-					AuctionFaster:ShowTooltip(self, nil, false);
-				end);
-			end
-		else
-			cellFrame.text:SetText(val);
-		end
-
-		FxHighlightScrollingTableRow(table, realrow, column, rowFrame, cols);
-	end
-end
-
-local function FxCompareSort(table, rowA, rowB, sortBy)
-	local a = table:GetRow(rowA);
-	local b = table:GetRow(rowB);
-	local column = table.cols[sortBy];
-	local idx = column.index;
-
-	local direction = column.sort or column.defaultsort or 'asc';
-
-	if direction:lower() == 'asc' then
-		return a[idx] > b[idx];
-	else
-		return a[idx] < b[idx];
-	end
-end
-
 function AuctionFaster:DrawSearchResultsTable()
 	local buyTab = self.buyTab;
 
@@ -264,8 +192,18 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'LEFT',
 			index        = 'icon',
 			format       = 'icon',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
+			sortable	 = false,
+			events		 = {
+				OnEnter = function(rowFrame, cellFrame, data, cols, row, realRow)
+					local cellData = data[realRow];
+					AuctionFaster:ShowTooltip(cellFrame, cellData.itemLink, true);
+					return false;
+				end,
+				OnLeave = function(rowFrame, cellFrame)
+					AuctionFaster:ShowTooltip(cellFrame, nil, false);
+					return false;
+				end
+			},
 		},
 		{
 			name         = 'Name',
@@ -273,8 +211,6 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'LEFT',
 			index        = 'itemLink',
 			format       = 'string',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Seller',
@@ -282,8 +218,6 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Qty',
@@ -291,8 +225,6 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Bid / Item',
@@ -300,8 +232,6 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'RIGHT',
 			index        = 'bid',
 			format       = 'money',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 		{
 			name         = 'Buy / Item',
@@ -309,8 +239,6 @@ function AuctionFaster:DrawSearchResultsTable()
 			align        = 'RIGHT',
 			index        = 'buy',
 			format       = 'money',
-			DoCellUpdate = FxDoCellUpdate,
-			comparesort  = FxCompareSort
 		},
 	}
 
