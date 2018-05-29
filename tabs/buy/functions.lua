@@ -99,29 +99,16 @@ function AuctionFaster:UpdatePager()
 	local lp = self.currentQuery.lastPage + 1;
 	self.buyTab.pager.pageText:SetText('Page ' .. p ..' of ' .. lp);
 
-	--@TODO: update buttons left right
-end
+	self.buyTab.pager.leftButton:Enable();
+	self.buyTab.pager.rightButton:Enable();
 
-function AuctionFaster:InterceptLinkClick()
-	local origChatEdit_InsertLink = ChatEdit_InsertLink;
-	local origHandleModifiedItemClick = HandleModifiedItemClick;
-	local function SearchItemLink(origMethod, link)
-		if self.buyTab.searchBox:HasFocus() then
-			local itemName = GetItemInfo(link);
-			self.buyTab.searchBox:SetText(itemName);
-			return true;
-		else
-			return origMethod(link);
-		end
+	if p <= 1 then
+		self.buyTab.pager.leftButton:Disable();
 	end
 
-	AuctionFaster:RawHook('HandleModifiedItemClick', function(link)
-		return SearchItemLink(origHandleModifiedItemClick, link);
-	end, true);
-
-	AuctionFaster:RawHook('ChatEdit_InsertLink', function(link)
-		return SearchItemLink(origChatEdit_InsertLink, link);
-	end, true);
+	if p >= lp then
+		self.buyTab.pager.rightButton:Disable();
+	end
 end
 
 function AuctionFaster:AddToFavorites()
@@ -241,4 +228,26 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 		'afConfirmBuy'
 	);
 	confirmFrame.count = count;
+end
+
+function AuctionFaster:InterceptLinkClick()
+	local origChatEdit_InsertLink = ChatEdit_InsertLink;
+	local origHandleModifiedItemClick = HandleModifiedItemClick;
+	local function SearchItemLink(origMethod, link)
+		if self.buyTab.searchBox:HasFocus() then
+			local itemName = GetItemInfo(link);
+			self.buyTab.searchBox:SetText(itemName);
+			return true;
+		else
+			return origMethod(link);
+		end
+	end
+
+	AuctionFaster:RawHook('HandleModifiedItemClick', function(link)
+		return SearchItemLink(origHandleModifiedItemClick, link);
+	end, true);
+
+	AuctionFaster:RawHook('ChatEdit_InsertLink', function(link)
+		return SearchItemLink(origChatEdit_InsertLink, link);
+	end, true);
 end

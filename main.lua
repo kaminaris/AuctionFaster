@@ -36,6 +36,39 @@ function AuctionFaster:UI_ERROR_MESSAGE(_, message)
 	self.lastUIError = message;
 end
 
+function AuctionFaster:BAG_UPDATE_DELAYED()
+	if not AuctionFrame or not AuctionFrame:IsVisible() then
+		self.isInMultisellProcess = false;
+		self.lastSoldItem = nil;
+		return;
+	end
+
+	if self.isInMultisellProcess then
+		-- Do not update inventory while multiselling
+		return;
+	end
+
+	self:ScanInventory();
+	if not self:CheckIfSelectedItemExists() then
+		-- no need to ask if there are no items left
+		return;
+	end
+
+	if not self.lastSoldItem then
+		return;
+	end
+
+	self:CheckEverythingSold();
+	self.lastSoldItem = nil;
+end
+
+function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
+	self.isInMultisellProcess = true;
+	if current == max then
+		self.isInMultisellProcess = false;
+	end
+end
+
 function AuctionFaster:AuctionFrameTab_OnClick(tab)
 	self.sellTab:Hide();
 	self.buyTab:Hide();

@@ -1,14 +1,6 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
-function AuctionFaster:AUCTION_MULTISELL_UPDATE(_, current, max)
-	if current == max then
-		C_Timer.After(0.5, function()
-			AuctionFaster:CheckEverythingSold();
-		end);
-	end
-end
-
 function AuctionFaster:SetAuctionSort()
 	self.currentlySorting = true;
 	SortAuctionItems('list', 'unitprice')
@@ -34,12 +26,12 @@ function AuctionFaster:FindAuctionIndex(auctionData)
 		local buy = floor(buyoutPrice / count);
 
 		if
-		name == auctionData.itemName and
-				itemId == auctionData.itemId and
-				owner == auctionData.owner and
-				bid == auctionData.bid and
-				buy == auctionData.buy and
-				count == auctionData.count
+			name == auctionData.itemName and
+			itemId == auctionData.itemId and
+			--owner == auctionData.owner and -- actually there is no need to check owner
+			bid == auctionData.bid and
+			buy == auctionData.buy and
+			count == auctionData.count
 		then
 			return index, name, count;
 		end
@@ -89,7 +81,6 @@ function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 end
 
 function AuctionFaster:CurrentAuctionsCallback()
-
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 
 	if not selectedId then
@@ -276,11 +267,13 @@ local failedAuctionErrors = {
 
 function AuctionFaster:SellItem(bid, buy, duration, stackSize, numStacks)
 	self.lastUIError = nil;
+	self.lastSoldItem = GetAuctionSellItemInfo();
 	StartAuction(bid, buy, duration, stackSize, numStacks);
 
 	local isMultisell = numStacks > 1;
 
 	if self.lastUIError and failedAuctionErrors[self.lastUIError] then
+		self.lastSoldItem = nil;
 		return false, false;
 	end
 

@@ -122,10 +122,6 @@ function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 	self:UpdateItemsTabPrice(itemId, itemName, newPrice);
 end
 
-function AuctionFaster:BAG_UPDATE_DELAYED()
-	self:ScanInventory();
-end
-
 function AuctionFaster:GetItemFromInventory(id, name)
 	local firstBag, firstSlot, remainingQty;
 

@@ -108,6 +108,27 @@ function AuctionFaster:SelectItem(index)
 	self:EnableAuctionTabControls(true);
 end
 
+function AuctionFaster:CheckIfSelectedItemExists()
+	local selectedId, selectedName = self:GetSelectedItemIdName();
+	if not selectedId then
+		return false;
+	end
+
+	local qtyLeft = self:UpdateItemInventory(selectedId, selectedName);
+	if qtyLeft == 0 then
+		if #self.inventoryItems > self.selectedItemIndex then
+			-- select next item
+			self:SelectItem(self.selectedItemIndex);
+		else
+			-- just select last item
+			self:SelectItem(#self.inventoryItems);
+		end
+		return false;
+	end
+
+	return true;
+end
+
 function AuctionFaster:GetSelectedItemIdName()
 	if not self.selectedItem then
 		return nil, nil;
@@ -220,12 +241,6 @@ function AuctionFaster:SellCurrentItem(singleStack)
 		maxStacks
 	);
 
-	if success and not multisell then
-		C_Timer.After(0.5, function()
-			self:CheckEverythingSold();
-		end);
-	end
-
 	return success;
 end
 
@@ -247,7 +262,6 @@ function AuctionFaster:CheckEverythingSold()
 	local itemId, itemName, itemLink = selectedItem.itemId, selectedItem.itemName, selectedItem.link;
 
 	local currentItemName = GetAuctionSellItemInfo();
-
 	if not currentItemName or currentItemName ~= itemName then
 		self:PutItemInSellBox(itemId, itemName);
 	end
@@ -271,7 +285,7 @@ function AuctionFaster:CheckEverythingSold()
 				self:GetParent():Hide();
 
 				-- Double check if item is still in inventory
-				qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
+				--qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
 				if qtyLeft == 0 then
 					return ;
 				end
