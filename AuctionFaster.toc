@@ -15,8 +15,6 @@ Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceHook-3.0\AceHook-3.0.xml
-Libs\LibTextTable-1.1\Lib.xml
-Libs\lib-st\lib-st.xml
 Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 Libs\StdUi\StdUi.xml
 

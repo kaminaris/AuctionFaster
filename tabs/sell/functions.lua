@@ -182,6 +182,69 @@ function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	end
 end
 
+
+function AuctionFaster:CurrentAuctionsCallback(shown, total, items)
+	local selectedId, selectedName = self:GetSelectedItemIdName();
+
+	if not selectedId then
+		-- Not our scan, ignore it
+		return ;
+	end ;
+
+	-- since we did scan anyway, put it in cache
+	local cacheKey;
+
+	local auctions = {}
+	for i = 1, shown do
+		local itemInfo = items[i];
+
+		-- this function runs for every AH scan so make sure to ignore it if item does not match selected one
+		if itemInfo.name == selectedName and itemInfo.itemId == selectedId then
+			if not cacheKey then
+				cacheKey = itemInfo.itemId .. itemInfo.name;
+			end
+
+			tinsert(auctions, {
+				owner    = itemInfo.owner,
+				count    = itemInfo.count,
+				itemId   = itemInfo.itemId,
+				itemName = itemInfo.name,
+				bid      = floor(itemInfo.minBid / itemInfo.count),
+				buy      = floor(itemInfo.buyoutPrice / itemInfo.count),
+			});
+		end
+	end
+
+	-- we skip any auctions that are not the same as selected item so no problem
+	local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
+
+	table.sort(auctions, function(a, b)
+		return a.buy < b.buy;
+	end);
+
+	cacheItem.scanTime = GetServerTime();
+	cacheItem.auctions = auctions;
+	cacheItem.totalItems = #auctions;
+
+	self:UpdateSellTabAuctions(cacheItem);
+	self:UpdateInfoPaneText();
+end
+
+function AuctionFaster:UpdateSellTabAuctions(cacheItem)
+	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
+	self.sellTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
+
+	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
+
+	if cacheItem.settings.alwaysUndercut then
+		self:UnderCutPrices(cacheItem, minBid, minBuy);
+	elseif cacheItem.settings.rememberLastPrice then
+		self:UpdateTabPrices(cacheItem.bid, cacheItem.buy);
+	end
+
+	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
+end
+
 function AuctionFaster:BuyItem()
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 	if not selectedId then

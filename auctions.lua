@@ -48,7 +48,7 @@ function AuctionFaster:GetCurrentAuctions(force)
 	local cacheItem = self:GetItemFromCache(itemId, itemName);
 	-- We still have pretty recent results from auction house, no need to scan again
 	if not force and cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
-		self:UpdateAuctionTable(cacheItem);
+		self:UpdateSellTabAuctions(cacheItem);
 		self:UpdateInfoPaneText();
 		return ;
 	end
@@ -65,85 +65,47 @@ function AuctionFaster:GetCurrentAuctions(force)
 	self.currentlyQuerying = false;
 end
 
+local itemKeys = {
+	'name', 'texture', 'count', 'quality', 'canUse', 'level', 'levelColHeader', 'minBid',
+	'minIncrement', 'buyoutPrice', 'bidAmount', 'highBidder', 'bidderFullName', 'owner',
+	'ownerFullName', 'saleStatus', 'itemId', 'hasAllInfo'
+};
+function AuctionFaster:GetItemFromAuctionList(index)
+	return self:TableCombine(itemKeys, {GetAuctionItemInfo('list', index)});
+end
+
 function AuctionFaster:AUCTION_ITEM_LIST_UPDATE()
 	if self.currentlySorting or not self.afScan then
-		return ;
+		return;
+	end
+
+	local shown, total = GetNumAuctionItems('list');
+	local items = {};
+
+	local hasAllInfo = true;
+	for i = 1, shown do
+		local itemInfo = self:GetItemFromAuctionList(i);
+
+		if not itemInfo.hasAllInfo or not itemInfo.owner then
+			hasAllInfo = false;
+		end
+
+		items[i] = itemInfo;
+	end
+
+	-- wait for next event
+	if not hasAllInfo then
+		return;
 	end
 
 	if self.afScan == 'CurrentAuctions' then
-		self:CurrentAuctionsCallback();
+		self:CurrentAuctionsCallback(shown, total, items);
 	elseif self.afScan == 'SearchAuctions' then
-		self:SearchAuctionsCallback();
+		self:SearchAuctionsCallback(shown, total, items);
 	end
 
 	-- no longer our scan
 	self.afScan = false;
-end
-
-function AuctionFaster:CurrentAuctionsCallback()
-	local selectedId, selectedName = self:GetSelectedItemIdName();
-
-	if not selectedId then
-		-- Not our scan, ignore it
-		return ;
-	end ;
-
-	local shown, total = GetNumAuctionItems('list');
-
-	-- since we did scan anyway, put it in cache
-	local cacheKey;
-
-	local auctions = {}
-	for i = 1, shown do
-		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-		ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
-
-		-- this function runs for every AH scan so make sure to ignore it if item does not match selected one
-		if name == selectedName and itemId == selectedId then
-			if not cacheKey then
-				cacheKey = itemId .. name;
-			end
-
-			tinsert(auctions, {
-				owner    = owner,
-				count    = count,
-				itemId   = itemId,
-				itemName = name,
-				bid      = floor(minBid / count),
-				buy      = floor(buyoutPrice / count),
-			});
-		end
-	end
-
-	-- we skip any auctions that are not the same as selected item so no problem
-	local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
-
-	table.sort(auctions, function(a, b)
-		return a.buy < b.buy;
-	end);
-
-	cacheItem.scanTime = GetServerTime();
-	cacheItem.auctions = auctions;
-	cacheItem.totalItems = #auctions;
-
-	self:UpdateAuctionTable(cacheItem);
-	self:UpdateInfoPaneText();
-end
-
-function AuctionFaster:UpdateAuctionTable(cacheItem)
-	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
-	self.sellTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
-
-	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
-
-	if cacheItem.settings.alwaysUndercut then
-		self:UnderCutPrices(cacheItem, minBid, minBuy);
-	elseif cacheItem.settings.rememberLastPrice then
-		self:UpdateTabPrices(cacheItem.bid, cacheItem.buy);
-	end
-
-	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
 end
 
 function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)

@@ -74,3 +74,12 @@ function AuctionFaster:FormatAuctionDuration(duration)
 		return '---';
 	end
 end
+
+function AuctionFaster:TableCombine(keys, values)
+	local result = {};
+	for i = 1, #keys do
+		result[keys[i]] = values[i];
+	end
+
+	return result;
+end

@@ -21,7 +21,6 @@ function AuctionFaster:AddBuyAuctionHouseTab()
 	StdUi:StripTextures(tab);
 
 	tab.backdrop = CreateFrame('Frame', nil, tab);
-	tab.backdrop:SetTemplate('Default');
 	tab.backdrop:SetFrameLevel(tab:GetFrameLevel() - 1);
 	StdUi:GlueAcross(tab.backdrop, tab, 10, -3, -10, 3);
 	StdUi:ApplyBackdrop(tab.backdrop);
@@ -158,8 +157,9 @@ function AuctionFaster:DrawFavorites()
 end
 
 function AuctionFaster:CreateFavoriteFrame(scrollChild, lineHeight)
-	local favoriteFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - 22, lineHeight, 'aaaa');
-	local removeFav = StdUi:Button(favoriteFrame, 20, lineHeight, 'X');
+	local favoriteFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - 22, lineHeight, '');
+
+	local removeFav = StdUi:SquareButton(favoriteFrame, 20, 20, 'DELETE');
 	StdUi:GlueRight(removeFav, favoriteFrame, 0, 0);
 
 	removeFav:SetScript('OnClick', function(self)

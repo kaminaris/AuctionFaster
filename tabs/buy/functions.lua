@@ -48,29 +48,28 @@ end
 --- Searching callback function
 ----------------------------------------------------------------------------
 
-function AuctionFaster:SearchAuctionsCallback()
-	local shown, total = GetNumAuctionItems('list');
-
+function AuctionFaster:SearchAuctionsCallback(shown, total, items)
 	self.currentQuery.lastPage = ceil(total / 50) - 1;
 
 	local auctions = {}
 	for i = 1, shown do
-		local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-		minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-		ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
+		local itemInfo = items[i];
+		--local name, texture, count, quality, canUse, level, levelColHeader, minBid,
+		--minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
+		--ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
 
-		local _, itemLink = GetItemInfo(itemId);
+		local _, itemLink = GetItemInfo(itemInfo.itemId);
 
 		tinsert(auctions, {
-			owner     = owner,
-			count     = count,
-			icon      = texture,
-			itemId    = itemId,
-			itemName  = name,
+			owner     = itemInfo.owner,
+			count     = itemInfo.count,
+			icon      = itemInfo.texture,
+			itemId    = itemInfo.itemId,
+			itemName  = itemInfo.name,
 			itemLink  = itemLink,
 			itemIndex = i,
-			bid       = floor(minBid / count),
-			buy       = floor(buyoutPrice / count),
+			bid       = floor(itemInfo.minBid / itemInfo.count),
+			buy       = floor(itemInfo.buyoutPrice / itemInfo.count),
 		});
 	end
 
