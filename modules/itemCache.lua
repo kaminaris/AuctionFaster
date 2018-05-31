@@ -29,7 +29,7 @@ function ItemCache:FindOrCreateCacheItem(itemId, itemName)
 		itemName   = itemName,
 		itemId     = itemId,
 		icon       = GetItemIcon(itemId),
-		settings   = self:GetDefaultItemSettings(),
+		settings   = AuctionFaster:GetDefaultItemSettings(),
 		scanTime   = nil,
 		auctions   = {},
 		totalItems = 0,
