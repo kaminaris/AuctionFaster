@@ -17,6 +17,9 @@ function AuctionFaster:OnInitialize()
 		self.db.global.auctionDb = {};
 	end
 
+	if self.db.global.tooltipsEnabled then
+		self:EnableModule('Tooltip');
+	end
 end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()

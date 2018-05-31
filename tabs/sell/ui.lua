@@ -1,9 +1,6 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
-AuctionFaster.itemFramePool = {};
-AuctionFaster.itemFrames = {};
-
 function AuctionFaster:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
@@ -47,9 +44,9 @@ end
 function AuctionFaster:DrawItemsFrame()
 	local marginTop = -35;
 	local sellTab = self.sellTab;
-	local panel, scrollFrame, scrollChild = StdUi:ScrollFrame(sellTab, 300, 300);
+	local panel, scrollFrame, scrollChild = StdUi:FauxScrollFrame(sellTab, 300, 300, 11, 32);
 	panel:SetPoint('TOPLEFT', 25, marginTop);
-	panel:SetPoint('BOTTOMLEFT', 300, 38);
+	panel:SetPoint('BOTTOMLEFT', 300, 55);
 
 	StdUi:AddLabel(sellTab, panel, 'Inventory Items', 'TOP');
 
@@ -73,35 +70,21 @@ function AuctionFaster:DrawItems()
 		return ;
 	end
 
+
 	local scrollChild = self.sellTab.scrollChild;
 	local lineHeight = 32;
 	local margin = 5;
 
-	scrollChild:SetHeight(margin * 2 + lineHeight * #self.inventoryItems);
+	local buttonCreate = function(parent, i)
+		return AuctionFaster:CreateItemFrame(lineHeight, margin);
+	end;
 
-	-- hide all frames
-	for i = 1, #self.itemFramePool do
-		self.itemFramePool[i]:Hide();
-	end
+	local buttonUpdate = function(parent, i, itemFrame, data)
+		AuctionFaster:UpdateItemFrame(itemFrame, data);
+		itemFrame.itemIndex = i;
+	end;
 
-	for i = 1, #self.inventoryItems do
-		-- next time we will be running this function we will reuse frames
-		local holdingFrame = self.itemFramePool[i];
-
-		if not holdingFrame then
-			-- no allocated frame need to create one
-			holdingFrame = self:CreateItemFrame(lineHeight, margin);
-			-- insert only newly created to frame pool
-			self.itemFramePool[i] = holdingFrame;
-		end
-
-		-- there is a frame so we need to update it
-		self:UpdateItemFrame(holdingFrame, self.inventoryItems[i]);
-		holdingFrame:ClearAllPoints();
-		holdingFrame:SetPoint('TOPLEFT', margin, -(i - 1) * lineHeight - margin);
-		holdingFrame.itemIndex = i;
-		holdingFrame:Show();
-	end
+	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, self.inventoryItems, lineHeight);
 end
 
 function AuctionFaster:CreateItemFrame(lineHeight, margin)
@@ -140,7 +123,7 @@ function AuctionFaster:UpdateItemFrame(holdingFrame, inventoryItem)
 	holdingFrame.itemIcon:SetTexture(inventoryItem.icon);
 	holdingFrame.itemName:SetText(inventoryItem.link);
 	holdingFrame.itemQty:SetText('#: |cff00f209' .. inventoryItem.count .. '|r');
-	holdingFrame.itemPrice:SetText(AuctionFaster:FormatMoney(inventoryItem.price));
+	holdingFrame.itemPrice:SetText(StdUi.Util.formatMoney(inventoryItem.price));
 end
 
 function AuctionFaster:DrawRightPane()

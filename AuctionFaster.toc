@@ -19,9 +19,12 @@ Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 Libs\StdUi\StdUi.xml
 
 main.lua
+
+modules\itemCache.lua
+modules\tooltip.lua
+
 options.lua
 auctions.lua
-itemCache.lua
 validators.lua
 inventory.lua
 utils.lua
@@ -31,7 +34,6 @@ tabs\sell\ui.lua
 tabs\sell\functions.lua
 tabs\sell\infoPane.lua
 tabs\sell\itemSettings.lua
-
 
 tabs\buy\ui.lua
 tabs\buy\functions.lua

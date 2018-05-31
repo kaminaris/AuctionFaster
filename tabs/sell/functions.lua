@@ -1,5 +1,15 @@
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
+local ItemCache = AuctionFaster:GetModule('ItemCache');
+
+function AuctionFaster:GetSelectedItemFromCache()
+	if not self.selectedItem then
+		return nil;
+	end
+
+	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.itemName;
+	return ItemCache:GetItemFromCache(itemId, itemName, true);
+end
 
 function AuctionFaster:GetSellSettings()
 	local sellTab = self.sellTab;
@@ -22,7 +32,7 @@ function AuctionFaster:GetSellSettings()
 		stackSize = self.selectedItem.count;
 	end
 
-	local duration = 2;
+	local duration = self.db.global.auctionDuration;
 	if cacheItem.settings.duration and cacheItem.settings.useCustomDuration then
 		duration = cacheItem.settings.duration;
 	end
@@ -91,7 +101,7 @@ function AuctionFaster:SelectItem(index)
 
 	sellTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
 
-	local cacheItem = self:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
 	-- Clear prices
 	self:UpdateTabPrices(nil, nil);
@@ -177,7 +187,7 @@ function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	for i = 1, #self.itemFramePool do
 		local f = self.itemFramePool[i];
 		if f.item.itemId == itemId and f.item.itemName == itemName then
-			f.itemPrice:SetText(self:FormatMoney(newPrice));
+			f.itemPrice:SetText(StdUi.Util.formatMoney(newPrice));
 		end
 	end
 end
@@ -216,7 +226,7 @@ function AuctionFaster:CurrentAuctionsCallback(shown, total, items)
 	end
 
 	-- we skip any auctions that are not the same as selected item so no problem
-	local cacheItem = self:FindOrCreateCacheItem(selectedId, selectedName);
+	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
 
 	table.sort(auctions, function(a, b)
 		return a.buy < b.buy;

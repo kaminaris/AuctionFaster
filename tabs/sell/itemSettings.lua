@@ -1,5 +1,6 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 function AuctionFaster:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
@@ -192,7 +193,7 @@ function AuctionFaster:UpdateItemSettings(settingName, settingValue)
 	end
 
 	local cacheKey = self.selectedItem.itemId .. self.selectedItem.itemName;
-	self:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
+	ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
 end
 
 function AuctionFaster:ToggleItemSettingsPane()

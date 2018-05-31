@@ -1,12 +1,15 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 function AuctionFaster:SetAuctionSort()
 	self.currentlySorting = true;
-	SortAuctionItems('list', 'unitprice')
+	SortAuctionItems('list', 'unitprice');
+
 	if IsAuctionSortReversed('list', 'unitprice') then
-		SortAuctionItems('list', 'unitprice')
+		SortAuctionItems('list', 'unitprice');
 	end
+
 	self.currentlySorting = false;
 end
 
@@ -45,7 +48,7 @@ function AuctionFaster:GetCurrentAuctions(force)
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
 
-	local cacheItem = self:GetItemFromCache(itemId, itemName);
+	local cacheItem = ItemCache:GetItemFromCache(itemId, itemName);
 	-- We still have pretty recent results from auction house, no need to scan again
 	if not force and cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
 		self:UpdateSellTabAuctions(cacheItem);

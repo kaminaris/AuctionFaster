@@ -1,3 +1,8 @@
+
+local ItemCache = AuctionFaster:GetModule('ItemCache');
+--local Tooltip = AuctionFaster:GetModule('ItemCache');
+
+
 AuctionFaster.options = {
 	type = 'group',
 	name = 'AuctionFaster Options',
@@ -12,6 +17,21 @@ AuctionFaster.options = {
 				AuctionFaster.db.global.enabled = val;
 			end,
 			get = function(info) return not AuctionFaster.db.global.enabled end
+		},
+		enableToolTips = {
+			name = 'Enable Tooltip information',
+			desc = 'You will see bid / buy prices on item tooltips',
+			type = 'toggle',
+			width = 'full',
+			set = function(info, val)
+				AuctionFaster.db.global.tooltipsEnabled = val;
+				if val then
+					AuctionFaster:EnableModule('Tooltip');
+				else
+					AuctionFaster:DisableModule('Tooltip');
+				end
+			end,
+			get = function(info) return AuctionFaster.db.global.tooltipsEnabled end
 		},
 		auctionDuration = {
 			name = 'Auction Duration',
@@ -32,7 +52,7 @@ AuctionFaster.options = {
 			type = 'execute',
 			--width = 'full',
 			func = function(info, val)
-				AuctionFaster:WipeItemCache();
+				ItemCache:WipeItemCache();
 				print('Settins wiped!');
 			end,
 		},
