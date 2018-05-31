@@ -70,13 +70,12 @@ function AuctionFaster:DrawItems()
 		return ;
 	end
 
-
 	local scrollChild = self.sellTab.scrollChild;
 	local lineHeight = 32;
 	local margin = 5;
 
 	local buttonCreate = function(parent, i)
-		return AuctionFaster:CreateItemFrame(lineHeight, margin);
+		return AuctionFaster:CreateItemFrame(parent, lineHeight, margin);
 	end;
 
 	local buttonUpdate = function(parent, i, itemFrame, data)
@@ -87,9 +86,8 @@ function AuctionFaster:DrawItems()
 	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, self.inventoryItems, lineHeight);
 end
 
-function AuctionFaster:CreateItemFrame(lineHeight, margin)
-	local scrollChild = self.sellTab.scrollChild;
-	local holdingFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - margin * 2, lineHeight);
+function AuctionFaster:CreateItemFrame(parent, lineHeight, margin)
+	local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
 
 	holdingFrame:SetScript('OnEnter', function(self)
 		AuctionFaster:ShowTooltip(self, self.itemLink, true);

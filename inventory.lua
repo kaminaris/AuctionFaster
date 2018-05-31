@@ -79,6 +79,11 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 
 	local itemName, itemLink, _, _, _, _, _, itemStackCount, _, _, itemSellPrice = GetItemInfo(link);
+	if not itemName then
+		print('wierd item in bag', link);
+		return;
+	end
+
 	local itemIcon = GetItemIcon(itemId);
 
 	local found = false;

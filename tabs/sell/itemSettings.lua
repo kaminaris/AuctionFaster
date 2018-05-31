@@ -37,25 +37,7 @@ function AuctionFaster:DrawItemSettings()
 	local options = {
 		{text = '12h', value = 1},
 		{text = '24h', value = 2},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
-		{text = '48h', value = 3},
+		{text = '48h', value = 3}
 	}
 	local duration = StdUi:Dropdown(pane, 150, 20, options);
 	StdUi:GlueBelow(duration, useCustomDuration, 0, -30, 'LEFT');

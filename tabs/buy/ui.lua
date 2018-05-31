@@ -41,7 +41,7 @@ function AuctionFaster:AddBuyAuctionHouseTab()
 
 	self:DrawSearchPane();
 	self:DrawFavoritesPane();
-	self:DrawFavorites(20);
+	--self:DrawFavorites(20);
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
 	self:DrawPager();
@@ -120,66 +120,62 @@ end
 
 function AuctionFaster:DrawFavoritesPane()
 	local buyTab = self.buyTab;
+	local lineHeight = 20;
 
-	local favorites = StdUi:ScrollFrame(buyTab, 200, 270);
+	local favorites = StdUi:FauxScrollFrame(buyTab, 200, 270, 13, lineHeight);
 	StdUi:GlueTop(favorites, buyTab, -10, -100, 'RIGHT');
 	StdUi:AddLabel(buyTab, favorites, 'Favorite Searches', 'TOP');
 
 	buyTab.favorites = favorites;
+
+	self:DrawFavorites(lineHeight);
 end
 
-local favoriteItemFrames = {};
 function AuctionFaster:DrawFavorites()
-	local scrollChild = self.buyTab.favorites.scrollChild;
+	local favFrame = self.buyTab.favorites;
 	local lineHeight = 20;
 
-	if not self.db.global.favorites then
-		self.db.global.favorites = {};
-	end
+	local buttonCreate = function(parent, i)
+		return AuctionFaster:CreateFavoriteFrame(parent, lineHeight);
+	end;
 
-	local favorites = self.db.global.favorites;
+	local buttonUpdate = function(parent, i, itemFrame, data)
+		AuctionFaster:UpdateFavoriteFrame(i, itemFrame, data);
+		itemFrame.itemIndex = i;
+	end;
 
-	scrollChild:SetHeight(2 * 2 + lineHeight * #favorites);
-
-	for i = 1, #favoriteItemFrames do
-		favoriteItemFrames[i]:Hide();
-	end
-
-	for i = 1, #favorites do
-		local fav = favorites[i];
-		if not favoriteItemFrames[i] then
-			favoriteItemFrames[i] = self:CreateFavoriteFrame(scrollChild, lineHeight);
-		end
-
-		local favoriteFrame = favoriteItemFrames[i];
-		self:UpdateFavoriteFrame(favoriteFrame, fav, i, lineHeight);
-	end
+	local data = self.db.global.favorites;
+	StdUi:ButtonList(favFrame.scrollChild, buttonCreate, buttonUpdate, data, lineHeight);
+	favFrame:UpdateItemsCount(#data);
 end
 
-function AuctionFaster:CreateFavoriteFrame(scrollChild, lineHeight)
-	local favoriteFrame = StdUi:HighlightButton(scrollChild, scrollChild:GetWidth() - 22, lineHeight, '');
+function AuctionFaster:CreateFavoriteFrame(parent, lineHeight)
+	local favoriteFrame = StdUi:Frame(parent, parent:GetWidth(), lineHeight);
+
+	local favButton = StdUi:HighlightButton(favoriteFrame, favoriteFrame:GetWidth() - 22, lineHeight, '');
+	StdUi:GlueLeft(favButton, favoriteFrame, 0, 0, true);
 
 	local removeFav = StdUi:SquareButton(favoriteFrame, 20, 20, 'DELETE');
-	StdUi:GlueRight(removeFav, favoriteFrame, 0, 0);
+	removeFav:SetBackdrop(nil);
+	StdUi:GlueRight(removeFav, favoriteFrame, 0, 0, true);
 
 	removeFav:SetScript('OnClick', function(self)
 		AuctionFaster:RemoveFromFavorites(self:GetParent().itemIndex);
 	end);
 
-	favoriteFrame:SetScript('OnClick', function (self)
-		AuctionFaster:SetFavoriteAsSearch(self.itemIndex);
+	favButton:SetScript('OnClick', function (self)
+		AuctionFaster:SetFavoriteAsSearch(self:GetParent().itemIndex);
 	end);
+
+	favoriteFrame.removeFav = removeFav;
+	favoriteFrame.favButton = favButton;
 
 	return favoriteFrame;
 end
 
-function AuctionFaster:UpdateFavoriteFrame(favoriteFrame, fav, i, lineHeight)
-	local margin = 2;
-	favoriteFrame:SetText(fav.text);
-	favoriteFrame:ClearAllPoints();
-	favoriteFrame:SetPoint('TOPLEFT', margin, -(i - 1) * lineHeight - margin);
-	favoriteFrame.itemIndex = i;
-	favoriteFrame:Show();
+function AuctionFaster:UpdateFavoriteFrame(i, itemFrame, data)
+	itemFrame.favButton:SetText(data.text);
+	itemFrame.itemIndex = i;
 end
 
 function AuctionFaster:DrawSearchResultsTable()
