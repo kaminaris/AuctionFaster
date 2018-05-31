@@ -145,6 +145,10 @@ function AuctionFaster:DrawFavorites()
 	end;
 
 	local data = self.db.global.favorites;
+	if not data then
+		self.db.global.favorites = {};
+		data = self.db.global.favorites;
+	end
 	StdUi:ButtonList(favFrame.scrollChild, buttonCreate, buttonUpdate, data, lineHeight);
 	favFrame:UpdateItemsCount(#data);
 end
@@ -192,7 +196,7 @@ function AuctionFaster:DrawSearchResultsTable()
 			events		 = {
 				OnEnter = function(rowFrame, cellFrame, data, cols, row, realRow)
 					local cellData = data[realRow];
-					AuctionFaster:ShowTooltip(cellFrame, cellData.itemLink, true);
+					AuctionFaster:ShowTooltip(cellFrame, cellData.itemLink, true, cellData.itemId);
 					return false;
 				end,
 				OnLeave = function(rowFrame, cellFrame)

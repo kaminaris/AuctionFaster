@@ -90,7 +90,7 @@ function AuctionFaster:CreateItemFrame(parent, lineHeight, margin)
 	local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
 
 	holdingFrame:SetScript('OnEnter', function(self)
-		AuctionFaster:ShowTooltip(self, self.itemLink, true);
+		AuctionFaster:ShowTooltip(self, self.itemLink, true, self.item.itemId);
 	end);
 	holdingFrame:SetScript('OnLeave', function(self)
 		AuctionFaster:ShowTooltip(self, nil, false);

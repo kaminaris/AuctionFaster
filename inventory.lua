@@ -78,13 +78,28 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 	end
 
-	local itemName, itemLink, _, _, _, _, _, itemStackCount, _, _, itemSellPrice = GetItemInfo(link);
-	if not itemName then
-		print('wierd item in bag', link);
-		return;
+
+	local itemName, itemIcon, itemStackCount, additionalInfo;
+
+	if itemId == 82800 then
+		local _, speciesId, _, breedQuality = strsplit(":", link)
+		speciesId = tonumber(speciesId);
+
+		if speciesId then
+			local n, i, _, _, tooltipSource = C_PetJournal.GetPetInfoBySpeciesID(speciesId);
+			itemName = n;
+			itemIcon = i;
+			itemStackCount = 1;
+		else
+			return;
+		end
+	else
+		local n, _, _, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
+		itemName = n;
+		itemStackCount = c;
+		itemIcon = GetItemIcon(itemId);
 	end
 
-	local itemIcon = GetItemIcon(itemId);
 
 	local found = false;
 	for i = 1, #self.inventoryItems do
@@ -103,13 +118,14 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 
 		tinsert(self.inventoryItems, {
-			icon         = itemIcon,
-			count        = count,
-			maxStackSize = itemStackCount,
-			itemName     = itemName,
-			link         = itemLink,
-			itemId       = itemId,
-			price        = scanPrice
+			icon           = itemIcon,
+			count          = count,
+			maxStackSize   = itemStackCount,
+			itemName       = itemName,
+			additionalInfo = additionalInfo,
+			link           = link,
+			itemId         = itemId,
+			price          = scanPrice
 		});
 	end
 end
