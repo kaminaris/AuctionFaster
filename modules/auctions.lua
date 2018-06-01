@@ -44,20 +44,17 @@ end
 
 function Auctions:FindAuctionIndex(auctionData)
 	for index = 1, 50 do
-		local name, _, count, _, _, _, _, minBid, _, buyoutPrice, _, _, _, owner, _, _, itemId = GetAuctionItemInfo('list', index);
-
-		local bid = floor(minBid / count);
-		local buy = floor(buyoutPrice / count);
+		local listData = Auctions:GetItemFromAuctionList(index);
 
 		if
-			name == auctionData.itemName and
-			itemId == auctionData.itemId and
-			--owner == auctionData.owner and -- actually there is no need to check owner
-			bid == auctionData.bid and
-			buy == auctionData.buy and
-			count == auctionData.count
+			listData.name == auctionData.name and
+			listData.itemId == auctionData.itemId and
+			--listData.owner == auctionData.owner and -- actually there is no need to check owner
+			listData.bid == auctionData.bid and
+			listData.buy == auctionData.buy and
+			listData.count == auctionData.count
 		then
-			return index, name, count;
+			return index, listData.name, listData.count;
 		end
 	end
 
@@ -78,6 +75,8 @@ function Auctions:QueryAuctions(query, callback)
 		return;
 	end
 
+	self.currentlyQuerying = true;
+
 	if not CanSendAuctionQuery() then
 		if Auctions.retries < 5 then
 			Auctions.retries = Auctions.retries + 1;
@@ -85,12 +84,12 @@ function Auctions:QueryAuctions(query, callback)
 
 			self:ScheduleTimer('QueryAuctions', 0.5);
 			return;
+		else
+			print('Cannot query AH. Please reload UI');
 		end
 	end
 
 	self:SetAuctionSort();
-
-	self.currentlyQuerying = true;
 
 	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
 	QueryAuctionItems(
@@ -101,7 +100,7 @@ function Auctions:QueryAuctions(query, callback)
 		query.isUsable or 0,
 		query.qualityIndex or 0,
 		false, -- No support for getAll
-		query.exact or true
+		query.exact or false
 	);
 
 	Auctions.retries = 0;
@@ -114,7 +113,15 @@ local itemKeys = {
 	'ownerFullName', 'saleStatus', 'itemId', 'hasAllInfo'
 };
 function Auctions:GetItemFromAuctionList(index)
-	return AuctionFaster:TableCombine(itemKeys, {GetAuctionItemInfo('list', index)});
+	local itemInfo = AuctionFaster:TableCombine(itemKeys, {GetAuctionItemInfo('list', index)});
+
+	local _, itemLink = GetItemInfo(itemInfo.itemId);
+	itemInfo.itemLink = itemLink;
+	itemInfo.itemIndex = i;
+	itemInfo.bid = floor(itemInfo.minBid / itemInfo.count);
+	itemInfo.buy = floor(itemInfo.buyoutPrice / itemInfo.count);
+
+	return itemInfo;
 end
 
 function Auctions:AUCTION_ITEM_LIST_UPDATE()
@@ -134,12 +141,6 @@ function Auctions:AUCTION_ITEM_LIST_UPDATE()
 		if not AuctionFaster:IsFastMode() and (not itemInfo.owner) then
 			hasAllInfo = false;
 		end
-
-		local _, itemLink = GetItemInfo(itemInfo.itemId);
-		itemInfo.itemLink = itemLink;
-		itemInfo.itemIndex = i;
-		itemInfo.bid = floor(itemInfo.minBid / itemInfo.count);
-		itemInfo.buy = floor(itemInfo.buyoutPrice / itemInfo.count);
 
 		if AuctionFaster:IsFastMode() and not itemInfo.owner then
 			itemInfo.owner = '---';

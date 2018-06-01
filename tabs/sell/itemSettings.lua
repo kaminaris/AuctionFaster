@@ -1,8 +1,11 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+--- @type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');
+--- @type Sell
+local Sell = AuctionFaster:GetModule('Sell');
 
-function AuctionFaster:DrawItemSettingsPane()
+function Sell:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
 
 	local pane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Item Settings');
@@ -13,7 +16,7 @@ function AuctionFaster:DrawItemSettingsPane()
 	self:DrawItemSettings();
 end
 
-function AuctionFaster:DrawItemSettings()
+function Sell:DrawItemSettings()
 	local pane = self.sellTab.itemSettingsPane;
 
 	local icon = StdUi:Texture(pane, 30, 30, nil);
@@ -57,32 +60,32 @@ function AuctionFaster:DrawItemSettings()
 	self:LoadItemSettings();
 end
 
-function AuctionFaster:InitItemSettingsScripts()
+function Sell:InitItemSettingsScripts()
 	local pane = self.sellTab.itemSettingsPane;
 
 	pane.rememberStack:SetScript('OnClick', function(self)
-		AuctionFaster:UpdateItemSettings('rememberStack', self:GetChecked());
+		Sell:UpdateItemSettings('rememberStack', self:GetChecked());
 	end);
 
 	pane.rememberLastPrice:SetScript('OnClick', function(self)
-		AuctionFaster:UpdateItemSettings('rememberLastPrice', self:GetChecked());
+		Sell:UpdateItemSettings('rememberLastPrice', self:GetChecked());
 	end);
 
 	pane.alwaysUndercut:SetScript('OnClick', function(self)
-		AuctionFaster:UpdateItemSettings('alwaysUndercut', self:GetChecked());
+		Sell:UpdateItemSettings('alwaysUndercut', self:GetChecked());
 	end);
 
 	pane.useCustomDuration:SetScript('OnClick', function(self)
-		AuctionFaster:UpdateItemSettings('useCustomDuration', self:GetChecked());
-		AuctionFaster:UpdateItemSettingsCustomDuration(self:GetChecked());
+		Sell:UpdateItemSettings('useCustomDuration', self:GetChecked());
+		Sell:UpdateItemSettingsCustomDuration(self:GetChecked());
 	end);
 
 	pane.duration.OnValueChanged = function(self, value)
-		AuctionFaster:UpdateItemSettings('duration', value);
+		Sell:UpdateItemSettings('duration', value);
 	end;
 end
 
-function AuctionFaster:UpdateItemSettingsCustomDuration(useCustomDuration)
+function Sell:UpdateItemSettingsCustomDuration(useCustomDuration)
 	local pane = self.sellTab.itemSettingsPane;
 
 	if useCustomDuration then
@@ -92,7 +95,7 @@ function AuctionFaster:UpdateItemSettingsCustomDuration(useCustomDuration)
 	end
 end
 
-function AuctionFaster:InitItemSettingsTooltips()
+function Sell:InitItemSettingsTooltips()
 	local pane = self.sellTab.itemSettingsPane;
 
 	StdUi:FrameTooltip(
@@ -121,7 +124,7 @@ function AuctionFaster:InitItemSettingsTooltips()
 	);
 end
 
-function AuctionFaster:LoadItemSettings()
+function Sell:LoadItemSettings()
 	local pane = self.sellTab.itemSettingsPane;
 
 	if not self.selectedItem then
@@ -148,10 +151,10 @@ function AuctionFaster:LoadItemSettings()
 	pane.useCustomDuration:SetChecked(item.settings.useCustomDuration);
 	pane.duration:SetValue(item.settings.duration);
 
-	AuctionFaster:UpdateItemSettingsCustomDuration(item.settings.useCustomDuration);
+	Sell:UpdateItemSettingsCustomDuration(item.settings.useCustomDuration);
 end
 
-function AuctionFaster:EnableDisableItemSettings(enable)
+function Sell:EnableDisableItemSettings(enable)
 	local pane = self.sellTab.itemSettingsPane;
 	if enable then
 		pane.rememberStack:Enable();
@@ -169,7 +172,7 @@ function AuctionFaster:EnableDisableItemSettings(enable)
 	end
 end
 
-function AuctionFaster:UpdateItemSettings(settingName, settingValue)
+function Sell:UpdateItemSettings(settingName, settingValue)
 	if not self.selectedItem then
 		return;
 	end
@@ -178,20 +181,10 @@ function AuctionFaster:UpdateItemSettings(settingName, settingValue)
 	ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
 end
 
-function AuctionFaster:ToggleItemSettingsPane()
+function Sell:ToggleItemSettingsPane()
 	if self.sellTab.itemSettingsPane:IsShown() then
 		self.sellTab.itemSettingsPane:Hide();
 	else
 		self.sellTab.itemSettingsPane:Show();
 	end
-end
-
-function AuctionFaster:GetDefaultItemSettings()
-	return {
-		rememberStack = true,
-		rememberLastPrice = false,
-		alwaysUndercut = true,
-		useCustomDuration = false,
-		duration = 2,
-	}
 end

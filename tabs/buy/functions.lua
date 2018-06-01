@@ -4,11 +4,14 @@ local StdUi = LibStub('StdUi');
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
 
+--- @type Buy
+local Buy = AuctionFaster:GetModule('Buy');
+
 ----------------------------------------------------------------------------
 --- Searching functions
 ----------------------------------------------------------------------------
 
-function AuctionFaster:SearchAuctions(name, exact, page)
+function Buy:SearchAuctions(name, exact, page)
 	self.currentQuery = {
 		name = name,
 		page = page or 0,
@@ -16,11 +19,11 @@ function AuctionFaster:SearchAuctions(name, exact, page)
 	};
 
 	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
-		AuctionFaster:SearchAuctionsCallback(shown, total, items)
+		Buy:SearchAuctionsCallback(shown, total, items)
 	end);
 end
 
-function AuctionFaster:SearchNextPage()
+function Buy:SearchNextPage()
 	-- if last page is not yet defined or it would be over last page, just abandon
 	if not self.currentQuery.lastPage or self.currentQuery.page + 1 > self.currentQuery.lastPage then
 		return;
@@ -29,7 +32,7 @@ function AuctionFaster:SearchNextPage()
 	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page + 1);
 end
 
-function AuctionFaster:SearchPreviousPage()
+function Buy:SearchPreviousPage()
 	-- just in case there are no search results abort
 	if not self.currentQuery.lastPage or self.currentQuery.page - 1 < 0 then
 		return;
@@ -42,13 +45,8 @@ end
 --- Searching callback function
 ----------------------------------------------------------------------------
 
-function AuctionFaster:SearchAuctionsCallback(shown, total, items)
+function Buy:SearchAuctionsCallback(shown, total, items)
 	self.currentQuery.lastPage = ceil(total / 50) - 1;
-
-
-	--table.sort(auctions, function(a, b)
-	--	return a.buy < b.buy;
-	--end);
 
 	self.buyTab.auctions = items;
 
@@ -57,7 +55,7 @@ function AuctionFaster:SearchAuctionsCallback(shown, total, items)
 	self:UpdatePager();
 end
 
-function AuctionFaster:UpdateStateText()
+function Buy:UpdateStateText()
 	if #self.buyTab.auctions == 0 then
 		self.buyTab.stateLabel:SetText('Nothing was found for query:');
 		self.buyTab.stateLabel:Show();
@@ -66,7 +64,7 @@ function AuctionFaster:UpdateStateText()
 	end
 end
 
-function AuctionFaster:UpdatePager()
+function Buy:UpdatePager()
 	local p = self.currentQuery.page + 1;
 	local lp = self.currentQuery.lastPage + 1;
 	self.buyTab.pager.pageText:SetText('Page ' .. p ..' of ' .. lp);
@@ -83,7 +81,7 @@ function AuctionFaster:UpdatePager()
 	end
 end
 
-function AuctionFaster:AddToFavorites()
+function Buy:AddToFavorites()
 	local searchBox = self.buyTab.searchBox;
 	local text = searchBox:GetText();
 
@@ -92,7 +90,7 @@ function AuctionFaster:AddToFavorites()
 		return ;
 	end
 
-	local favorites = self.db.global.favorites;
+	local favorites = AuctionFaster.db.global.favorites;
 	for i = 1, #favorites do
 		if favorites[i].text == text then
 			--already exists - no error
@@ -104,8 +102,8 @@ function AuctionFaster:AddToFavorites()
 	self:DrawFavorites();
 end
 
-function AuctionFaster:RemoveFromFavorites(i)
-	local favorites = self.db.global.favorites;
+function Buy:RemoveFromFavorites(i)
+	local favorites = AuctionFaster.db.global.favorites;
 
 	if favorites[i] then
 		tremove(favorites, i);
@@ -114,15 +112,15 @@ function AuctionFaster:RemoveFromFavorites(i)
 	self:DrawFavorites();
 end
 
-function AuctionFaster:SetFavoriteAsSearch(i)
-	local favorites = self.db.global.favorites;
+function Buy:SetFavoriteAsSearch(i)
+	local favorites = AuctionFaster.db.global.favorites;
 
 	if favorites[i] then
 		self.buyTab.searchBox:SetText(favorites[i].text);
 	end
 end
 
-function AuctionFaster:RemoveCurrentSearchAuction()
+function Buy:RemoveCurrentSearchAuction()
 	local index = self.buyTab.searchResults:GetSelection();
 	if not index then
 		return ;
@@ -140,12 +138,12 @@ function AuctionFaster:RemoveCurrentSearchAuction()
 	end
 end
 
-function AuctionFaster:UpdateSearchAuctions()
+function Buy:UpdateSearchAuctions()
 	self.buyTab.searchResults:SetData(self.buyTab.auctions, true);
 end
 
 local alreadyBought = 0;
-function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
+function Buy:BuySelectedItem(boughtSoFar, fresh)
 	local index = self.buyTab.searchResults:GetSelection();
 	if not index then
 		return ;
@@ -179,9 +177,9 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 				self:GetParent():Hide();
 
 				Auctions:BuyItemByIndex(index);
-				AuctionFaster:RemoveCurrentSearchAuction();
+				Buy:RemoveCurrentSearchAuction();
 
-				AuctionFaster:BuySelectedItem(self:GetParent().count);
+				Buy:BuySelectedItem(self:GetParent().count);
 
 			end
 		},
@@ -202,24 +200,24 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 	confirmFrame.count = count;
 end
 
-function AuctionFaster:InterceptLinkClick()
+function Buy:InterceptLinkClick()
 	local origChatEdit_InsertLink = ChatEdit_InsertLink;
 	local origHandleModifiedItemClick = HandleModifiedItemClick;
 	local function SearchItemLink(origMethod, link)
-		if self.buyTab.searchBox:HasFocus() then
+		if Buy.buyTab.searchBox:HasFocus() then
 			local itemName = GetItemInfo(link);
-			self.buyTab.searchBox:SetText(itemName);
+			Buy.buyTab.searchBox:SetText(itemName);
 			return true;
 		else
 			return origMethod(link);
 		end
 	end
 
-	AuctionFaster:RawHook('HandleModifiedItemClick', function(link)
+	Buy:RawHook('HandleModifiedItemClick', function(link)
 		return SearchItemLink(origHandleModifiedItemClick, link);
 	end, true);
 
-	AuctionFaster:RawHook('ChatEdit_InsertLink', function(link)
+	Buy:RawHook('ChatEdit_InsertLink', function(link)
 		return SearchItemLink(origChatEdit_InsertLink, link);
 	end, true);
 end

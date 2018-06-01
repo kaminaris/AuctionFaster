@@ -28,11 +28,11 @@ modules\inventory.lua
 modules\auctions.lua
 
 options.lua
-validators.lua
 utils.lua
 
 tabs\sell\ui.lua
 tabs\sell\functions.lua
+tabs\sell\validators.lua
 tabs\sell\infoPane.lua
 tabs\sell\itemSettings.lua
 

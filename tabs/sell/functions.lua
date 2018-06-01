@@ -7,7 +7,29 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 
-function AuctionFaster:GetSelectedItemFromCache()
+--- @type Sell
+local Sell = AuctionFaster:GetModule('Sell');
+
+function Sell:AFTER_INVENTORY_SCAN()
+	print('AFTER_INVENTORY_SCAN');
+	if Auctions.isInMultisellProcess then
+		-- Do not update inventory while multiselling
+		return;
+	end
+
+	-- redraw items
+	self:DrawItems();
+
+	-- if it was in the selling process check if everything has been sold
+	if not self:CheckIfSelectedItemExists() or not Auctions.lastSoldItem then
+		return;
+	end
+
+	self:CheckEverythingSold();
+	Auctions.lastSoldItem = nil;
+end
+
+function Sell:GetSelectedItemFromCache()
 	if not self.selectedItem then
 		return nil;
 	end
@@ -16,7 +38,7 @@ function AuctionFaster:GetSelectedItemFromCache()
 	return ItemCache:GetItemFromCache(itemId, itemName, true);
 end
 
-function AuctionFaster:GetSellSettings()
+function Sell:GetSellSettings()
 	local sellTab = self.sellTab;
 
 	local cacheItem = self:GetSelectedItemFromCache();
@@ -28,7 +50,7 @@ function AuctionFaster:GetSellSettings()
 
 	local realMaxStacks = maxStacks;
 	if maxStacks == 0 then
-		maxStacks = AuctionFaster:CalcMaxStacks();
+		maxStacks = self:CalcMaxStacks();
 	end
 
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
@@ -37,7 +59,7 @@ function AuctionFaster:GetSellSettings()
 		stackSize = self.selectedItem.count;
 	end
 
-	local duration = self.db.global.auctionDuration;
+	local duration = AuctionFaster.db.global.auctionDuration;
 	if cacheItem.settings.duration and cacheItem.settings.useCustomDuration then
 		duration = cacheItem.settings.duration;
 	end
@@ -52,7 +74,7 @@ function AuctionFaster:GetSellSettings()
 	};
 end
 
-function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
+function Sell:UpdateCacheItemVariable(editBox, variable)
 	if not editBox:IsValid() then
 		return;
 	end
@@ -62,7 +84,7 @@ function AuctionFaster:UpdateCacheItemVariable(editBox, variable)
 	cacheItem[variable] = editBox:GetValue();
 end
 
-function AuctionFaster:UpdateTabPrices(bid, buy)
+function Sell:UpdateTabPrices(bid, buy)
 	local sellTab = self.sellTab;
 
 	if bid then
@@ -80,7 +102,7 @@ function AuctionFaster:UpdateTabPrices(bid, buy)
 	end
 end
 
-function AuctionFaster:GetCurrentAuctions(force)
+function Sell:GetCurrentAuctions(force)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
@@ -100,11 +122,11 @@ function AuctionFaster:GetCurrentAuctions(force)
 	};
 
 	Auctions:QueryAuctions(query, function(shown, total, items)
-		AuctionFaster:CurrentAuctionsCallback(shown, total, items);
+		Sell:CurrentAuctionsCallback(shown, total, items);
 	end);
 end
 
-function AuctionFaster:UpdateStackSettings(maxStacks, stackSize)
+function Sell:UpdateStackSettings(maxStacks, stackSize)
 	local sellTab = self.sellTab;
 
 	if maxStacks then
@@ -116,7 +138,7 @@ function AuctionFaster:UpdateStackSettings(maxStacks, stackSize)
 	end
 end
 
-function AuctionFaster:SelectItem(index)
+function Sell:SelectItem(index)
 	local sellTab = self.sellTab;
 	if not Inventory.inventoryItems[index] then
 		return;
@@ -147,7 +169,7 @@ function AuctionFaster:SelectItem(index)
 	self:EnableAuctionTabControls(true);
 end
 
-function AuctionFaster:CheckIfSelectedItemExists()
+function Sell:CheckIfSelectedItemExists()
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 	if not selectedId then
 		return false;
@@ -168,7 +190,7 @@ function AuctionFaster:CheckIfSelectedItemExists()
 	return true;
 end
 
-function AuctionFaster:GetSelectedItemIdName()
+function Sell:GetSelectedItemIdName()
 	if not self.selectedItem then
 		return nil, nil;
 	end
@@ -176,7 +198,7 @@ function AuctionFaster:GetSelectedItemIdName()
 	return self.selectedItem.itemId, self.selectedItem.itemName;
 end
 
-function AuctionFaster:UpdateItemQtyText()
+function Sell:UpdateItemQtyText()
 	if not self.selectedItem then
 		return ;
 	end
@@ -190,7 +212,7 @@ function AuctionFaster:UpdateItemQtyText()
 	);
 end
 
-function AuctionFaster:EnableAuctionTabControls(enable)
+function Sell:EnableAuctionTabControls(enable)
 	local sellTab = self.sellTab;
 
 	if enable then
@@ -212,9 +234,10 @@ function AuctionFaster:EnableAuctionTabControls(enable)
 	end
 end
 
-function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
-	for i = 1, #self.itemFramePool do
-		local f = self.itemFramePool[i];
+function Sell:UpdateItemsTabPrice(itemId, itemName, newPrice)
+	local itemFrames = self.sellTab.scrollChild.items;
+	for i = 1, #itemFrames do
+		local f = itemFrames[i];
 		if f.item.itemId == itemId and f.item.itemName == itemName then
 			f.itemPrice:SetText(StdUi.Util.formatMoney(newPrice));
 		end
@@ -222,24 +245,16 @@ function AuctionFaster:UpdateItemsTabPrice(itemId, itemName, newPrice)
 end
 
 
-function AuctionFaster:CurrentAuctionsCallback(shown, total, items)
+function Sell:CurrentAuctionsCallback(shown, total, items)
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 
 	if not selectedId then
-		-- Not our scan, ignore it
+		-- No item selected ? - should not happen
 		return ;
 	end ;
 
-	-- since we did scan anyway, put it in cache
-	local cacheKey;
-
 	-- we skip any auctions that are not the same as selected item so no problem
 	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
-
-	-- technically this should not be needed
-	--table.sort(items, function(a, b)
-	--	return a.buy < b.buy;
-	--end);
 
 	cacheItem.scanTime = GetServerTime();
 	cacheItem.auctions = items;
@@ -249,7 +264,7 @@ function AuctionFaster:CurrentAuctionsCallback(shown, total, items)
 	self:UpdateInfoPaneText();
 end
 
-function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
+function Sell:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
 	if #cacheItem.auctions < 1 then
 		return ;
 	end
@@ -264,9 +279,9 @@ function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
 	self:UpdateTabPrices(lowestBid - 1, lowestBuy - 1);
 end
 
-function AuctionFaster:UpdateSellTabAuctions(cacheItem)
+function Sell:UpdateSellTabAuctions(cacheItem)
 	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
-	self.sellTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
+	self.sellTab.lastScan:SetText('Last Scan: ' .. AuctionFaster:FormatDuration(GetServerTime() - cacheItem.scanTime));
 
 	local minBid, minBuy = ItemCache:FindLowestBidBuy(cacheItem);
 
@@ -282,7 +297,7 @@ function AuctionFaster:UpdateSellTabAuctions(cacheItem)
 end
 
 local alreadyBought = 0;
-function AuctionFaster:BuyItem(boughtSoFar, fresh)
+function Sell:BuyItem(boughtSoFar, fresh)
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 	if not selectedId then
 		return ;
@@ -321,9 +336,9 @@ function AuctionFaster:BuyItem(boughtSoFar, fresh)
 				self:GetParent():Hide();
 
 				Auctions:BuyItemByIndex(index);
-				AuctionFaster:RemoveCurrentSearchAuction();
+				Sell:RemoveCurrentSearchAuction();
 
-				AuctionFaster:BuyItem(self:GetParent().count);
+				Sell:BuyItem(self:GetParent().count);
 
 			end
 		},
@@ -344,7 +359,7 @@ function AuctionFaster:BuyItem(boughtSoFar, fresh)
 	confirmFrame.count = count;
 end
 
-function AuctionFaster:SellCurrentItem(singleStack)
+function Sell:SellCurrentItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
@@ -376,7 +391,7 @@ end
 
 
 --- Check if all items has been sold, if not, propose to sell last incomplete stack
-function AuctionFaster:CheckEverythingSold()
+function Sell:CheckEverythingSold()
 	local sellSettings = self:GetSellSettings();
 
 	--- DISABLED FOR TEST
@@ -420,7 +435,7 @@ function AuctionFaster:CheckEverythingSold()
 					return ;
 				end
 
-				AuctionFaster:SellCurrentItem(false);
+				Sell:SellCurrentItem(false);
 			end,
 		},
 		no  = {

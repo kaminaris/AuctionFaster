@@ -20,32 +20,7 @@ function Inventory:AUCTION_HOUSE_CLOSED()
 end
 
 function Inventory:BAG_UPDATE_DELAYED()
-	-- This should not be needed anymore
-	--if not AuctionFrame or not AuctionFrame:IsVisible() then
-	--	self.isInMultisellProcess = false;
-	--	self.lastSoldItem = nil;
-	--	return;
-	--end
-
-	--if self.isInMultisellProcess then
-	--	-- Do not update inventory while multiselling
-	--	return;
-	--end
-
 	self:ScanInventory();
-
-	--TODO: Move this out
-	--if not self:CheckIfSelectedItemExists() then
-	--	-- no need to ask if there are no items left
-	--	return;
-	--end
-	--
-	--if not self.lastSoldItem then
-	--	return;
-	--end
-	--
-	--self:CheckEverythingSold();
-	--self.lastSoldItem = nil;
 end
 
 function Inventory:ScanInventory()
@@ -68,6 +43,8 @@ function Inventory:ScanInventory()
 			end
 		end
 	end
+
+	self:SendMessage('AFTER_INVENTORY_SCAN', self.inventoryItems);
 end
 
 function Inventory:UpdateItemInventory(itemId, itemName)

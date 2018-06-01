@@ -1,54 +1,31 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
-AuctionFaster.itemFramePool = {};
-AuctionFaster.itemFrames = {};
+--- @class Buy
+local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0');
 
-function AuctionFaster:AddBuyAuctionHouseTab()
+function Buy:Enable()
+	self:AddBuyAuctionHouseTab();
+	self:InterceptLinkClick();
+end
+
+function Buy:AddBuyAuctionHouseTab()
 	if self.buyTabAdded then
 		return ;
 	end
 
-	local buyTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, 'Auction Faster - Buy', 160);
-	buyTab:Hide();
-	buyTab:SetAllPoints();
-
-	self.buyTab = buyTab;
-
-	local n = AuctionFrame.numTabs + 1;
-
-	local tab = CreateFrame('Button', 'AuctionFrameTab' .. n, AuctionFrame, 'AuctionTabTemplate');
-	StdUi:StripTextures(tab);
-
-	tab.backdrop = CreateFrame('Frame', nil, tab);
-	tab.backdrop:SetFrameLevel(tab:GetFrameLevel() - 1);
-	StdUi:GlueAcross(tab.backdrop, tab, 10, -3, -10, 3);
-	StdUi:ApplyBackdrop(tab.backdrop);
-
-	tab:Hide();
-	tab:SetID(n);
-	tab:SetText('Buy Items');
-	tab:SetNormalFontObject(GameFontHighlightSmall);
-	tab:SetPoint('LEFT', _G['AuctionFrameTab' .. n - 1], 'RIGHT', -8, 0);
-	tab:Show();
-	-- reference the actual tab
-	tab.auctionFasterTab = buyTab;
-
-	PanelTemplates_SetNumTabs(AuctionFrame, n);
-	PanelTemplates_EnableTab(AuctionFrame, n);
+	self.buyTab = AuctionFaster:AddAuctionHouseTab('Buy Items', 'Auction Faster - Buy');
 
 	self.buyTabAdded = true;
 
 	self:DrawSearchPane();
 	self:DrawFavoritesPane();
-	--self:DrawFavorites(20);
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
 	self:DrawPager();
-	self:InterceptLinkClick();
 end
 
-function AuctionFaster:DrawSearchPane()
+function Buy:DrawSearchPane()
 	local buyTab = self.buyTab;
 
 	local searchBox = StdUi:SearchEditBox(buyTab, 400, 30, 'Search');
@@ -66,32 +43,32 @@ function AuctionFaster:DrawSearchPane()
 	StdUi:GlueRight(addFavoritesButton, searchButton, 5, 0);
 
 	addFavoritesButton:SetScript('OnClick', function()
-		AuctionFaster:AddToFavorites();
+		Buy:AddToFavorites();
 	end);
 
 	searchBox:SetScript('OnEnterPressed', function()
-		AuctionFaster:SearchAuctions(searchBox:GetText(), false, 0);
+		Buy:SearchAuctions(searchBox:GetText(), false, 0);
 	end);
 
 	searchButton:SetScript('OnClick', function()
-		AuctionFaster:SearchAuctions(searchBox:GetText(), false, 0);
+		Buy:SearchAuctions(searchBox:GetText(), false, 0);
 	end);
 
 	buyTab.searchBox = searchBox;
 end
 
-function AuctionFaster:DrawSearchButtons()
+function Buy:DrawSearchButtons()
 	local buyTab = self.buyTab;
 
 	local buyButton = StdUi:Button(buyTab, 80, 20, 'Buy');
 	StdUi:GlueBottom(buyButton, buyTab, 300, 50, 'LEFT');
 
 	buyButton:SetScript('OnClick', function ()
-		AuctionFaster:BuySelectedItem(0, true);
+		Buy:BuySelectedItem(0, true);
 	end);
 end
 
-function AuctionFaster:DrawPager()
+function Buy:DrawPager()
 	local buyTab = self.buyTab;
 
 	local leftButton = StdUi:SquareButton(buyTab, 20, 20, 'LEFT');
@@ -104,11 +81,11 @@ function AuctionFaster:DrawPager()
 	StdUi:GlueBottom(pageText, buyTab, 10, 50, 'LEFT');
 
 	leftButton:SetScript('OnClick', function()
-		AuctionFaster:SearchPreviousPage();
+		Buy:SearchPreviousPage();
 	end);
 
 	rightButton:SetScript('OnClick', function()
-		AuctionFaster:SearchNextPage();
+		Buy:SearchNextPage();
 	end);
 
 	buyTab.pager = {
@@ -118,7 +95,7 @@ function AuctionFaster:DrawPager()
 	};
 end
 
-function AuctionFaster:DrawFavoritesPane()
+function Buy:DrawFavoritesPane()
 	local buyTab = self.buyTab;
 	local lineHeight = 20;
 
@@ -131,29 +108,30 @@ function AuctionFaster:DrawFavoritesPane()
 	self:DrawFavorites(lineHeight);
 end
 
-function AuctionFaster:DrawFavorites()
+function Buy:DrawFavorites()
 	local favFrame = self.buyTab.favorites;
 	local lineHeight = 20;
 
 	local buttonCreate = function(parent, i)
-		return AuctionFaster:CreateFavoriteFrame(parent, lineHeight);
+		return Buy:CreateFavoriteFrame(parent, lineHeight);
 	end;
 
 	local buttonUpdate = function(parent, i, itemFrame, data)
-		AuctionFaster:UpdateFavoriteFrame(i, itemFrame, data);
+		Buy:UpdateFavoriteFrame(i, itemFrame, data);
 		itemFrame.itemIndex = i;
 	end;
 
-	local data = self.db.global.favorites;
+	local data = AuctionFaster.db.global.favorites;
 	if not data then
-		self.db.global.favorites = {};
-		data = self.db.global.favorites;
+		AuctionFaster.db.global.favorites = {};
+		data = AuctionFaster.db.global.favorites;
 	end
+
 	StdUi:ButtonList(favFrame.scrollChild, buttonCreate, buttonUpdate, data, lineHeight);
 	favFrame:UpdateItemsCount(#data);
 end
 
-function AuctionFaster:CreateFavoriteFrame(parent, lineHeight)
+function Buy:CreateFavoriteFrame(parent, lineHeight)
 	local favoriteFrame = StdUi:Frame(parent, parent:GetWidth(), lineHeight);
 
 	local favButton = StdUi:HighlightButton(favoriteFrame, favoriteFrame:GetWidth() - 22, lineHeight, '');
@@ -164,11 +142,11 @@ function AuctionFaster:CreateFavoriteFrame(parent, lineHeight)
 	StdUi:GlueRight(removeFav, favoriteFrame, 0, 0, true);
 
 	removeFav:SetScript('OnClick', function(self)
-		AuctionFaster:RemoveFromFavorites(self:GetParent().itemIndex);
+		Buy:RemoveFromFavorites(self:GetParent().itemIndex);
 	end);
 
 	favButton:SetScript('OnClick', function (self)
-		AuctionFaster:SetFavoriteAsSearch(self:GetParent().itemIndex);
+		Buy:SetFavoriteAsSearch(self:GetParent().itemIndex);
 	end);
 
 	favoriteFrame.removeFav = removeFav;
@@ -177,20 +155,20 @@ function AuctionFaster:CreateFavoriteFrame(parent, lineHeight)
 	return favoriteFrame;
 end
 
-function AuctionFaster:UpdateFavoriteFrame(i, itemFrame, data)
+function Buy:UpdateFavoriteFrame(i, itemFrame, data)
 	itemFrame.favButton:SetText(data.text);
 	itemFrame.itemIndex = i;
 end
 
-function AuctionFaster:DrawSearchResultsTable()
+function Buy:DrawSearchResultsTable()
 	local buyTab = self.buyTab;
 
 	local cols = {
 		{
-			name         = 'Item',
+			name         = '',
 			width        = 32,
 			align        = 'LEFT',
-			index        = 'icon',
+			index        = 'texture',
 			format       = 'icon',
 			sortable	 = false,
 			events		 = {

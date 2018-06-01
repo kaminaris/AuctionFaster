@@ -1,4 +1,8 @@
-function AuctionFaster:CalcMaxStacks()
+
+--- @type Sell
+local Sell = AuctionFaster:GetModule('Sell');
+
+function Sell:CalcMaxStacks()
 	local sellTab = self.sellTab;
 	if not self.selectedItem then
 		return 0, 0;
@@ -20,7 +24,7 @@ function AuctionFaster:CalcMaxStacks()
 	return maxStacks, remainingQty;
 end
 
-function AuctionFaster:ValidateMaxStacks(editBox)
+function Sell:ValidateMaxStacks(editBox)
 	if not self.selectedItem then
 		return ;
 	end
@@ -28,7 +32,7 @@ function AuctionFaster:ValidateMaxStacks(editBox)
 	local maxStacks = tonumber(editBox:GetText());
 	local origMaxStacks = maxStacks;
 
-	local maxStacksPossible = AuctionFaster:CalcMaxStacks();
+	local maxStacksPossible = self:CalcMaxStacks();
 
 	-- 0 means no limit
 	if not maxStacks or maxStacks < 0 then
@@ -47,7 +51,7 @@ function AuctionFaster:ValidateMaxStacks(editBox)
 	self:UpdateInfoPaneText();
 end
 
-function AuctionFaster:ValidateStackSize(editBox)
+function Sell:ValidateStackSize(editBox)
 	if not self.selectedItem then
 		return ;
 	end
@@ -71,7 +75,7 @@ function AuctionFaster:ValidateStackSize(editBox)
 	self:UpdateInfoPaneText();
 end
 
-function AuctionFaster:ValidateItemPrice(editBox)
+function Sell:ValidateItemPrice(editBox)
 	if not editBox:IsValid() then
 		return;
 	end

@@ -2,8 +2,10 @@
 local StdUi = LibStub('StdUi');
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
+--- @type Sell
+local Sell = AuctionFaster:GetModule('Sell');
 
-function AuctionFaster:DrawInfoPane()
+function Sell:DrawInfoPane()
 	local sellTab = self.sellTab;
 
 	sellTab.infoPane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Auction Info');
@@ -43,7 +45,7 @@ function AuctionFaster:DrawInfoPane()
 	--StdUi:GlueTop(tab, sellTab.infoPane, 10, -20, 'RIGHT');
 end
 
-function AuctionFaster:UpdateInfoPaneText()
+function Sell:UpdateInfoPaneText()
 	if not self.selectedItem then
 		return ;
 	end
@@ -61,10 +63,10 @@ function AuctionFaster:UpdateInfoPaneText()
 	sellTab.infoPane.totalLabel:SetText('Per auction: ' .. StdUi.Util.formatMoney(total));
 	sellTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
 	sellTab.infoPane.deposit:SetText('Deposit: ' .. StdUi.Util.formatMoney(deposit));
-	sellTab.infoPane.duration:SetText('Duration: ' .. self:FormatAuctionDuration(sellSettings.duration));
+	sellTab.infoPane.duration:SetText('Duration: ' .. AuctionFaster:FormatAuctionDuration(sellSettings.duration));
 end
 
-function AuctionFaster:ToggleInfoPane()
+function Sell:ToggleInfoPane()
 	if self.sellTab.infoPane:IsShown() then
 		self.sellTab.infoPane:Hide();
 	else

@@ -28,3 +28,32 @@ function AuctionFaster:TableCombine(keys, values)
 
 	return result;
 end
+
+function AuctionFaster:ShowTooltip(frame, link, show, itemId)
+	if show then
+
+		GameTooltip:SetOwner(frame);
+		GameTooltip:SetPoint('TOPLEFT');
+
+		if itemId == 82800 then
+			local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(':', link);
+
+			BattlePetToolTip_Show(
+					tonumber(speciesID),
+					tonumber(level),
+					tonumber(breedQuality),
+					tonumber(maxHealth),
+					tonumber(power),
+					tonumber(speed),
+					string.gsub(string.gsub(link, '^(.*)%[', ''), '%](.*)$', '')
+			);
+			BattlePetTooltip:ClearAllPoints();
+			BattlePetTooltip:SetPoint('BOTTOMLEFT', frame, 'TOPLEFT', 0, 0);
+		else
+			GameTooltip:SetHyperlink(link);
+			GameTooltip:Show();
+		end
+	else
+		GameTooltip:Hide();
+	end
+end
