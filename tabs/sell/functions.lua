@@ -1,6 +1,11 @@
---- @var StdUi StdUi
+--- @type ItemCache
 local StdUi = LibStub('StdUi');
+--- @type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');
+--- @type Auctions
+local Auctions = AuctionFaster:GetModule('Auctions');
+--- @type Inventory
+local Inventory = AuctionFaster:GetModule('Inventory');
 
 function AuctionFaster:GetSelectedItemFromCache()
 	if not self.selectedItem then
@@ -75,6 +80,30 @@ function AuctionFaster:UpdateTabPrices(bid, buy)
 	end
 end
 
+function AuctionFaster:GetCurrentAuctions(force)
+	local selectedItem = self.selectedItem;
+	local itemId = selectedItem.itemId;
+	local itemName = selectedItem.itemName;
+
+	local cacheItem = ItemCache:GetItemFromCache(itemId, itemName);
+
+	-- We still have pretty recent results from auction house, no need to scan again
+	if not force and cacheItem and cacheItem.auctions and #cacheItem.auctions > 0 then
+		self:UpdateSellTabAuctions(cacheItem);
+		self:UpdateInfoPaneText();
+		return ;
+	end
+
+	local query = {
+		name = itemName,
+		exact = true
+	};
+
+	Auctions:QueryAuctions(query, function(shown, total, items)
+		AuctionFaster:CurrentAuctionsCallback(shown, total, items);
+	end);
+end
+
 function AuctionFaster:UpdateStackSettings(maxStacks, stackSize)
 	local sellTab = self.sellTab;
 
@@ -89,11 +118,11 @@ end
 
 function AuctionFaster:SelectItem(index)
 	local sellTab = self.sellTab;
-	if not self.inventoryItems[index] then
+	if not Inventory.inventoryItems[index] then
 		return;
 	end
 
-	self.selectedItem = self.inventoryItems[index];
+	self.selectedItem = Inventory.inventoryItems[index];
 	self.selectedItemIndex = index;
 
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
@@ -124,14 +153,14 @@ function AuctionFaster:CheckIfSelectedItemExists()
 		return false;
 	end
 
-	local qtyLeft = self:UpdateItemInventory(selectedId, selectedName);
+	local qtyLeft = Inventory:UpdateItemInventory(selectedId, selectedName);
 	if qtyLeft == 0 then
-		if #self.inventoryItems > self.selectedItemIndex then
+		if #Inventory.inventoryItems > self.selectedItemIndex then
 			-- select next item
 			self:SelectItem(self.selectedItemIndex);
 		else
 			-- just select last item
-			self:SelectItem(#self.inventoryItems);
+			self:SelectItem(#Inventory.inventoryItems);
 		end
 		return false;
 	end
@@ -204,47 +233,42 @@ function AuctionFaster:CurrentAuctionsCallback(shown, total, items)
 	-- since we did scan anyway, put it in cache
 	local cacheKey;
 
-	local auctions = {}
-	for i = 1, shown do
-		local itemInfo = items[i];
-
-		-- this function runs for every AH scan so make sure to ignore it if item does not match selected one
-		if itemInfo.name == selectedName and itemInfo.itemId == selectedId then
-			if not cacheKey then
-				cacheKey = itemInfo.itemId .. itemInfo.name;
-			end
-
-			tinsert(auctions, {
-				owner    = itemInfo.owner,
-				count    = itemInfo.count,
-				itemId   = itemInfo.itemId,
-				itemName = itemInfo.name,
-				bid      = floor(itemInfo.minBid / itemInfo.count),
-				buy      = floor(itemInfo.buyoutPrice / itemInfo.count),
-			});
-		end
-	end
-
 	-- we skip any auctions that are not the same as selected item so no problem
 	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
 
-	table.sort(auctions, function(a, b)
-		return a.buy < b.buy;
-	end);
+	-- technically this should not be needed
+	--table.sort(items, function(a, b)
+	--	return a.buy < b.buy;
+	--end);
 
 	cacheItem.scanTime = GetServerTime();
-	cacheItem.auctions = auctions;
-	cacheItem.totalItems = #auctions;
+	cacheItem.auctions = items;
+	cacheItem.totalItems = #items;
 
 	self:UpdateSellTabAuctions(cacheItem);
 	self:UpdateInfoPaneText();
+end
+
+function AuctionFaster:UnderCutPrices(cacheItem, lowestBid, lowestBuy)
+	if #cacheItem.auctions < 1 then
+		return ;
+	end
+
+	if not lowestBid or not lowestBuy then
+		lowestBid, lowestBuy = ItemCache:FindLowestBidBuy(cacheItem);
+	end
+
+	cacheItem.bid = lowestBid - 1;
+	cacheItem.buy = lowestBuy - 1;
+
+	self:UpdateTabPrices(lowestBid - 1, lowestBuy - 1);
 end
 
 function AuctionFaster:UpdateSellTabAuctions(cacheItem)
 	self.sellTab.currentAuctions:SetData(cacheItem.auctions, true);
 	self.sellTab.lastScan:SetText('Last Scan: ' .. self:FormatDuration(GetServerTime() - cacheItem.scanTime));
 
-	local minBid, minBuy = self:FindLowestBidBuy(cacheItem);
+	local minBid, minBuy = ItemCache:FindLowestBidBuy(cacheItem);
 
 	if cacheItem.settings.alwaysUndercut then
 		self:UnderCutPrices(cacheItem, minBid, minBuy);
@@ -252,10 +276,13 @@ function AuctionFaster:UpdateSellTabAuctions(cacheItem)
 		self:UpdateTabPrices(cacheItem.bid, cacheItem.buy);
 	end
 
-	self:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
+	Inventory:UpdateInventoryItemPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
+	-- update the UI
+	self:UpdateItemsTabPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
 end
 
-function AuctionFaster:BuyItem()
+local alreadyBought = 0;
+function AuctionFaster:BuyItem(boughtSoFar, fresh)
 	local selectedId, selectedName = self:GetSelectedItemIdName();
 	if not selectedId then
 		return ;
@@ -265,26 +292,56 @@ function AuctionFaster:BuyItem()
 	if not index then
 		return ;
 	end
-	local auctionData = self.sellTab.currentAuctions:GetRow(index);
 
-	-- maybe index is the same
-	local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-	minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-	ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', index);
-
-	local bid = floor(minBid / count);
-	local buy = floor(buyoutPrice / count);
-
-	if name == auctionData.itemName and itemId == auctionData.itemId and owner == auctionData.owner
-			and bid == auctionData.bid and buy == auctionData.buy and count == auctionData.count then
-		-- same index, we can buy it
-		self:BuyItemByIndex(index);
-		-- we need to refresh the auctions
-		self:GetCurrentAuctions();
+	boughtSoFar = boughtSoFar or 0;
+	alreadyBought = alreadyBought + boughtSoFar;
+	if fresh then
+		alreadyBought = 0;
 	end
 
-	-- item was not found but lets check if it still exists
-	-- todo: need to check it
+	local auctionData = self.sellTab.currentAuctions:GetRow(index);
+	if not auctionData then
+		return;
+	end
+
+	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
+
+	if not auctionIndex then
+		-- @TODO: show some error
+		print('Auction not found');
+		DevTools_Dump(auctionData);
+		return;
+	end
+
+	local buttons = {
+		ok     = {
+			text    = 'Yes',
+			onClick = function(self)
+				-- same index, we can buy it
+				self:GetParent():Hide();
+
+				Auctions:BuyItemByIndex(index);
+				AuctionFaster:RemoveCurrentSearchAuction();
+
+				AuctionFaster:BuyItem(self:GetParent().count);
+
+			end
+		},
+		cancel = {
+			text    = 'No',
+			onClick = function(self)
+				self:GetParent():Hide();
+			end
+		}
+	};
+
+	local confirmFrame = StdUi:Confirm(
+			'Confirm Buy',
+			'Buying ' .. name .. '\n#: ' .. count .. '\n\nBought so far: ' .. alreadyBought,
+			buttons,
+			'afConfirmBuy'
+	);
+	confirmFrame.count = count;
 end
 
 function AuctionFaster:SellCurrentItem(singleStack)
@@ -292,7 +349,7 @@ function AuctionFaster:SellCurrentItem(singleStack)
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
 
-	if not self:PutItemInSellBox(itemId, itemName) then
+	if not Auctions:PutItemInSellBox(itemId, itemName) then
 		return false;
 	end
 
@@ -307,7 +364,7 @@ function AuctionFaster:SellCurrentItem(singleStack)
 		maxStacks = 1;
 	end
 
-	local success, multisell = AuctionFaster:SellItem(sellSettings.bidPerItem * sellSettings.stackSize,
+	local success, multisell = Auctions:SellItem(sellSettings.bidPerItem * sellSettings.stackSize,
 		sellSettings.buyPerItem * sellSettings.stackSize,
 		sellSettings.duration,
 		sellSettings.stackSize,
@@ -336,11 +393,11 @@ function AuctionFaster:CheckEverythingSold()
 
 	local currentItemName = GetAuctionSellItemInfo();
 	if not currentItemName or currentItemName ~= itemName then
-		self:PutItemInSellBox(itemId, itemName);
+		Auctions:PutItemInSellBox(itemId, itemName);
 	end
 
 	-- Check if item is still in inventory
-	local qtyLeft = self:UpdateItemInventory(itemId, itemName);
+	local qtyLeft = Inventory:UpdateItemInventory(itemId, itemName);
 	if qtyLeft == 0 then
 		return ;
 	end

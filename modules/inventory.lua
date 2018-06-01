@@ -1,6 +1,54 @@
 local Gratuity = LibStub('LibGratuity-3.0');
+---@type ItemCache
+local ItemCache = AuctionFaster:GetModule('ItemCache');
+---@class Inventory
+local Inventory = AuctionFaster:NewModule('Inventory', 'AceEvent-3.0');
 
-function AuctionFaster:ScanInventory()
+--- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
+function Inventory:Enable()
+	self.inventoryItems = {};
+	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
+	self:RegisterEvent('AUCTION_HOUSE_SHOW');
+end
+
+function Inventory:AUCTION_HOUSE_SHOW()
+	self:RegisterEvent('BAG_UPDATE_DELAYED');
+end
+
+function Inventory:AUCTION_HOUSE_CLOSED()
+	self:UnregisterEvent('BAG_UPDATE_DELAYED');
+end
+
+function Inventory:BAG_UPDATE_DELAYED()
+	-- This should not be needed anymore
+	--if not AuctionFrame or not AuctionFrame:IsVisible() then
+	--	self.isInMultisellProcess = false;
+	--	self.lastSoldItem = nil;
+	--	return;
+	--end
+
+	--if self.isInMultisellProcess then
+	--	-- Do not update inventory while multiselling
+	--	return;
+	--end
+
+	self:ScanInventory();
+
+	--TODO: Move this out
+	--if not self:CheckIfSelectedItemExists() then
+	--	-- no need to ask if there are no items left
+	--	return;
+	--end
+	--
+	--if not self.lastSoldItem then
+	--	return;
+	--end
+	--
+	--self:CheckEverythingSold();
+	--self.lastSoldItem = nil;
+end
+
+function Inventory:ScanInventory()
 	if self.inventoryItems then
 		table.wipe(self.inventoryItems);
 	else
@@ -20,11 +68,9 @@ function AuctionFaster:ScanInventory()
 			end
 		end
 	end
-
-	self:DrawItems();
 end
 
-function AuctionFaster:UpdateItemInventory(itemId, itemName)
+function Inventory:UpdateItemInventory(itemId, itemName)
 	local totalQty = 0;
 
 	local index = false;
@@ -44,7 +90,7 @@ function AuctionFaster:UpdateItemInventory(itemId, itemName)
 	return totalQty;
 end
 
-function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
+function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	local canSell = false;
 
 	if itemId == 82800 then
@@ -112,7 +158,7 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 
 	if not found then
-		local scanPrice = self:GetLowestPrice(itemId, itemName);
+		local scanPrice = ItemCache:GetLowestPrice(itemId, itemName);
 		if not scanPrice then
 			scanPrice = '---';
 		end
@@ -130,7 +176,7 @@ function AuctionFaster:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 end
 
-function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
+function Inventory:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 	for i = 1, #self.inventoryItems do
 		local ii = self.inventoryItems[i];
 		if ii.itemId == itemId and ii.itemName == itemName then
@@ -138,12 +184,9 @@ function AuctionFaster:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 			break ;
 		end
 	end
-
-	-- update the UI
-	self:UpdateItemsTabPrice(itemId, itemName, newPrice);
 end
 
-function AuctionFaster:GetItemFromInventory(id, name)
+function Inventory:GetItemFromInventory(id, name)
 	local firstBag, firstSlot, remainingQty;
 
 	for bag = 0, 4 do
@@ -164,7 +207,7 @@ function AuctionFaster:GetItemFromInventory(id, name)
 	return nil, nil;
 end
 
-function AuctionFaster:GetInventoryItemQuantity(itemId, itemName)
+function Inventory:GetInventoryItemQuantity(itemId, itemName)
 	local qty = 0;
 
 	for i = 1, #self.inventoryItems do

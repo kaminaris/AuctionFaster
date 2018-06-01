@@ -1,5 +1,7 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+--- @type Auctions
+local Auctions = AuctionFaster:GetModule('Auctions');
 
 function AuctionFaster:DrawInfoPane()
 	local sellTab = self.sellTab;
@@ -54,7 +56,7 @@ function AuctionFaster:UpdateInfoPaneText()
 	end
 
 	local total = sellSettings.buyPerItem * sellSettings.stackSize;
-	local deposit = self:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.itemName);
+	local deposit = Auctions:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.itemName, sellSettings.duration);
 
 	sellTab.infoPane.totalLabel:SetText('Per auction: ' .. StdUi.Util.formatMoney(total));
 	sellTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);

@@ -1,29 +1,23 @@
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
 
+--- @type Auctions
+local Auctions = AuctionFaster:GetModule('Auctions');
+
 ----------------------------------------------------------------------------
 --- Searching functions
 ----------------------------------------------------------------------------
 
 function AuctionFaster:SearchAuctions(name, exact, page)
-	if self.currentlyQuerying or not self:CanSendAuctionQuery() then
-		return ;
-	end
-
-	self:SetAuctionSort();
-
-	self.currentlyQuerying = true;
-	self.afScan = 'SearchAuctions';
-
 	self.currentQuery = {
 		name = name,
 		page = page or 0,
 		exact = exact or false,
 	};
 
-	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
-	QueryAuctionItems(name, nil, nil, page or 0, 0, 0, false, exact or false);
-	self.currentlyQuerying = false;
+	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
+		AuctionFaster:SearchAuctionsCallback(shown, total, items)
+	end);
 end
 
 function AuctionFaster:SearchNextPage()
@@ -51,33 +45,12 @@ end
 function AuctionFaster:SearchAuctionsCallback(shown, total, items)
 	self.currentQuery.lastPage = ceil(total / 50) - 1;
 
-	local auctions = {}
-	for i = 1, shown do
-		local itemInfo = items[i];
-		--local name, texture, count, quality, canUse, level, levelColHeader, minBid,
-		--minIncrement, buyoutPrice, bidAmount, highBidder, bidderFullName, owner,
-		--ownerFullName, saleStatus, itemId, hasAllInfo = GetAuctionItemInfo('list', i);
 
-		local _, itemLink = GetItemInfo(itemInfo.itemId);
+	--table.sort(auctions, function(a, b)
+	--	return a.buy < b.buy;
+	--end);
 
-		tinsert(auctions, {
-			owner     = itemInfo.owner,
-			count     = itemInfo.count,
-			icon      = itemInfo.texture,
-			itemId    = itemInfo.itemId,
-			itemName  = itemInfo.name,
-			itemLink  = itemLink,
-			itemIndex = i,
-			bid       = floor(itemInfo.minBid / itemInfo.count),
-			buy       = floor(itemInfo.buyoutPrice / itemInfo.count),
-		});
-	end
-
-	table.sort(auctions, function(a, b)
-		return a.buy < b.buy;
-	end);
-
-	self.buyTab.auctions = auctions;
+	self.buyTab.auctions = items;
 
 	self:UpdateSearchAuctions();
 	self:UpdateStateText();
@@ -189,7 +162,7 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 		return;
 	end
 
-	local auctionIndex, name, count = self:FindAuctionIndex(auctionData);
+	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
 
 	if not auctionIndex then
 		-- @TODO: show some error
@@ -205,7 +178,7 @@ function AuctionFaster:BuySelectedItem(boughtSoFar, fresh)
 				-- same index, we can buy it
 				self:GetParent():Hide();
 
-				AuctionFaster:BuyItemByIndex(index);
+				Auctions:BuyItemByIndex(index);
 				AuctionFaster:RemoveCurrentSearchAuction();
 
 				AuctionFaster:BuySelectedItem(self:GetParent().count);

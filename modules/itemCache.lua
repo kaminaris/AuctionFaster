@@ -1,3 +1,4 @@
+--- @class ItemCache
 local ItemCache = AuctionFaster:NewModule('ItemCache');
 
 function ItemCache:GetItemFromCache(itemId, itemName, skipOldCheck)
@@ -60,4 +61,43 @@ end
 
 function ItemCache:WipeItemCache()
 	AuctionFaster.db.global.auctionDb = {};
+end
+
+function ItemCache:GetLowestPrice(itemId, itemName)
+	local cacheKey = itemId .. itemName;
+
+	if not AuctionFaster.db.global.auctionDb[cacheKey] then
+		return nil, nil;
+	end
+
+	return self:FindLowestBidBuy(AuctionFaster.db.global.auctionDb[cacheKey]);
+end
+
+function ItemCache:FindLowestBidBuy(cacheItem)
+	if not cacheItem.auctions or #cacheItem.auctions < 1 then
+		return nil, nil;
+	end
+
+	local lowestBid, lowestBuy;
+	for i = 1, #cacheItem.auctions do
+		local auc = cacheItem.auctions[i];
+		if auc.bid > 0 and (not lowestBid or lowestBid > auc.bid) then
+			lowestBid = auc.bid;
+		end
+
+		if auc.buy > 0 and (not lowestBuy or lowestBuy > auc.buy) then
+			lowestBuy = auc.buy;
+		end
+	end
+
+	--TODO: Ignore own auctions
+	if lowestBuy and not lowestBid then
+		lowestBid = lowestBuy - 1;
+	end
+
+	if lowestBid and not lowestBuy then
+		lowestBuy = lowestBid + 1;
+	end
+
+	return lowestBid, lowestBuy;
 end

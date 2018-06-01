@@ -16,7 +16,17 @@ AuctionFaster.options = {
 			set = function(info, val)
 				AuctionFaster.db.global.enabled = val;
 			end,
-			get = function(info) return not AuctionFaster.db.global.enabled end
+			get = function(info) return AuctionFaster.db.global.enabled end
+		},
+		fastMode = {
+			name = 'Fast Mode',
+			desc = 'In fast mode auction seller may not be correctly updated but speed of searching is greatly increased',
+			type = 'toggle',
+			width = 'full',
+			set = function(info, val)
+				AuctionFaster.db.global.fastMode = val;
+			end,
+			get = function(info) return AuctionFaster.db.global.fastMode end
 		},
 		enableToolTips = {
 			name = 'Enable Tooltip information',
@@ -62,6 +72,11 @@ AuctionFaster.options = {
 AuctionFaster.defaults = {
 	global = {
 		enabled = true,
-		auctionDuration = 2;
+		auctionDuration = 2,
+		fastMode = true
 	}
 };
+
+function AuctionFaster:IsFastMode()
+	return self.db.global.fastMode;
+end

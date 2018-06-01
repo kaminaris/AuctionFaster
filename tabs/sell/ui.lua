@@ -1,6 +1,9 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
+---@type Inventory
+local Inventory = AuctionFaster:GetModule('Inventory');
+
 function AuctionFaster:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
@@ -35,7 +38,7 @@ function AuctionFaster:AddSellAuctionHouseTab()
 
 	self.sellTabAdded = true;
 
-	self:ScanInventory();
+	Inventory:ScanInventory();
 	self:DrawItemsFrame();
 	self:DrawRightPane();
 	self:EnableAuctionTabControls(false);
@@ -83,7 +86,7 @@ function AuctionFaster:DrawItems()
 		itemFrame.itemIndex = i;
 	end;
 
-	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, self.inventoryItems, lineHeight);
+	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, Inventory.inventoryItems, lineHeight);
 end
 
 function AuctionFaster:CreateItemFrame(parent, lineHeight, margin)

@@ -10,6 +10,8 @@ Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
 
 Libs\AceAddon-3.0\AceAddon-3.0.xml
 Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\AceBucket-3.0\AceBucket-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceGUI-3.0\AceGUI-3.0.xml
 Libs\AceConfig-3.0\AceConfig-3.0.xml
@@ -22,13 +24,12 @@ main.lua
 
 modules\itemCache.lua
 modules\tooltip.lua
+modules\inventory.lua
+modules\auctions.lua
 
 options.lua
-auctions.lua
 validators.lua
-inventory.lua
 utils.lua
-
 
 tabs\sell\ui.lua
 tabs\sell\functions.lua
