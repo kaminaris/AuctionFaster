@@ -201,6 +201,10 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 end
 
 function Buy:InterceptLinkClick()
+	if self.linksIntercepted then
+		return;
+	end
+
 	local origChatEdit_InsertLink = ChatEdit_InsertLink;
 	local origHandleModifiedItemClick = HandleModifiedItemClick;
 	local function SearchItemLink(origMethod, link)
@@ -220,4 +224,6 @@ function Buy:InterceptLinkClick()
 	Buy:RawHook('ChatEdit_InsertLink', function(link)
 		return SearchItemLink(origChatEdit_InsertLink, link);
 	end, true);
+
+	self.linksIntercepted = true;
 end
