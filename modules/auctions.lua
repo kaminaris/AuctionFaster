@@ -97,10 +97,11 @@ function Auctions:QueryAuctions(query, callback)
 		query.minLevel,
 		query.maxLevel,
 		query.page or 0,
-		query.isUsable or 0,
-		query.qualityIndex or 0,
+		query.isUsable,
+		query.qualityIndex,
 		false, -- No support for getAll
-		query.exact or false
+		query.exact or false,
+		nil
 	);
 
 	Auctions.retries = 0;
