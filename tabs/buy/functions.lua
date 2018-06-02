@@ -18,6 +18,8 @@ function Buy:SearchAuctions(name, exact, page)
 		exact = exact or false,
 	};
 
+	self:ApplyFilters(self.currentQuery);
+
 	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
 		Buy:SearchAuctionsCallback(shown, total, items)
 	end);
@@ -198,6 +200,68 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 		'afConfirmBuy'
 	);
 	confirmFrame.count = count;
+end
+
+----------------------------------------------------------------------------
+--- Filters functions
+----------------------------------------------------------------------------
+
+function Buy:GetSearchCategories()
+	if self.categories and self.subCategories then
+		return self.categories, self.subCategories;
+	end
+
+	local categories = {
+		{value = 0, text = 'All'}
+	};
+
+	local subCategories = {
+		[0] = {
+			{value = 0, text = 'All'}
+		}
+	};
+
+	for i = 1, #AuctionCategories do
+		local children = AuctionCategories[i].subCategories;
+
+		tinsert(categories, { value = i, text = AuctionCategories[i].name});
+
+		subCategories[i] = {};
+		if children then
+			tinsert(subCategories[i], {value = 0, text = 'All'});
+			for x = 1, #children do
+				tinsert(subCategories[i], {value = x, text = children[x].name});
+			end
+		end
+	end
+
+	self.categories = categories;
+	self.subCategories = subCategories;
+end
+
+function Buy:ApplyFilters(query)
+	local filters = self.filtersPane;
+
+	query.exact = filters.exactMatch:GetChecked();
+	local minLevel = filters.minLevel:GetValue();
+	local maxLevel = filters.maxLevel:GetValue();
+
+	if minLevel then
+		query.minLevel = minLevel;
+	end
+
+	if maxLevel then
+		query.maxLevel = maxLevel;
+	end
+
+	local categoryIndex = filters.category:GetValue();
+	local subCategoryIndex = filters.subCategory:GetValue();
+
+	if categoryIndex > 0 and subCategoryIndex > 0 then
+		query.filterData = AuctionCategories[categoryIndex].subCategories[subCategoryIndex].filters;
+	elseif categoryIndex > 0 then
+		query.filterData = AuctionCategories[categoryIndex].filters;
+	end
 end
 
 function Buy:InterceptLinkClick()

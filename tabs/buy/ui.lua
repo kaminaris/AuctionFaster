@@ -23,6 +23,8 @@ function Buy:AddBuyAuctionHouseTab()
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
 	self:DrawPager();
+
+	self:DrawFilterFrame();
 end
 
 function Buy:DrawSearchPane()
@@ -42,6 +44,10 @@ function Buy:DrawSearchPane()
 	addFavoritesButton.texture:SetTexCoord(0, 0.5, 0, 0.5);
 	StdUi:GlueRight(addFavoritesButton, searchButton, 5, 0);
 
+
+	local filtersButton = StdUi:Button(buyTab, 150, 30, 'Filters');
+	StdUi:GlueRight(filtersButton, addFavoritesButton, 5, 0);
+
 	addFavoritesButton:SetScript('OnClick', function()
 		Buy:AddToFavorites();
 	end);
@@ -54,7 +60,66 @@ function Buy:DrawSearchPane()
 		Buy:SearchAuctions(searchBox:GetText(), false, 0);
 	end);
 
+	filtersButton:SetScript('OnClick', function()
+		Buy:ToggleFilters();
+	end);
+
 	buyTab.searchBox = searchBox;
+end
+
+function Buy:DrawFilterFrame()
+	local buyTab = self.buyTab;
+
+	local filtersPane = StdUi:PanelWithTitle(buyTab, 200, 100, 'Filters');
+	filtersPane:Hide();
+	StdUi:GlueAfter(filtersPane, buyTab, 0, 0, 0, 0);
+
+	local exactMatch = StdUi:Checkbox(filtersPane, 'Exact Match');
+	StdUi:GlueTop(exactMatch, filtersPane, 10, -20, 'LEFT');
+
+	local minLevel = StdUi:NumericBoxWithLabel(filtersPane, 50, 20, '', 'Level from', 'TOP');
+	local maxLevel = StdUi:NumericBoxWithLabel(filtersPane, 50, 20, '', 'Level to', 'TOP');
+	StdUi:GlueBelow(minLevel, exactMatch, 0, -30, 'LEFT');
+	StdUi:GlueRight(maxLevel, minLevel, 20, 0);
+
+	self:GetSearchCategories();
+	local category = StdUi:Dropdown(filtersPane, 150, 20, self.categories, 0);
+	StdUi:AddLabel(filtersPane, category, 'Category', 'TOP');
+	StdUi:GlueBelow(category, minLevel, 0, -30, 'LEFT');
+
+	local subCategory = StdUi:Dropdown(filtersPane, 150, 20, {}, 0);
+	StdUi:AddLabel(filtersPane, subCategory, 'Sub Category', 'TOP');
+	StdUi:GlueBelow(subCategory, category, 0, -30, 'LEFT');
+	subCategory:Disable();
+
+	category.OnValueChanged = function(dropdown, value, text)
+		local subCategories = Buy.subCategories[value];
+
+		if #subCategories > 0 then
+			subCategory:SetOptions(subCategories);
+			subCategory:SetValue(0);
+			subCategory:Enable();
+		else
+			subCategory:SetOptions({});
+			subCategory:SetValue(0);
+			subCategory:Disable();
+		end
+	end;
+
+	self.filtersPane = filtersPane;
+	self.filtersPane.exactMatch = exactMatch;
+	self.filtersPane.minLevel = minLevel;
+	self.filtersPane.maxLevel = maxLevel;
+	self.filtersPane.category = category;
+	self.filtersPane.subCategory = subCategory;
+end
+
+function Buy:ToggleFilters()
+	if self.filtersPane:IsVisible() then
+		self.filtersPane:Hide();
+	else
+		self.filtersPane:Show();
+	end
 end
 
 function Buy:DrawSearchButtons()

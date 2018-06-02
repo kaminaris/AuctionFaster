@@ -33,6 +33,17 @@ end
 
 function Auctions:SetAuctionSort()
 	self.currentlySorting = true;
+	local sortColumn, reversed = GetAuctionSort('list', 1);
+	if sortColumn == 'unitprice' then
+		-- at least there is no need to sort twice
+		if reversed then
+			SortAuctionItems('list', 'unitprice');
+		end
+
+		self.currentlySorting = false;
+		return;
+	end
+
 	SortAuctionItems('list', 'unitprice');
 
 	if IsAuctionSortReversed('list', 'unitprice') then
@@ -75,9 +86,9 @@ function Auctions:QueryAuctions(query, callback)
 		return;
 	end
 
-	self.currentlyQuerying = true;
 
 	if not CanSendAuctionQuery() then
+		self.currentlyQuerying = false;
 		if Auctions.retries < 5 then
 			Auctions.retries = Auctions.retries + 1;
 			print('Auctions.retries', Auctions.retries);
@@ -91,6 +102,7 @@ function Auctions:QueryAuctions(query, callback)
 
 	self:SetAuctionSort();
 
+	self.currentlyQuerying = true;
 	--QueryAuctionItems("name", minLevel, maxLevel, page, isUsable, qualityIndex, getAll, exactMatch, filterData)
 	QueryAuctionItems(
 		query.name or '',
@@ -101,7 +113,7 @@ function Auctions:QueryAuctions(query, callback)
 		query.qualityIndex,
 		false, -- No support for getAll
 		query.exact or false,
-		nil
+		query.filterData or nil
 	);
 
 	Auctions.retries = 0;
