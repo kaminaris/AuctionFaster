@@ -43,6 +43,7 @@ function Sell:DrawItemsFrame()
 		Inventory:ScanInventory();
 	end);
 
+	sellTab.itemsList = panel;
 	sellTab.scrollFrame = scrollFrame;
 	sellTab.scrollChild = scrollChild;
 
@@ -70,6 +71,7 @@ function Sell:DrawItems()
 	end;
 
 	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, Inventory.inventoryItems, lineHeight);
+	self.sellTab.itemsList:UpdateItemsCount(#Inventory.inventoryItems);
 end
 
 function Sell:CreateItemFrame(parent, lineHeight, margin)

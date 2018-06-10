@@ -12,3 +12,6 @@ externals:
 
     AuctionFaster/Libs/StdUi:
         url: git://github.com/kaminaris/StdUi.git
+
+ignore:
+    - README.md
