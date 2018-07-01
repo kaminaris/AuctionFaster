@@ -20,6 +20,9 @@ function Buy:SearchAuctions(name, exact, page)
 
 	self:ApplyFilters(self.currentQuery);
 
+	self:ClearSearchAuctions();
+	self:UpdateStateText(true);
+
 	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
 		Buy:SearchAuctionsCallback(shown, total, items)
 	end);
@@ -57,9 +60,12 @@ function Buy:SearchAuctionsCallback(shown, total, items)
 	self:UpdatePager();
 end
 
-function Buy:UpdateStateText()
-	if #self.buyTab.auctions == 0 then
-		self.buyTab.stateLabel:SetText('Nothing was found for query:');
+function Buy:UpdateStateText(inProgress)
+	if inProgress then
+		self.buyTab.stateLabel:SetText('Search in progress...');
+		self.buyTab.stateLabel:Show();
+	elseif #self.buyTab.auctions == 0 then
+		self.buyTab.stateLabel:SetText('Nothing was found for this query.');
 		self.buyTab.stateLabel:Show();
 	else
 		self.buyTab.stateLabel:Hide();
@@ -142,6 +148,10 @@ end
 
 function Buy:UpdateSearchAuctions()
 	self.buyTab.searchResults:SetData(self.buyTab.auctions, true);
+end
+
+function Buy:ClearSearchAuctions()
+	self.buyTab.searchResults:SetData({}, true);
 end
 
 local alreadyBought = 0;

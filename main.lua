@@ -61,6 +61,7 @@ end
 AuctionFaster.auctionTabs = {};
 function AuctionFaster:AddAuctionHouseTab(buttonText, title)
 	local auctionTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, title, 160);
+	auctionTab.titlePanel:SetBackdrop(nil);
 	auctionTab:Hide();
 	auctionTab:SetAllPoints();
 

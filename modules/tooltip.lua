@@ -21,6 +21,10 @@ end
 
 function Tooltip:UpdateTooltip(tooltip, ...)
 	local name, link = tooltip:GetItem();
+	if not link then
+		return;
+	end
+
 	local itemId = GetItemInfoInstant(link);
 
 	local cacheItem = ItemCache:GetItemFromCache(itemId, name, true);

@@ -61,16 +61,20 @@ function Sell:DrawItems()
 	local lineHeight = 32;
 	local margin = 5;
 
-	local buttonCreate = function(parent, i)
+	local buttonCreate = function(parent, data, i)
 		return Sell:CreateItemFrame(parent, lineHeight, margin);
 	end;
 
-	local buttonUpdate = function(parent, i, itemFrame, data)
+	local buttonUpdate = function(parent, itemFrame, data, i)
 		Sell:UpdateItemFrame(itemFrame, data);
 		itemFrame.itemIndex = i;
 	end;
 
-	StdUi:ButtonList(scrollChild, buttonCreate, buttonUpdate, Inventory.inventoryItems, lineHeight);
+	if not scrollChild.items then
+		scrollChild.items = {};
+	end
+
+	StdUi:ObjectList(scrollChild, scrollChild.items, buttonCreate, buttonUpdate, Inventory.inventoryItems);
 	self.sellTab.itemsList:UpdateItemsCount(#Inventory.inventoryItems);
 end
 
@@ -156,12 +160,16 @@ function Sell:DrawRightPaneItemPrices(marginToIcon)
 	local sellTab = self.sellTab;
 
 	-- Bid per item edit box
-	sellTab.bidPerItem = StdUi:MoneyBoxWithLabel(sellTab, 150, 20, '-', 'Bid Per Item', 'TOP');
+	sellTab.bidPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
+	StdUi:AddLabel(sellTab, sellTab.bidPerItem,  'Bid Per Item', 'TOP');
+
 	sellTab.bidPerItem:Validate();
 	StdUi:GlueBelow(sellTab.bidPerItem, sellTab.itemIcon, 0, marginToIcon, 'LEFT');
 
 	-- Buy per item edit box
-	sellTab.buyPerItem = StdUi:MoneyBoxWithLabel(sellTab, 150, 20, '-', 'Buy Per Item', 'TOP');
+	sellTab.buyPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
+	StdUi:AddLabel(sellTab, sellTab.buyPerItem,  'Buy Per Item', 'TOP');
+
 	sellTab.buyPerItem:Validate();
 	StdUi:GlueBelow(sellTab.buyPerItem, sellTab.bidPerItem, 0, -20);
 
@@ -188,11 +196,15 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 	local sellTab = self.sellTab;
 
 	-- Stack Size
-	sellTab.stackSize = StdUi:NumericBoxWithLabel(sellTab, 150, 20, '1', 'Stack Size', 'TOP');
+	sellTab.stackSize = StdUi:NumericBox(sellTab, 150, 20, '1');
+	StdUi:AddLabel(sellTab, sellTab.stackSize, 'Stack Size', 'TOP');
+
 	sellTab.stackSize:SetValue(0);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
-	sellTab.maxStacks = StdUi:NumericBoxWithLabel(sellTab, 150, 20, '0', '# Stacks', 'TOP');
+	sellTab.maxStacks = StdUi:NumericBox(sellTab, 150, 20, '0');
+	StdUi:AddLabel(sellTab, sellTab.maxStacks, '# Stacks', 'TOP');
+
 	sellTab.maxStacks:SetValue(0);
 	StdUi:GlueRight(sellTab.maxStacks, sellTab.buyPerItem, marginToPrices, 0);
 
@@ -310,5 +322,5 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	sellTab.currentAuctions = StdUi:ScrollTable(sellTab, cols, 10, 18);
 	sellTab.currentAuctions:EnableSelection(true);
-	StdUi:GlueAcross(sellTab.currentAuctions.frame, sellTab, leftMargin, -200, -20, 55);
+	StdUi:GlueAcross(sellTab.currentAuctions, sellTab, leftMargin, -200, -20, 55);
 end

@@ -77,8 +77,12 @@ function Buy:DrawFilterFrame()
 	local exactMatch = StdUi:Checkbox(filtersPane, 'Exact Match');
 	StdUi:GlueTop(exactMatch, filtersPane, 10, -20, 'LEFT');
 
-	local minLevel = StdUi:NumericBoxWithLabel(filtersPane, 50, 20, '', 'Level from', 'TOP');
-	local maxLevel = StdUi:NumericBoxWithLabel(filtersPane, 50, 20, '', 'Level to', 'TOP');
+	local minLevel = StdUi:NumericBox(filtersPane, 50, 20, '');
+	StdUi:AddLabel(filtersPane, minLevel, 'Level from', 'TOP');
+
+	local maxLevel = StdUi:NumericBox(filtersPane, 50, 20, '');
+	StdUi:AddLabel(filtersPane, maxLevel, 'Level to', 'TOP');
+
 	StdUi:GlueBelow(minLevel, exactMatch, 0, -30, 'LEFT');
 	StdUi:GlueRight(maxLevel, minLevel, 20, 0);
 
@@ -177,11 +181,11 @@ function Buy:DrawFavorites()
 	local favFrame = self.buyTab.favorites;
 	local lineHeight = 20;
 
-	local buttonCreate = function(parent, i)
+	local buttonCreate = function(parent, data, i)
 		return Buy:CreateFavoriteFrame(parent, lineHeight);
 	end;
 
-	local buttonUpdate = function(parent, i, itemFrame, data)
+	local buttonUpdate = function(parent, itemFrame, data, i)
 		Buy:UpdateFavoriteFrame(i, itemFrame, data);
 		itemFrame.itemIndex = i;
 	end;
@@ -192,7 +196,11 @@ function Buy:DrawFavorites()
 		data = AuctionFaster.db.global.favorites;
 	end
 
-	StdUi:ButtonList(favFrame.scrollChild, buttonCreate, buttonUpdate, data, lineHeight);
+	if not favFrame.scrollChild.items then
+		favFrame.scrollChild.items = {};
+	end
+
+	StdUi:ObjectList(favFrame.scrollChild, favFrame.scrollChild.items, buttonCreate, buttonUpdate, data);
 	favFrame:UpdateItemsCount(#data);
 end
 
@@ -237,12 +245,11 @@ function Buy:DrawSearchResultsTable()
 			format       = 'icon',
 			sortable	 = false,
 			events		 = {
-				OnEnter = function(rowFrame, cellFrame, data, cols, row, realRow)
-					local cellData = data[realRow];
-					AuctionFaster:ShowTooltip(cellFrame, cellData.itemLink, true, cellData.itemId);
+				OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
+					AuctionFaster:ShowTooltip(cellFrame, rowData.itemLink, true, rowData.itemId);
 					return false;
 				end,
-				OnLeave = function(rowFrame, cellFrame)
+				OnLeave = function(table, cellFrame)
 					AuctionFaster:ShowTooltip(cellFrame, nil, false);
 					return false;
 				end
@@ -287,8 +294,8 @@ function Buy:DrawSearchResultsTable()
 
 	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 8, 32);
 	buyTab.searchResults:EnableSelection(true);
-	StdUi:GlueAcross(buyTab.searchResults.frame, buyTab, 10, -100, -220, 80);
+	StdUi:GlueAcross(buyTab.searchResults, buyTab, 10, -100, -220, 80);
 
-	buyTab.stateLabel = StdUi:Label(buyTab.searchResults.frame, 'Chose your search criteria nad press "Search"');
-	StdUi:GlueTop(buyTab.stateLabel, buyTab.searchResults.frame, 0, -40, 'CENTER');
+	buyTab.stateLabel = StdUi:Label(buyTab.searchResults, 'Chose your search criteria nad press "Search"');
+	StdUi:GlueTop(buyTab.stateLabel, buyTab.searchResults, 0, -40, 'CENTER');
 end
