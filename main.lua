@@ -38,12 +38,29 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 	end
 end
 
+function AuctionFaster:StripAhTextures()
+	for i = 1, AuctionFrame:GetNumRegions() do
+		---@type Region
+		local region = select(i, AuctionFrame:GetRegions());
+
+		if region and region:GetObjectType() == 'Texture' then
+			if region:GetName() ~= 'AuctionPortraitTexture' then
+				region:SetTexture(nil);
+			else
+				region:Hide();
+			end
+		end
+	end
+end
+
 function AuctionFaster:AuctionFrameTab_OnClick(tab)
+	AuctionPortraitTexture:Show();
 	for i = 1, #self.auctionTabs do
 		self.auctionTabs[i]:Hide();
 	end
 
 	if tab.auctionFasterTab then
+		self:StripAhTextures()
 		tab.auctionFasterTab:Show();
 	end
 end
