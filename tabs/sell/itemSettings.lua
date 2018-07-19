@@ -63,22 +63,22 @@ end
 function Sell:InitItemSettingsScripts()
 	local pane = self.sellTab.itemSettingsPane;
 
-	pane.rememberStack:SetScript('OnClick', function(self)
-		Sell:UpdateItemSettings('rememberStack', self:GetChecked());
-	end);
+	pane.rememberStack.OnValueChanged = function(self, flag)
+		Sell:UpdateItemSettings('rememberStack', flag);
+	end;
 
-	pane.rememberLastPrice:SetScript('OnClick', function(self)
-		Sell:UpdateItemSettings('rememberLastPrice', self:GetChecked());
-	end);
+	pane.rememberLastPrice.OnValueChanged = function(self, flag)
+		Sell:UpdateItemSettings('rememberLastPrice', flag);
+	end;
 
-	pane.alwaysUndercut:SetScript('OnClick', function(self)
-		Sell:UpdateItemSettings('alwaysUndercut', self:GetChecked());
-	end);
+	pane.alwaysUndercut.OnValueChanged = function(self, flag)
+		Sell:UpdateItemSettings('alwaysUndercut', flag);
+	end;
 
-	pane.useCustomDuration:SetScript('OnClick', function(self)
-		Sell:UpdateItemSettings('useCustomDuration', self:GetChecked());
-		Sell:UpdateItemSettingsCustomDuration(self:GetChecked());
-	end);
+	pane.useCustomDuration.OnValueChanged = function(self, flag)
+		Sell:UpdateItemSettings('useCustomDuration', flag);
+		Sell:UpdateItemSettingsCustomDuration(flag);
+	end;
 
 	pane.duration.OnValueChanged = function(self, value)
 		Sell:UpdateItemSettings('duration', value);

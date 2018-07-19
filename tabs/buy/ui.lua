@@ -2,11 +2,16 @@
 local StdUi = LibStub('StdUi');
 
 --- @class Buy
-local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0');
+local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0');
 
 function Buy:Enable()
 	self:AddBuyAuctionHouseTab();
 	self:InterceptLinkClick();
+	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+end
+
+function Buy:Disable()
+	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
 function Buy:AddBuyAuctionHouseTab()

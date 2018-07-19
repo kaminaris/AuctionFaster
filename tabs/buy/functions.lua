@@ -154,10 +154,27 @@ function Buy:ClearSearchAuctions()
 	self.buyTab.searchResults:SetData({}, true);
 end
 
+function Buy:LockBuyButton(lock)
+	local buyButton = self.confirmFrame.buttons['ok'];
+
+	if lock then
+		buyButton:Disable();
+	else
+		buyButton:Enable();
+	end
+end
+
+function Buy:AUCTION_ITEM_LIST_UPDATE()
+	-- this unlocks the button after buying item
+	if self.confirmFrame then
+		C_Timer.After(0.2, self.LockBuyButton);
+	end
+end
+
 local alreadyBought = 0;
 function Buy:BuySelectedItem(boughtSoFar, fresh)
-	local index = self.buyTab.searchResults:GetSelection();
-	if not index then
+	local auctionData = self.buyTab.searchResults:GetSelectedItem();
+	if not auctionData then
 		return ;
 	end
 
@@ -165,11 +182,6 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 	alreadyBought = alreadyBought + boughtSoFar;
 	if fresh then
 		alreadyBought = 0;
-	end
-
-	local auctionData = self.buyTab.searchResults:GetRow(index);
-	if not auctionData then
-		return;
 	end
 
 	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
@@ -185,14 +197,15 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 		ok     = {
 			text    = 'Yes',
 			onClick = function(self)
-				-- same index, we can buy it
 				self:GetParent():Hide();
 
-				Auctions:BuyItemByIndex(index);
+				Auctions:BuyItemByIndex(auctionIndex);
+				Buy:LockBuyButton(true);
 				Buy:RemoveCurrentSearchAuction();
 
 				Buy:BuySelectedItem(self:GetParent().count);
-
+				-- Unlock after second just in case
+				--C_Timer.After(1, function() Buy:LockBuyButton(); end);
 			end
 		},
 		cancel = {
@@ -203,13 +216,20 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 		}
 	};
 
-	local confirmFrame = StdUi:Confirm(
+	self.confirmFrame = StdUi:Confirm(
 		'Confirm Buy',
-		'Buying ' .. name .. '\n#: ' .. count .. '\n\nBought so far: ' .. alreadyBought,
+		'Buying ' .. auctionData.itemLink .. '\n'..
+			'qty: ' .. count .. '\n\n' ..
+			'per item: ' .. StdUi.Util.formatMoney(auctionData.buy) .. '\n' ..
+			'Total: ' .. StdUi.Util.formatMoney(auctionData.buy * auctionData.count) .. '\n\n' ..
+
+			'Bought so far: ' .. alreadyBought,
 		buttons,
 		'afConfirmBuy'
 	);
-	confirmFrame.count = count;
+
+	self.confirmFrame:SetHeight(200);
+	self.confirmFrame.count = count;
 end
 
 ----------------------------------------------------------------------------
