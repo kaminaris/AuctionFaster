@@ -10,10 +10,10 @@ function Sell:DrawInfoPane()
 
 	sellTab.infoPane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Auction Info');
 	sellTab.infoPane:Hide();
-	StdUi:GlueAfter(sellTab.infoPane, sellTab, 0, 0, 0, sellTab:GetHeight() - 200);
+	StdUi:GlueAfter(sellTab.infoPane, sellTab, 0, 0, 0, sellTab:GetHeight() - 150);
 
 	local totalLabel = StdUi:Label(sellTab.infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
-	StdUi:GlueTop(totalLabel, sellTab.infoPane, 5, -15, 'LEFT');
+	StdUi:GlueTop(totalLabel, sellTab.infoPane, 5, -40, 'LEFT');
 
 	local deposit = StdUi:Label(sellTab.infoPane, 'Deposit: ' .. StdUi.Util.formatMoney(0));
 	StdUi:GlueBelow(deposit, totalLabel, 0, -5, 'LEFT');

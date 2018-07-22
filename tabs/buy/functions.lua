@@ -167,7 +167,7 @@ end
 function Buy:AUCTION_ITEM_LIST_UPDATE()
 	-- this unlocks the button after buying item
 	if self.confirmFrame then
-		C_Timer.After(0.2, self.LockBuyButton);
+		self:LockBuyButton();
 	end
 end
 

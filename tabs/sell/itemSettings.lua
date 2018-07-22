@@ -9,7 +9,7 @@ function Sell:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
 
 	local pane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Item Settings');
-	StdUi:GlueAfter(pane, sellTab, 0, -200, 0, 0);
+	StdUi:GlueAfter(pane, sellTab, 0, -150, 0, 0);
 	pane:Hide();
 
 	sellTab.itemSettingsPane = pane;
@@ -20,7 +20,7 @@ function Sell:DrawItemSettings()
 	local pane = self.sellTab.itemSettingsPane;
 
 	local icon = StdUi:Texture(pane, 30, 30, nil);
-	StdUi:GlueTop(icon, pane, 10, -20, 'LEFT');
+	StdUi:GlueTop(icon, pane, 10, -40, 'LEFT');
 
 	local itemName = StdUi:Label(pane, 'No Item selected', 14, nil, 150);
 	StdUi:GlueAfter(itemName, icon, 10, 0);
