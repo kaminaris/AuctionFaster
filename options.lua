@@ -1,82 +1,58 @@
 
-local ItemCache = AuctionFaster:GetModule('ItemCache');
---local Tooltip = AuctionFaster:GetModule('ItemCache');
-
-
-AuctionFaster.options = {
-	type = 'group',
-	name = 'AuctionFaster Options',
-	inline = false,
-	args = {
-		enable = {
-			name = 'Enable AuctionFaster',
-			desc = 'Enable AuctionFaster',
-			type = 'toggle',
-			width = 'full',
-			set = function(info, val)
-				AuctionFaster.db.global.enabled = val;
-			end,
-			get = function(info) return AuctionFaster.db.global.enabled end
-		},
-		fastMode = {
-			name = 'Fast Mode',
-			desc = 'In fast mode auction seller may not be correctly updated but speed of searching is greatly increased',
-			type = 'toggle',
-			width = 'full',
-			set = function(info, val)
-				AuctionFaster.db.global.fastMode = val;
-			end,
-			get = function(info) return AuctionFaster.db.global.fastMode end
-		},
-		enableToolTips = {
-			name = 'Enable Tooltip information',
-			desc = 'You will see bid / buy prices on item tooltips',
-			type = 'toggle',
-			width = 'full',
-			set = function(info, val)
-				AuctionFaster.db.global.tooltipsEnabled = val;
-				if val then
-					AuctionFaster:EnableModule('Tooltip');
-				else
-					AuctionFaster:DisableModule('Tooltip');
-				end
-			end,
-			get = function(info) return AuctionFaster.db.global.tooltipsEnabled end
-		},
-		auctionDuration = {
-			name = 'Auction Duration',
-			type = 'select',
-			values = {
-				[1] = '12 Hours',
-				[2] = '24 Hours',
-				[3] = '48 Hours',
-			},
-			set = function(info, val)
-				AuctionFaster.db.global.auctionDuration = val;
-			end,
-			get = function(info) return AuctionFaster.db.global.auctionDuration end
-		},
-		wipe = {
-			name = 'Wipe AuctionFaster item cache and settings',
-			desc = 'Wipe AuctionFaster item cache and settings',
-			type = 'execute',
-			--width = 'full',
-			func = function(info, val)
-				ItemCache:WipeItemCache();
-				print('Settins wiped!');
-			end,
-		},
-	},
-}
+--- @type StdUi
+local StdUi = LibStub('StdUi');
 
 AuctionFaster.defaults = {
-	global = {
-		enabled = true,
-		auctionDuration = 2,
-		fastMode = true
-	}
+	enabled = true,
+	fastMode = true,
+	enableToolTips = true,
+	auctionDuration = 3,
 };
 
 function AuctionFaster:IsFastMode()
-	return self.db.global.fastMode;
+	return self.db.fastMode;
+end
+
+function AuctionFaster:RegisterOptionWindow()
+	if self.optionsFrame then
+		return;
+	end
+
+	self.optionsFrame = StdUi:PanelWithTitle(UIParent, 100, 100, 'Auction Faster Options');
+	self.optionsFrame.name = 'Auction Faster';
+
+	local enabled = StdUi:Checkbox(self.optionsFrame, 'Enable Auction Faster');
+	StdUi:GlueTop(enabled, self.optionsFrame, 10, -40, 'LEFT');
+	if self.db.enabled then enabled:SetChecked(true); end
+	enabled.OnValueChanged = function(_, flag) AuctionFaster.db.enabled = flag; print(flag) end;
+
+	local fastMode = StdUi:Checkbox(self.optionsFrame, 'Fast Mode');
+	StdUi:GlueBelow(fastMode, enabled, 0, -10, 'LEFT');
+	if self.db.fastMode then fastMode:SetChecked(true); end
+	fastMode.OnValueChanged = function(_, flag) AuctionFaster.db.fastMode = flag; print(flag) end;
+
+	local enableToolTips = StdUi:Checkbox(self.optionsFrame, 'Enable ToolTips');
+	StdUi:GlueBelow(enableToolTips, fastMode, 0, -10, 'LEFT');
+	if self.db.enableToolTips then enableToolTips:SetChecked(true); end
+	enableToolTips.OnValueChanged = function(_, flag) AuctionFaster.db.enableToolTips = flag; print(flag) end;
+
+
+	local durations = {
+		{text = '12 Hours', value = 1},
+		{text = '24 Hours', value = 2},
+		{text = '48 Hours', value = 3},
+	};
+	local auctionDuration = StdUi:Dropdown(self.optionsFrame, 160, 24, durations, self.db.auctionDuration);
+	StdUi:AddLabel(self.optionsFrame, auctionDuration, 'Auction Duration', 'TOP');
+	StdUi:GlueTop(auctionDuration, self.optionsFrame, 300, -60, 'LEFT');
+	auctionDuration.OnValueChanged = function(_, value) AuctionFaster.db.auctionDuration = value; end;
+
+	local wipeSettings = StdUi:Button(self.optionsFrame, 200, 24, 'Wipe Item Cache');
+	StdUi:GlueBelow(wipeSettings, auctionDuration, 0, -20, 'LEFT');
+	wipeSettings:SetScript('OnClick', function()
+		AuctionFaster:GetModule('ItemCache'):WipeItemCache();
+		print('AuctionFaster: Item cache wiped!');
+	end);
+
+	InterfaceOptions_AddCategory(self.optionsFrame);
 end

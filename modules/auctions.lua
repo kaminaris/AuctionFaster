@@ -6,7 +6,7 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 local Inventory = AuctionFaster:GetModule('Inventory');
 
 --- @class Auctions
-local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceBucket-3.0', 'AceTimer-3.0');
+local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceTimer-3.0');
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
 function Auctions:Enable()
@@ -15,18 +15,13 @@ function Auctions:Enable()
 end
 
 function Auctions:AUCTION_HOUSE_SHOW()
-	--if AuctionFaster:IsFastMode() then
-		self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
-	--else
-	--	self:RegisterBucketEvent('AUCTION_ITEM_LIST_UPDATE', 0.6);
-	--end
+	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
 
 	self:RegisterEvent('AUCTION_MULTISELL_UPDATE');
 	self:RegisterEvent('UI_ERROR_MESSAGE');
 end
 
 function Auctions:AUCTION_HOUSE_CLOSED()
-	self:UnregisterBucket('AUCTION_ITEM_LIST_UPDATE');
 	self:UnregisterEvent('AUCTION_MULTISELL_UPDATE');
 	self:UnregisterEvent('UI_ERROR_MESSAGE');
 end
@@ -138,8 +133,6 @@ function Auctions:GetItemFromAuctionList(index)
 end
 
 function Auctions:AUCTION_ITEM_LIST_UPDATE()
-	print('AUCTION_ITEM_LIST_UPDATE');
-
 	if self.currentlySorting or not self.currentCallback then
 		return;
 	end
@@ -237,7 +230,6 @@ local failedAuctionErrors = {
 }
 
 function Auctions:UI_ERROR_MESSAGE(_, message)
-	print('ERROR', message);
 	self.lastUIError = message;
 end
 

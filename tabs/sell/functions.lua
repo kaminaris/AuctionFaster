@@ -11,7 +11,6 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 local Sell = AuctionFaster:GetModule('Sell');
 
 function Sell:AFTER_INVENTORY_SCAN()
-	print('AFTER_INVENTORY_SCAN');
 	if Auctions.isInMultisellProcess then
 		-- Do not update inventory while multiselling
 		return;
@@ -59,7 +58,7 @@ function Sell:GetSellSettings()
 		stackSize = self.selectedItem.count;
 	end
 
-	local duration = AuctionFaster.db.global.auctionDuration;
+	local duration = AuctionFaster.db.auctionDuration;
 	if cacheItem.settings.duration and cacheItem.settings.useCustomDuration then
 		duration = cacheItem.settings.duration;
 	end
@@ -296,15 +295,47 @@ function Sell:UpdateSellTabAuctions(cacheItem)
 	self:UpdateItemsTabPrice(cacheItem.itemId, cacheItem.itemName, minBuy);
 end
 
-local alreadyBought = 0;
-function Sell:BuyItem(boughtSoFar, fresh)
-	local selectedId, selectedName = self:GetSelectedItemIdName();
-	if not selectedId then
+function Sell:AUCTION_ITEM_LIST_UPDATE()
+	-- this unlocks the button after buying item
+	if self.confirmFrame then
+		self:LockBuyButton();
+	end
+end
+
+function Sell:LockBuyButton(lock)
+	local buyButton = self.confirmFrame.buttons['ok'];
+
+	if lock then
+		buyButton:Disable();
+	else
+		buyButton:Enable();
+	end
+end
+
+function Sell:RemoveCurrentSearchAuction()
+	local index = self.sellTab.currentAuctions:GetSelection();
+	if not index then
 		return ;
 	end
 
-	local index = self.sellTab.currentAuctions:GetSelection();
-	if not index then
+	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+
+	if not cacheItem.auctions[index] then
+		return;
+	end
+
+	tremove(cacheItem.auctions, index);
+	self:UpdateSellTabAuctions(cacheItem);
+
+	if cacheItem.auctions[index] then
+		self.sellTab.currentAuctions:SetSelection(index);
+	end
+end
+
+local alreadyBought = 0;
+function Sell:BuySelectedItem(boughtSoFar, fresh)
+	local auctionData = self.sellTab.currentAuctions:GetSelectedItem();
+	if not auctionData then
 		return ;
 	end
 
@@ -314,17 +345,11 @@ function Sell:BuyItem(boughtSoFar, fresh)
 		alreadyBought = 0;
 	end
 
-	local auctionData = self.sellTab.currentAuctions:GetRow(index);
-	if not auctionData then
-		return;
-	end
-
 	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
 
 	if not auctionIndex then
 		-- @TODO: show some error
 		print('Auction not found');
-		DevTools_Dump(auctionData);
 		return;
 	end
 
@@ -332,14 +357,13 @@ function Sell:BuyItem(boughtSoFar, fresh)
 		ok     = {
 			text    = 'Yes',
 			onClick = function(self)
-				-- same index, we can buy it
 				self:GetParent():Hide();
 
-				Auctions:BuyItemByIndex(index);
+				Auctions:BuyItemByIndex(auctionIndex);
+				Sell:LockBuyButton(true);
 				Sell:RemoveCurrentSearchAuction();
 
-				Sell:BuyItem(self:GetParent().count);
-
+				Sell:BuySelectedItem(self:GetParent().count);
 			end
 		},
 		cancel = {
@@ -350,13 +374,20 @@ function Sell:BuyItem(boughtSoFar, fresh)
 		}
 	};
 
-	local confirmFrame = StdUi:Confirm(
-			'Confirm Buy',
-			'Buying ' .. name .. '\n#: ' .. count .. '\n\nBought so far: ' .. alreadyBought,
-			buttons,
-			'afConfirmBuy'
+	self.confirmFrame = StdUi:Confirm(
+		'Confirm Buy',
+		'Buying ' .. auctionData.itemLink .. '\n'..
+			'qty: ' .. count .. '\n\n' ..
+			'per item: ' .. StdUi.Util.formatMoney(auctionData.buy) .. '\n' ..
+			'Total: ' .. StdUi.Util.formatMoney(auctionData.buy * auctionData.count) .. '\n\n' ..
+
+			'Bought so far: ' .. alreadyBought,
+		buttons,
+		'afConfirmBuy'
 	);
-	confirmFrame.count = count;
+
+	self.confirmFrame:SetHeight(200);
+	self.confirmFrame.count = count;
 end
 
 function Sell:SellCurrentItem(singleStack)
@@ -394,10 +425,9 @@ end
 function Sell:CheckEverythingSold()
 	local sellSettings = self:GetSellSettings();
 
-	--- DISABLED FOR TEST
-	--if sellSettings.realMaxStacks ~= 0 then
-	--	return;
-	--end
+	if sellSettings.realMaxStacks ~= 0 then
+		return;
+	end
 
 	local selectedItem = self.selectedItem;
 	if not selectedItem then

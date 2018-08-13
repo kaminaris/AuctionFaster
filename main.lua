@@ -5,19 +5,20 @@ AuctionFaster = LibStub('AceAddon-3.0'):NewAddon('AuctionFaster', 'AceConsole-3.
 local StdUi = LibStub('StdUi');
 
 function AuctionFaster:OnInitialize()
-	LibStub('AceConfig-3.0'):RegisterOptionsTable('AuctionFaster', self.options, { '/afconf' });
+	if not AuctionFasterDb or type(AuctionFasterDb) ~= 'table' or AuctionFasterDb.global then
+		AuctionFasterDb = self.defaults;
+	end
 
-	self.db = LibStub('AceDB-3.0'):New('AuctionFasterDb', self.defaults);
-
-	self.optionsFrame = LibStub('AceConfigDialog-3.0'):AddToBlizOptions('AuctionFaster', 'AuctionFaster');
+	self.db = AuctionFasterDb;
+	self:RegisterOptionWindow();
 
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 
-	if not self.db.global.auctionDb then
-		self.db.global.auctionDb = {};
+	if not self.db.auctionDb then
+		self.db.auctionDb = {};
 	end
 
-	if self.db.global.tooltipsEnabled then
+	if self.db.tooltipsEnabled then
 		self:EnableModule('Tooltip');
 	end
 
@@ -27,7 +28,7 @@ function AuctionFaster:OnInitialize()
 end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()
-	if self.db.global.enabled then
+	if self.db.enabled then
 		self:EnableModule('Sell');
 		self:EnableModule('Buy');
 
@@ -71,7 +72,7 @@ function AuctionFaster:GetDefaultItemSettings()
 		rememberLastPrice = false,
 		alwaysUndercut = true,
 		useCustomDuration = false,
-		duration = self.db.global.auctionDuration,
+		duration = self.db.auctionDuration,
 	}
 end
 

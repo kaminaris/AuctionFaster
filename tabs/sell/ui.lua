@@ -9,7 +9,12 @@ local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
 
 function Sell:Enable()
 	self:AddSellAuctionHouseTab();
+	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
 	self:RegisterMessage('AFTER_INVENTORY_SCAN');
+end
+
+function Sell:Disable()
+	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
 function Sell:AddSellAuctionHouseTab()
@@ -278,7 +283,7 @@ function Sell:DrawTabButtons(leftMargin)
 	end);
 
 	buyItemButton:SetScript('OnClick', function()
-		Sell:BuyItem();
+		Sell:BuySelectedItem(0, true);
 	end);
 
 	sellTab.buttons.postButton = postButton;

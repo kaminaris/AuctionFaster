@@ -6,8 +6,8 @@ function ItemCache:GetItemFromCache(itemId, itemName, skipOldCheck)
 		return nil;
 	end
 
-	if AuctionFaster.db.global.auctionDb[itemId .. itemName] then
-		local item = AuctionFaster.db.global.auctionDb[itemId .. itemName];
+	if AuctionFaster.db.auctionDb[itemId .. itemName] then
+		local item = AuctionFaster.db.auctionDb[itemId .. itemName];
 		if not skipOldCheck and item.scanTime and ((GetServerTime() - item.scanTime) > 60 * 10) then
 			-- older than 10 minutes
 			return nil;
@@ -22,11 +22,11 @@ end
 function ItemCache:FindOrCreateCacheItem(itemId, itemName)
 	local cacheKey = itemId .. itemName;
 
-	if AuctionFaster.db.global.auctionDb[cacheKey] then
-		return AuctionFaster.db.global.auctionDb[cacheKey];
+	if AuctionFaster.db.auctionDb[cacheKey] then
+		return AuctionFaster.db.auctionDb[cacheKey];
 	end
 
-	AuctionFaster.db.global.auctionDb[cacheKey] = {
+	AuctionFaster.db.auctionDb[cacheKey] = {
 		itemName   = itemName,
 		itemId     = itemId,
 		icon       = GetItemIcon(itemId),
@@ -38,39 +38,40 @@ function ItemCache:FindOrCreateCacheItem(itemId, itemName)
 		buy        = nil
 	};
 
-	return AuctionFaster.db.global.auctionDb[cacheKey];
+	return AuctionFaster.db.auctionDb[cacheKey];
 end
 
 function ItemCache:CacheItemNeedsUpdate(cacheKey)
-	if not AuctionFaster.db.global.auctionDb[cacheKey] then
+	if not AuctionFaster.db.auctionDb[cacheKey] then
 		return true;
 	end
 
-	local cacheItem = AuctionFaster.db.global.auctionDb[cacheKey];
+	local cacheItem = AuctionFaster.db.auctionDb[cacheKey];
 
 	return not cacheItem.scanTime;
 end
 
 function ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue)
-	if not AuctionFaster.db.global.auctionDb[cacheKey] then
+	if not AuctionFaster.db.auctionDb[cacheKey] then
+		print('Invalid cacheKey');
 		return ;
 	end
 
-	AuctionFaster.db.global.auctionDb[cacheKey].settings[settingName] = settingValue;
+	AuctionFaster.db.auctionDb[cacheKey].settings[settingName] = settingValue;
 end
 
 function ItemCache:WipeItemCache()
-	AuctionFaster.db.global.auctionDb = {};
+	AuctionFaster.db.auctionDb = {};
 end
 
 function ItemCache:GetLowestPrice(itemId, itemName)
 	local cacheKey = itemId .. itemName;
 
-	if not AuctionFaster.db.global.auctionDb[cacheKey] then
+	if not AuctionFaster.db.auctionDb[cacheKey] then
 		return nil, nil;
 	end
 
-	return self:FindLowestBidBuy(AuctionFaster.db.global.auctionDb[cacheKey]);
+	return self:FindLowestBidBuy(AuctionFaster.db.auctionDb[cacheKey]);
 end
 
 function ItemCache:FindLowestBidBuy(cacheItem)

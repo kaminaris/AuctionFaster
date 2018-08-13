@@ -98,7 +98,7 @@ function Buy:AddToFavorites()
 		return ;
 	end
 
-	local favorites = AuctionFaster.db.global.favorites;
+	local favorites = AuctionFaster.db.favorites;
 	for i = 1, #favorites do
 		if favorites[i].text == text then
 			--already exists - no error
@@ -111,7 +111,7 @@ function Buy:AddToFavorites()
 end
 
 function Buy:RemoveFromFavorites(i)
-	local favorites = AuctionFaster.db.global.favorites;
+	local favorites = AuctionFaster.db.favorites;
 
 	if favorites[i] then
 		tremove(favorites, i);
@@ -121,7 +121,7 @@ function Buy:RemoveFromFavorites(i)
 end
 
 function Buy:SetFavoriteAsSearch(i)
-	local favorites = AuctionFaster.db.global.favorites;
+	local favorites = AuctionFaster.db.favorites;
 
 	if favorites[i] then
 		self.buyTab.searchBox:SetText(favorites[i].text);
@@ -189,7 +189,6 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 	if not auctionIndex then
 		-- @TODO: show some error
 		print('Auction not found');
-		DevTools_Dump(auctionData);
 		return;
 	end
 
@@ -204,8 +203,6 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 				Buy:RemoveCurrentSearchAuction();
 
 				Buy:BuySelectedItem(self:GetParent().count);
-				-- Unlock after second just in case
-				--C_Timer.After(1, function() Buy:LockBuyButton(); end);
 			end
 		},
 		cancel = {

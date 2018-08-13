@@ -3,15 +3,27 @@ enable-nolib-creation: no
 
 externals:
     # Ace Libs
-    AuctionFaster/Libs/AceAddon-3.0:
+    Libs/AceAddon-3.0:
         url: https://repos.wowace.com/wow/ace3/trunk/AceAddon-3.0
-    AuctionFaster/Libs/CallbackHandler-1.0:
+    Libs/AceConsole-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/AceConsole-3.0
+    Libs/AceDB-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/AceDB-3.0
+    Libs/AceEvent-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/AceEvent-3.0
+    Libs/AceHook-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/AceHook-3.0
+    Libs/AceTimer-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/AceTimer-3.0
+    Libs/CallbackHandler-1.0:
         url: https://repos.wowace.com/wow/ace3/trunk/CallbackHandler-1.0
-    AuctionFaster/Libs/LibStub:
+    Libs/LibGratuity-3.0:
+        url: https://repos.wowace.com/wow/ace3/trunk/LibGratuity-3-0
+    Libs/LibStub:
         url: https://repos.wowace.com/wow/ace3/trunk/LibStub
 
-    AuctionFaster/Libs/StdUi:
-        url: git://github.com/kaminaris/StdUi.git
+    Libs/StdUi:
+        url: https://github.com/kaminaris/StdUi.git
 
 ignore:
     - README.md

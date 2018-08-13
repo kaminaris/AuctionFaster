@@ -54,10 +54,10 @@ function Sell:DrawItemSettings()
 	pane.useCustomDuration = useCustomDuration;
 	pane.duration = duration;
 
+	self:LoadItemSettings();
 	self:InitItemSettingsScripts();
 	self:InitItemSettingsTooltips();
 	-- this will mark all settings disabled
-	self:LoadItemSettings();
 end
 
 function Sell:InitItemSettingsScripts()
@@ -116,7 +116,7 @@ function Sell:InitItemSettingsTooltips()
 		'AFInfoTTX', 'TOPLEFT', true
 	);
 
-	StdUi:Tooltip(
+	StdUi:FrameTooltip(
 		pane.alwaysUndercut,
 		'By default, AuctionFaster always undercuts price,\neven if you toggle "Remember Last Price"\n'..
 		'If you uncheck this option AuctionFaster\nwill never undercut items for you',
@@ -126,6 +126,7 @@ end
 
 function Sell:LoadItemSettings()
 	local pane = self.sellTab.itemSettingsPane;
+	self.loadingItemSettings = true;
 
 	if not self.selectedItem then
 		pane.icon:SetTexture(nil);
@@ -137,10 +138,14 @@ function Sell:LoadItemSettings()
 		pane.useCustomDuration:SetChecked(false);
 		pane.duration:SetValue(2);
 		self:EnableDisableItemSettings(false);
+
+		self.loadingItemSettings = false;
 		return;
 	end
 
 	local item = self:GetSelectedItemFromCache();
+	LoadAddOn('Blizzard_DebugTools')
+	DevTools_Dump(item.settings);
 
 	self:EnableDisableItemSettings(true);
 	pane.icon:SetTexture(self.selectedItem.icon);
@@ -152,6 +157,8 @@ function Sell:LoadItemSettings()
 	pane.duration:SetValue(item.settings.duration);
 
 	Sell:UpdateItemSettingsCustomDuration(item.settings.useCustomDuration);
+
+	self.loadingItemSettings = false;
 end
 
 function Sell:EnableDisableItemSettings(enable)
@@ -173,10 +180,11 @@ function Sell:EnableDisableItemSettings(enable)
 end
 
 function Sell:UpdateItemSettings(settingName, settingValue)
-	if not self.selectedItem then
+	if not self.selectedItem or self.loadingItemSettings then
 		return;
 	end
 
+	print(settingName, settingValue);
 	local cacheKey = self.selectedItem.itemId .. self.selectedItem.itemName;
 	ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
 end

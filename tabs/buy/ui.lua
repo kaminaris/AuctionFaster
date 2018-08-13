@@ -195,10 +195,10 @@ function Buy:DrawFavorites()
 		itemFrame.itemIndex = i;
 	end;
 
-	local data = AuctionFaster.db.global.favorites;
+	local data = AuctionFaster.db.favorites;
 	if not data then
-		AuctionFaster.db.global.favorites = {};
-		data = AuctionFaster.db.global.favorites;
+		AuctionFaster.db.favorites = {};
+		data = AuctionFaster.db.favorites;
 	end
 
 	if not favFrame.scrollChild.items then
