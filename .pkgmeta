@@ -18,7 +18,7 @@ externals:
     Libs/CallbackHandler-1.0:
         url: https://repos.wowace.com/wow/ace3/trunk/CallbackHandler-1.0
     Libs/LibGratuity-3.0:
-        url: https://repos.wowace.com/wow/ace3/trunk/LibGratuity-3-0
+        url: https://repos.wowace.com/wow/libgratuity-3-0/trunk
     Libs/LibStub:
         url: https://repos.wowace.com/wow/ace3/trunk/LibStub
 
