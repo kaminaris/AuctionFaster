@@ -144,8 +144,6 @@ function Sell:LoadItemSettings()
 	end
 
 	local item = self:GetSelectedItemFromCache();
-	LoadAddOn('Blizzard_DebugTools')
-	DevTools_Dump(item.settings);
 
 	self:EnableDisableItemSettings(true);
 	pane.icon:SetTexture(self.selectedItem.icon);

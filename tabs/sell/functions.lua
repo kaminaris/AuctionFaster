@@ -357,13 +357,15 @@ function Sell:BuySelectedItem(boughtSoFar, fresh)
 		ok     = {
 			text    = 'Yes',
 			onClick = function(self)
-				self:GetParent():Hide();
+				local parent = self:GetParent();
+				parent:Hide();
 
-				Auctions:BuyItemByIndex(auctionIndex);
+				Auctions:BuyItem(parent.auctionData);
 				Sell:LockBuyButton(true);
 				Sell:RemoveCurrentSearchAuction();
 
-				Sell:BuySelectedItem(self:GetParent().count);
+				-- Chain buy
+				Sell:BuySelectedItem(parent.count);
 			end
 		},
 		cancel = {
@@ -388,6 +390,7 @@ function Sell:BuySelectedItem(boughtSoFar, fresh)
 
 	self.confirmFrame:SetHeight(200);
 	self.confirmFrame.count = count;
+	self.confirmFrame.auctionData = auctionData;
 end
 
 function Sell:SellCurrentItem(singleStack)

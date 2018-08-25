@@ -185,7 +185,6 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 	end
 
 	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
-
 	if not auctionIndex then
 		-- @TODO: show some error
 		print('Auction not found');
@@ -196,13 +195,15 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 		ok     = {
 			text    = 'Yes',
 			onClick = function(self)
-				self:GetParent():Hide();
+				local parent = self:GetParent();
+				parent:Hide();
 
-				Auctions:BuyItemByIndex(auctionIndex);
+				Auctions:BuyItem(parent.auctionData);
 				Buy:LockBuyButton(true);
 				Buy:RemoveCurrentSearchAuction();
 
-				Buy:BuySelectedItem(self:GetParent().count);
+				-- Chain buy
+				Buy:BuySelectedItem(parent.count);
 			end
 		},
 		cancel = {
@@ -226,6 +227,7 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 	);
 
 	self.confirmFrame:SetHeight(200);
+	self.confirmFrame.auctionData = auctionData;
 	self.confirmFrame.count = count;
 end
 

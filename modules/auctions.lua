@@ -48,25 +48,6 @@ function Auctions:SetAuctionSort()
 	self.currentlySorting = false;
 end
 
-function Auctions:FindAuctionIndex(auctionData)
-	for index = 1, 50 do
-		local listData = Auctions:GetItemFromAuctionList(index);
-
-		if
-			listData.name == auctionData.name and
-			listData.itemId == auctionData.itemId and
-			--listData.owner == auctionData.owner and -- actually there is no need to check owner
-			listData.bid == auctionData.bid and
-			listData.buy == auctionData.buy and
-			listData.count == auctionData.count
-		then
-			return index, listData.name, listData.count;
-		end
-	end
-
-	return false, '', 0;
-end
-
 Auctions.currentQuery = nil;
 Auctions.currentCallback = nil;
 Auctions.retries = 0;
@@ -88,7 +69,7 @@ function Auctions:QueryAuctions(query, callback)
 			Auctions.retries = Auctions.retries + 1;
 			print('Auctions.retries', Auctions.retries);
 
-			self:ScheduleTimer('QueryAuctions', 0.5);
+			self:ScheduleTimer('QueryAuctions', 0.8);
 			return;
 		else
 			print('Cannot query AH. Please reload UI');
@@ -205,11 +186,40 @@ function Auctions:CalculateDeposit(itemId, itemName, duration)
 	return CalculateAuctionDeposit(duration);
 end
 
+function Auctions:FindAuctionIndex(auctionData)
+	for index = 1, 50 do
+		local listData = Auctions:GetItemFromAuctionList(index);
+
+		if
+		listData.name == auctionData.name and
+			listData.itemId == auctionData.itemId and
+			--listData.owner == auctionData.owner and -- actually there is no need to check owner
+			listData.bid == auctionData.bid and
+			listData.buy == auctionData.buy and
+			listData.count == auctionData.count
+		then
+			return index, listData.name, listData.count;
+		end
+	end
+
+	return false, '', 0;
+end
+
 function Auctions:BuyItemByIndex(index)
 	local buyPrice = select(10, GetAuctionItemInfo('list', index))
 
 	PlaceAuctionBid('list', index, buyPrice);
 	CloseAuctionStaticPopups();
+end
+
+function Auctions:BuyItem(auctionData)
+	local index = self:FindAuctionIndex(auctionData)
+	if not index then
+		return false;
+	end
+
+	self:BuyItemByIndex(index);
+	return true;
 end
 
 local failedAuctionErrors = {
