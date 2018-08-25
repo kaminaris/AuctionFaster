@@ -184,13 +184,6 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 		alreadyBought = 0;
 	end
 
-	local auctionIndex, name, count = Auctions:FindAuctionIndex(auctionData);
-	if not auctionIndex then
-		-- @TODO: show some error
-		print('Auction not found');
-		return;
-	end
-
 	local buttons = {
 		ok     = {
 			text    = 'Yes',
@@ -217,7 +210,7 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 	self.confirmFrame = StdUi:Confirm(
 		'Confirm Buy',
 		'Buying ' .. auctionData.itemLink .. '\n'..
-			'qty: ' .. count .. '\n\n' ..
+			'qty: ' .. auctionData.count .. '\n\n' ..
 			'per item: ' .. StdUi.Util.formatMoney(auctionData.buy) .. '\n' ..
 			'Total: ' .. StdUi.Util.formatMoney(auctionData.buy * auctionData.count) .. '\n\n' ..
 
@@ -228,7 +221,7 @@ function Buy:BuySelectedItem(boughtSoFar, fresh)
 
 	self.confirmFrame:SetHeight(200);
 	self.confirmFrame.auctionData = auctionData;
-	self.confirmFrame.count = count;
+	self.confirmFrame.count = auctionData.count;
 end
 
 ----------------------------------------------------------------------------
