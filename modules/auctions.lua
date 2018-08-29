@@ -174,16 +174,23 @@ function Auctions:PutItemInSellBox(itemId, itemName)
 	return true;
 end
 
-function Auctions:CalculateDeposit(itemId, itemName, duration)
+function Auctions:CalculateDeposit(itemId, itemName, settings)
 	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = duration;
+		AuctionFrameAuctions.duration = settings.duration;
 	end
 
 	if not self:PutItemInSellBox(itemId, itemName) then
 		return 0;
 	end
 
-	return CalculateAuctionDeposit(duration);
+	--return GetAuctionDeposit(duration);
+	return GetAuctionDeposit(
+		settings.duration,
+		settings.bidPerItem * settings.stackSize, -- minBid
+		settings.buyPerItem * settings.stackSize, -- buyoutPrice
+		settings.stackSize, -- itemCount
+		settings.maxStacks -- numStacks
+	);
 end
 
 function Auctions:FindAuctionIndex(auctionData)
@@ -253,7 +260,7 @@ end
 function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
 	self.lastUIError = nil;
 	self.lastSoldItem = GetAuctionSellItemInfo();
-	StartAuction(bid, buy, duration, stackSize, numStacks);
+	PostAuction(bid, buy, duration, stackSize, numStacks);
 
 	local isMultisell = numStacks > 1;
 

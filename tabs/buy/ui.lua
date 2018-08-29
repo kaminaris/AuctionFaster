@@ -1,8 +1,12 @@
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
+--- @type Auctions
+local Auctions = AuctionFaster:GetModule('Auctions');
+
 --- @class Buy
 local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0');
+
 
 function Buy:Enable()
 	self:AddBuyAuctionHouseTab();
@@ -299,6 +303,18 @@ function Buy:DrawSearchResultsTable()
 
 	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 8, 32);
 	buyTab.searchResults:EnableSelection(true);
+	buyTab.searchResults:RegisterEvents({
+		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
+			if button == 'LeftButton' and IsShiftKeyDown() then
+				Auctions:BuyItem(rowData);
+
+				tremove(Buy.buyTab.auctions, rowIndex);
+				Buy:UpdateSearchAuctions();
+				return true;
+			end
+			return false;
+		end
+	});
 	StdUi:GlueAcross(buyTab.searchResults, buyTab, 10, -100, -220, 80);
 
 	buyTab.stateLabel = StdUi:Label(buyTab.searchResults, 'Chose your search criteria nad press "Search"');

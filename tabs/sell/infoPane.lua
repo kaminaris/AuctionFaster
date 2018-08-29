@@ -58,7 +58,11 @@ function Sell:UpdateInfoPaneText()
 	end
 
 	local total = sellSettings.buyPerItem * sellSettings.stackSize;
-	local deposit = Auctions:CalculateDeposit(self.selectedItem.itemId, self.selectedItem.itemName, sellSettings.duration);
+	local deposit = Auctions:CalculateDeposit(
+		self.selectedItem.itemId,
+		self.selectedItem.itemName,
+		sellSettings
+	);
 
 	sellTab.infoPane.totalLabel:SetText('Per auction: ' .. StdUi.Util.formatMoney(total));
 	sellTab.infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
