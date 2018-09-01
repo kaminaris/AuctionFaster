@@ -17,7 +17,7 @@ function Sell:AFTER_INVENTORY_SCAN()
 	end
 
 	-- redraw items
-	self:DrawItems();
+	self:DoFilterSort();
 
 	-- if it was in the selling process check if everything has been sold
 	if not self:CheckIfSelectedItemExists() or not Auctions.lastSoldItem then
@@ -87,7 +87,7 @@ function Sell:DoFilterSort()
 		return self:CompareSort(rowA, rowB, sortBy);
 	end);
 
-	Sell:DrawItems();
+	self:DrawItems();
 end
 
 function Sell:CompareSort(a, b)
@@ -478,7 +478,7 @@ function Sell:CheckEverythingSold()
 
 	self:UpdateItemQtyText();
 	self:GetCurrentAuctions();
-	self:DrawItems();
+	self:DoFilterSort();
 
 	local buttons = {
 		yes = {
