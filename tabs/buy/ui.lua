@@ -305,14 +305,21 @@ function Buy:DrawSearchResultsTable()
 	buyTab.searchResults:EnableSelection(true);
 	buyTab.searchResults:RegisterEvents({
 		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
-			if button == 'LeftButton' and IsShiftKeyDown() then
-				Auctions:BuyItem(rowData);
+			if button == 'LeftButton' then
+				if IsShiftKeyDown() then
+					Auctions:BuyItem(rowData);
 
-				tremove(Buy.buyTab.auctions, rowIndex);
-				Buy:UpdateSearchAuctions();
-				return true;
+					tremove(Buy.buyTab.auctions, rowIndex);
+					Buy:UpdateSearchAuctions();
+				else
+					if table:GetSelection() == rowIndex then
+						table:ClearSelection();
+					else
+						table:SetSelection(rowIndex);
+					end
+				end
 			end
-			return false;
+			return true;
 		end
 	});
 	StdUi:GlueAcross(buyTab.searchResults, buyTab, 10, -100, -220, 80);
