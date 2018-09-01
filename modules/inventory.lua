@@ -101,12 +101,12 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 	end
 
-
-	local itemName, itemIcon, itemStackCount, additionalInfo;
+	local itemName, itemIcon, itemStackCount, additionalInfo, quality;
 
 	if itemId == 82800 then
 		local _, speciesId, _, breedQuality = strsplit(":", link)
 		speciesId = tonumber(speciesId);
+		quality = breedQuality;
 
 		if speciesId then
 			local n, i, _, _, tooltipSource = C_PetJournal.GetPetInfoBySpeciesID(speciesId);
@@ -117,9 +117,10 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 			return;
 		end
 	else
-		local n, _, _, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
+		local n, _, q, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
 		itemName = n;
 		itemStackCount = c;
+		quality = q;
 		itemIcon = GetItemIcon(itemId);
 	end
 
@@ -146,6 +147,7 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 			maxStackSize   = itemStackCount,
 			itemName       = itemName,
 			additionalInfo = additionalInfo,
+			quality        = quality,
 			link           = link,
 			itemId         = itemId,
 			price          = scanPrice

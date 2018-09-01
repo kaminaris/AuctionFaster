@@ -73,6 +73,38 @@ function Sell:GetSellSettings()
 	};
 end
 
+function Sell:DoFilterSort()
+	self.filteredItems = {};
+	for i = 1, #Inventory.inventoryItems do
+		local item = Inventory.inventoryItems[i];
+
+		if self.filterText == false or strfind(item.itemName:lower(), self.filterText:lower()) then
+			tinsert(self.filteredItems, item);
+		end
+	end
+
+	table.sort(self.filteredItems, function(rowA, rowB)
+		return self:CompareSort(rowA, rowB, sortBy);
+	end);
+
+	Sell:DrawItems();
+end
+
+function Sell:CompareSort(a, b)
+	local valA, valB = a[self.sortInventoryBy], b[self.sortInventoryBy];
+
+	if self.sortInventoryBy == 'price' then
+		if valA == nil or valA == '---' then valA = 0; end
+		if valB == nil or valB == '---' then valB = 0; end
+	end
+
+	if self.sortInventoryOrder == 'asc' then
+		return valA < valB;
+	else
+		return valA > valB;
+	end
+end
+
 function Sell:UpdateCacheItemVariable(editBox, variable)
 	if not editBox:IsValid() then
 		return;
@@ -139,11 +171,11 @@ end
 
 function Sell:SelectItem(index)
 	local sellTab = self.sellTab;
-	if not Inventory.inventoryItems[index] then
+	if not self.filteredItems[index] then
 		return;
 	end
 
-	self.selectedItem = Inventory.inventoryItems[index];
+	self.selectedItem = self.filteredItems[index];
 	self.selectedItemIndex = index;
 
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
@@ -176,12 +208,12 @@ function Sell:CheckIfSelectedItemExists()
 
 	local qtyLeft = Inventory:UpdateItemInventory(selectedId, selectedName);
 	if qtyLeft == 0 then
-		if #Inventory.inventoryItems > self.selectedItemIndex then
+		if #self.filteredItems > self.selectedItemIndex then
 			-- select next item
 			self:SelectItem(self.selectedItemIndex);
 		else
 			-- just select last item
-			self:SelectItem(#Inventory.inventoryItems);
+			self:SelectItem(#self.filteredItems);
 		end
 		return false;
 	end

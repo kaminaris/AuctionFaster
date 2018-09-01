@@ -39,21 +39,84 @@ function Sell:DrawItemsFrame()
 	panel:SetPoint('TOPLEFT', 25, marginTop);
 	panel:SetPoint('BOTTOMLEFT', 300, 55);
 
-	StdUi:AddLabel(sellTab, panel, 'Inventory Items', 'TOP');
-
-	local refreshInventory = StdUi:Button(sellTab, 100, 20, 'Refresh');
+	local refreshInventory = StdUi:Button(sellTab, 20, 20);
+	refreshInventory.icon = StdUi:Texture(refreshInventory, 12, 12, [[Interface\Buttons\UI-RefreshButton]]);
+	refreshInventory.icon:SetPoint('CENTER', 0, 0);
 	StdUi:GlueAbove(refreshInventory, panel, 0, 5, 'RIGHT');
-
+	StdUi:FrameTooltip(refreshInventory, 'Refresh inventory', 'af_refresh', 'TOPRIGHT', true);
 	refreshInventory:SetScript('OnClick', function()
 		Inventory:ScanInventory();
 	end);
+
+	local sortSettings = StdUi:Button(sellTab, 20, 20);
+	sortSettings.icon = StdUi:Texture(sortSettings, 12, 12, [[Interface\GossipFrame\BinderGossipIcon]]);
+	sortSettings.icon:SetPoint('CENTER', 0, 0);
+	StdUi:GlueLeft(sortSettings, refreshInventory, -5, 0);
+	StdUi:FrameTooltip(sortSettings, 'Sort settings', 'af_sort', 'TOPRIGHT', true);
+
+	local function callback(value, groupName)
+		if groupName == 'dd-sortBy' then
+			self.sortInventoryBy = value;
+		else
+			self.sortInventoryOrder = value;
+		end
+
+		self:DoFilterSort();
+	end
+
+	local settDrops = {
+		{title = 'Sort by', color = {1, 0.9, 0}},
+		{radio = 'Name',    value = 'itemName', radioGroup = 'dd-sortBy'},
+		{radio = 'Price',   value = 'price',    radioGroup = 'dd-sortBy'},
+		{radio = 'Quality', value = 'quality',  radioGroup = 'dd-sortBy'},
+
+		{isSeparator = true},
+		{title = 'Direction', color = {1, 0.9, 0}},
+		{radio = 'Ascending',  value = 'asc',  radioGroup = 'dd-sortOrder'},
+		{radio = 'Descending', value = 'desc', radioGroup = 'dd-sortOrder'},
+	}
+
+	local sortContext = StdUi:ContextMenu(sortSettings, settDrops, true);
+	StdUi:GlueOpposite(sortContext, sortSettings, 0, 0, 'BOTTOMRIGHT');
+
+	StdUi:SetRadioGroupValue('dd-sortBy', 'itemName');
+	StdUi:SetRadioGroupValue('dd-sortOrder', 'asc');
+
+	StdUi:OnRadioGroupValueChanged('dd-sortBy', callback);
+	StdUi:OnRadioGroupValueChanged('dd-sortOrder', callback);
+
+	sortSettings:SetScript('OnClick', function()
+		if sortContext:IsShown() then
+			sortContext:Hide();
+		else
+			sortContext:Show();
+		end
+	end);
+
+	local filter = StdUi:SearchEditBox(sellTab, 240, 20, 'Filter items');
+	StdUi:GlueAbove(filter, panel, 0, 5, 'LEFT');
+
+	sellTab.filterText = false;
+	filter.OnValueChanged = function(_, txt)
+		if strlen(txt) > 1 then
+			Sell.filterText = txt;
+		else
+			Sell.filterText = false;
+		end
+
+		Sell:DoFilterSort();
+	end;
 
 	sellTab.itemsList = panel;
 	sellTab.scrollFrame = scrollFrame;
 	sellTab.scrollChild = scrollChild;
 
+	self.sortInventoryBy = 'itemName'; -- quality, price
+	self.sortInventoryOrder = 'asc';
+	self.filterText = false;
+
 	self.safeToDrawItems = true;
-	self:DrawItems();
+	self:DoFilterSort();
 end
 
 function Sell:DrawItems()
@@ -79,8 +142,8 @@ function Sell:DrawItems()
 		scrollChild.items = {};
 	end
 
-	StdUi:ObjectList(scrollChild, scrollChild.items, buttonCreate, buttonUpdate, Inventory.inventoryItems);
-	self.sellTab.itemsList:UpdateItemsCount(#Inventory.inventoryItems);
+	StdUi:ObjectList(scrollChild, scrollChild.items, buttonCreate, buttonUpdate, self.filteredItems);
+	self.sellTab.itemsList:UpdateItemsCount(#self.filteredItems);
 end
 
 function Sell:CreateItemFrame(parent, lineHeight, margin)

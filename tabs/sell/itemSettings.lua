@@ -182,7 +182,6 @@ function Sell:UpdateItemSettings(settingName, settingValue)
 		return;
 	end
 
-	print(settingName, settingValue);
 	local cacheKey = self.selectedItem.itemId .. self.selectedItem.itemName;
 	ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
 end
