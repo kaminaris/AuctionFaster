@@ -7,6 +7,9 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Buy
 local Buy = AuctionFaster:GetModule('Buy');
 
+--- @type ChainBuy
+local ChainBuy = AuctionFaster:GetModule('ChainBuy');
+
 ----------------------------------------------------------------------------
 --- Searching functions
 ----------------------------------------------------------------------------
@@ -51,13 +54,13 @@ end
 ----------------------------------------------------------------------------
 
 function Buy:SearchAuctionsCallback(shown, total, items)
-	self.currentQuery.lastPage = ceil(total / 50) - 1;
-
-	self.buyTab.auctions = items;
-
-	self:UpdateSearchAuctions();
-	self:UpdateStateText();
-	self:UpdatePager();
+	--self.currentQuery.lastPage = ceil(total / 50) - 1;
+	--
+	--self.buyTab.auctions = items;
+	--
+	--self:UpdateSearchAuctions();
+	--self:UpdateStateText();
+	--self:UpdatePager();
 end
 
 function Buy:UpdateStateText(inProgress)
@@ -73,19 +76,48 @@ function Buy:UpdateStateText(inProgress)
 end
 
 function Buy:UpdatePager()
+	if not self.currentQuery then return; end
+
 	local p = self.currentQuery.page + 1;
 	local lp = self.currentQuery.lastPage + 1;
-	self.buyTab.pager.pageText:SetText('Page ' .. p ..' of ' .. lp);
+	local pager = self.buyTab.pager;
+	self.updatingPagerLock = true;
 
-	self.buyTab.pager.leftButton:Enable();
-	self.buyTab.pager.rightButton:Enable();
+	pager.pageText:SetText('Pages: ' .. lp);
+
+	pager.leftButton:Enable();
+	pager.rightButton:Enable();
+
+	local opts = {};
+	for i = 0, self.currentQuery.lastPage do
+		tinsert(opts, {text = tostring(i + 1), value = i});
+	end
+
+	pager.pageJump:SetOptions(opts);
+	pager.pageJump:SetValue(self.currentQuery.page);
 
 	if p <= 1 then
-		self.buyTab.pager.leftButton:Disable();
+		pager.leftButton:Disable();
 	end
 
 	if p >= lp then
-		self.buyTab.pager.rightButton:Disable();
+		pager.rightButton:Disable();
+	end
+	self.updatingPagerLock = false;
+end
+
+function Buy:UpdateQueue()
+	local buyTab = Buy.buyTab;
+	if ChainBuy.nextItemCallback then
+		buyTab.queueLabel:SetText('Queue: -');
+
+		buyTab.queueProgress:SetMinMaxValues(0, 0);
+		buyTab.queueProgress:SetValue(0);
+	else
+		buyTab.queueLabel:SetText('Queue: ' .. ChainBuy:CalcRemainingQty());
+
+		buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
+		buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
 	end
 end
 
@@ -166,62 +198,114 @@ end
 
 function Buy:AUCTION_ITEM_LIST_UPDATE()
 	-- this unlocks the button after buying item
-	if self.confirmFrame then
-		self:LockBuyButton();
-	end
+	local items, hasAllInfo, shown, total = Auctions:CollectAuctionsFromList();
+
+	self.currentQuery.lastPage = ceil(total / 50) - 1;
+
+	self.buyTab.auctions = items;
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
+	self:UpdatePager();
 end
 
-local alreadyBought = 0;
-function Buy:BuySelectedItem(boughtSoFar, fresh)
+function Buy:ChainBuyStart(index)
+	local queue = {};
+	local filtered = self.buyTab.searchResults.filtered;
+	local filteredIndex = 0;
+
+	for i = 1, #filtered do
+		if filtered[i] == index then filteredIndex = i; break; end
+	end
+
+	for i = filteredIndex, #self.buyTab.auctions do
+		local rowIndex = filtered[i];
+		tinsert(queue, self.buyTab.auctions[rowIndex]);
+	end
+
+	ChainBuy:Start(queue);
+end
+
+function Buy:AddToQueue()
 	local auctionData = self.buyTab.searchResults:GetSelectedItem();
 	if not auctionData then
 		return ;
 	end
 
-	boughtSoFar = boughtSoFar or 0;
-	alreadyBought = alreadyBought + boughtSoFar;
-	if fresh then
-		alreadyBought = 0;
+	ChainBuy:AddBuyRequest(auctionData);
+	ChainBuy:Start(nil, self.UpdateQueue);
+
+	Buy:RemoveCurrentSearchAuction();
+end
+
+function Buy:AddToQueueWithXStacks(amount)
+	local queue = {};
+	for i = 1, #self.buyTab.auctions do
+		local auction = self.buyTab.auctions[i];
+		if auction.count >= amount then
+			tinsert(queue, auction);
+		end
 	end
 
-	local buttons = {
-		ok     = {
-			text    = 'Yes',
-			onClick = function(self)
-				local parent = self:GetParent();
-				parent:Hide();
+	if #queue == 0 then
+		print('No auctions found with requested stack count: ' .. amount);
+	end
 
-				Auctions:BuyItem(parent.auctionData);
-				Buy:LockBuyButton(true);
-				Buy:RemoveCurrentSearchAuction();
+	ChainBuy:Start(queue);
+end
 
-				-- Chain buy
-				Buy:BuySelectedItem(parent.count);
+function Buy:SearchStacksCallback(items, minStacks, page)
+	local found = false;
+	for x = 1, #items do
+		if items[x].count >= minStacks then
+			found = true;
+			break;
+		end
+	end
+
+	local foundIndex = 0;
+	if found then
+		for i = 1, #self.buyTab.auctions do
+			local auction = self.buyTab.auctions[i];
+			if auction.count >= minStacks then
+				foundIndex = i;
+				break;
 			end
-		},
-		cancel = {
-			text    = 'No',
-			onClick = function(self)
-				self:GetParent():Hide();
-			end
-		}
-	};
+		end
+	else
+		Buy:FindFirstWithXStacks(minStacks, page);
+		return;
+	end
 
-	self.confirmFrame = StdUi:Confirm(
-		'Confirm Buy',
-		'Buying ' .. auctionData.itemLink .. '\n'..
-			'qty: ' .. auctionData.count .. '\n\n' ..
-			'per item: ' .. StdUi.Util.formatMoney(auctionData.buy) .. '\n' ..
-			'Total: ' .. StdUi.Util.formatMoney(auctionData.buy * auctionData.count) .. '\n\n' ..
+	C_Timer.After(0.7, function ()
+		self.buyTab.searchResults:SetSelection(foundIndex);
+		self.buyTab.searchResults:ScrollToLine(foundIndex);
+	end);
+end
 
-			'Bought so far: ' .. alreadyBought,
-		buttons,
-		'afConfirmBuy'
-	);
+function Buy:FindFirstWithXStacks(minStacks, page)
+	if not self.currentQuery or not self.currentQuery.name or not self.currentQuery.lastPage then
+		print('Enter query and hit search button first');
+		return;
+	end
 
-	self.confirmFrame:SetHeight(200);
-	self.confirmFrame.auctionData = auctionData;
-	self.confirmFrame.count = auctionData.count;
+	if page == nil then
+		page = 0;
+	else
+		page = page + 1;
+	end;
+
+	if page > self.currentQuery.lastPage then
+		print('No auction found for minimum stacks: ' .. minStacks);
+		return;
+	end
+
+	self.currentQuery.page = page;
+	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
+		C_Timer.After(0.7, function()
+			self:SearchStacksCallback(items, minStacks, page);
+		end);
+	end);
 end
 
 ----------------------------------------------------------------------------

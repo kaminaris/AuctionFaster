@@ -12,6 +12,12 @@ function Buy:Enable()
 	self:AddBuyAuctionHouseTab();
 	self:InterceptLinkClick();
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+
+	self.buyTab.auctions = {};
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
+	self:UpdatePager();
 end
 
 function Buy:Disable()
@@ -31,6 +37,7 @@ function Buy:AddBuyAuctionHouseTab()
 	self:DrawFavoritesPane();
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
+	self:DrawQueue();
 	self:DrawPager();
 
 	self:DrawFilterFrame();
@@ -138,25 +145,83 @@ end
 function Buy:DrawSearchButtons()
 	local buyTab = self.buyTab;
 
-	local buyButton = StdUi:Button(buyTab, 80, 20, 'Buy');
-	StdUi:GlueBottom(buyButton, buyTab, 300, 50, 'LEFT');
+	local chainBuyButton = StdUi:Button(buyTab, 120, 20, 'Chain Buy');
+	local addToQueueButton = StdUi:Button(buyTab, 120, 20, 'Add to Queue');
+	local addWithXButton = StdUi:Button(buyTab, 120, 20, 'Add All With X Stacks');
+	local findXButton = StdUi:Button(buyTab, 120, 20, 'Find X Stacks');
 
-	buyButton:SetScript('OnClick', function ()
-		Buy:BuySelectedItem(0, true);
+	local minStacksLabel = StdUi:Label(buyTab, 'Min Stacks: ');
+	local minStacks = StdUi:NumericBox(buyTab, 60, 20, 1);
+	minStacks:SetMinMaxValue(1, 200);
+
+	StdUi:GlueBottom(chainBuyButton, buyTab, 300, 50, 'LEFT');
+	StdUi:GlueRight(addToQueueButton, chainBuyButton, 10, 0);
+	StdUi:GlueBelow(findXButton, chainBuyButton, 0, -10, 'LEFT');
+	StdUi:GlueBelow(addWithXButton, addToQueueButton, 0, -10, 'LEFT');
+
+	StdUi:GlueRight(minStacksLabel, addWithXButton, 10, 0);
+	StdUi:GlueRight(minStacks, minStacksLabel, 10, 0);
+
+	chainBuyButton:SetScript('OnClick', function()
+		local index = self.buyTab.searchResults:GetSelection();
+		if not index then
+			print('Please select auction first');
+		end
+		Buy:ChainBuyStart(index);
 	end);
+
+	addToQueueButton:SetScript('OnClick', function()
+		Buy:AddToQueue();
+	end);
+
+	findXButton:SetScript('OnClick', function()
+		if not minStacks.isValid then
+			print('Enter a correct stack amount 1-200');
+			return;
+		end
+
+		Buy:FindFirstWithXStacks(minStacks:GetValue());
+	end);
+
+	addWithXButton:SetScript('OnClick', function()
+		if not minStacks.isValid then
+			print('Enter a correct stack amount 1-200');
+			return;
+		end
+
+		Buy:AddToQueueWithXStacks(minStacks:GetValue());
+	end);
+
+	buyTab.addToQueueButton = addToQueueButton;
+end
+
+function Buy:DrawQueue()
+	local buyTab = self.buyTab;
+
+	local queueLabel = StdUi:Label(buyTab, 'Queue: 0', 12, nil, 100);
+	StdUi:GlueRight(queueLabel, buyTab.addToQueueButton, 30, 0);
+
+	local queueProgress = StdUi:ProgressBar(self.window, 150, 20);
+	queueProgress.TextUpdate = function(self, min, max, value)
+		return 'Auctions: ' .. value .. ' / ' .. max;
+	end;
+
+	buyTab.queueProgress = queueProgress;
+	buyTab.queueLabel = queueLabel;
 end
 
 function Buy:DrawPager()
 	local buyTab = self.buyTab;
 
 	local leftButton = StdUi:SquareButton(buyTab, 20, 20, 'LEFT');
-	StdUi:GlueBottom(leftButton, buyTab, 80, 50, 'LEFT');
-
 	local rightButton = StdUi:SquareButton(buyTab, 20, 20, 'RIGHT');
-	StdUi:GlueBottom(rightButton, buyTab, 105, 50, 'LEFT');
-
+	local pageJump = StdUi:Dropdown(buyTab, 80, 20, {});
 	local pageText = StdUi:Label(buyTab, 'Page 1 of 0');
-	StdUi:GlueBottom(pageText, buyTab, 10, 50, 'LEFT');
+
+	StdUi:GlueBottom(leftButton, buyTab, 10, 50, 'LEFT');
+	StdUi:GlueRight(pageJump, leftButton, 10, 0);
+	StdUi:GlueRight(rightButton, pageJump, 10, 0);
+	StdUi:GlueRight(pageText, rightButton, 10, 0);
 
 	leftButton:SetScript('OnClick', function()
 		Buy:SearchPreviousPage();
@@ -166,10 +231,17 @@ function Buy:DrawPager()
 		Buy:SearchNextPage();
 	end);
 
+	pageJump.OnValueChanged = function(pg, value)
+		if not self.updatingPagerLock then
+			self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, value);
+		end
+	end
+
 	buyTab.pager = {
 		leftButton = leftButton,
 		rightButton = rightButton,
 		pageText = pageText,
+		pageJump = pageJump,
 	};
 end
 

@@ -113,11 +113,7 @@ function Auctions:GetItemFromAuctionList(index)
 	return itemInfo;
 end
 
-function Auctions:AUCTION_ITEM_LIST_UPDATE()
-	if self.currentlySorting or not self.currentCallback then
-		return;
-	end
-
+function Auctions:CollectAuctionsFromList()
 	local shown, total = GetNumAuctionItems('list');
 	local items = {};
 
@@ -135,6 +131,16 @@ function Auctions:AUCTION_ITEM_LIST_UPDATE()
 
 		items[i] = itemInfo;
 	end
+
+	return items, hasAllInfo, shown, total;
+end
+
+function Auctions:AUCTION_ITEM_LIST_UPDATE()
+	if self.currentlySorting or not self.currentCallback then
+		return;
+	end
+
+	local items, hasAllInfo, shown, total = self:CollectAuctionsFromList();
 
 	-- wait for next event
 	if not AuctionFaster:IsFastMode() and not hasAllInfo then
@@ -193,20 +199,31 @@ function Auctions:CalculateDeposit(itemId, itemName, settings)
 	);
 end
 
-function Auctions:FindAuctionIndex(auctionData)
+function Auctions:FindAuctionIndex(auctionData, randomizeIndex)
+
+	local indexes = {};
 	for index = 1, 50 do
 		local listData = Auctions:GetItemFromAuctionList(index);
 
 		if
-		listData.name == auctionData.name and
+			listData.name == auctionData.name and
 			listData.itemId == auctionData.itemId and
 			--listData.owner == auctionData.owner and -- actually there is no need to check owner
 			listData.bid == auctionData.bid and
 			listData.buy == auctionData.buy and
 			listData.count == auctionData.count
 		then
-			return index, listData.name, listData.count;
+			if not randomizeIndex then
+				return index, listData.name, listData.count;
+			else
+				tinsert(indexes, index);
+			end
 		end
+	end
+
+	if randomizeIndex and #indexes > 0 then
+		local i = random(1, #indexes);
+		return indexes[i], auctionData.name, auctionData.count;
 	end
 
 	return false, '', 0;
@@ -219,8 +236,8 @@ function Auctions:BuyItemByIndex(index)
 	CloseAuctionStaticPopups();
 end
 
-function Auctions:BuyItem(auctionData)
-	local index = self:FindAuctionIndex(auctionData)
+function Auctions:BuyItem(auctionData, randomizeIndex)
+	local index = self:FindAuctionIndex(auctionData, randomizeIndex)
 	if not index then
 		return false;
 	end

@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
 ## Notes: Simple auction interface
-## Version: 8.0.7
+## Version: 8.0.8
 ## Author: Kaminaris
 ## Interface: 80000
 ## SavedVariables: AuctionFasterDb
@@ -26,6 +26,7 @@ modules\itemCache.lua
 modules\tooltip.lua
 modules\inventory.lua
 modules\auctions.lua
+modules\chainBuy.lua
 
 tabs\sell\ui.lua
 tabs\sell\functions.lua
