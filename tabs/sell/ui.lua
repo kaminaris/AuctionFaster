@@ -7,26 +7,24 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Sell
 local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
 
-function Sell:Enable()
-	self:AddSellAuctionHouseTab();
-	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
-	self:RegisterMessage('AFTER_INVENTORY_SCAN');
-end
-
-function Sell:Disable()
-	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
-end
 
 function Sell:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
 	end
 
-	self.sellTab = AuctionFaster:AddAuctionHouseTab('Sell Items', 'Auction Faster - Sell');
+	self.sellTab = AuctionFaster:AddAuctionHouseTab('Sell Items', 'Auction Faster - Sell', self);
+
+	self.sellTab:SetScript('OnShow', function()
+		Sell:OnShow();
+	end);
+
+	self.sellTab:SetScript('OnHide', function()
+		Sell:OnHide();
+	end);
 
 	self.sellTabAdded = true;
 
-	Inventory:ScanInventory();
 	self:DrawItemsFrame();
 	self:DrawRightPane();
 	self:EnableAuctionTabControls(false);

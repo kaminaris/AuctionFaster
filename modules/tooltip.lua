@@ -8,14 +8,15 @@ local StdUi = LibStub('StdUi');
 function Tooltip:Enable()
 	if not self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:HookScript(GameTooltip, 'OnTooltipSetItem', 'UpdateTooltip');
-		print('Tooltips enabled');
+
+		AuctionFaster:Echo(2, 'Tooltips enabled');
 	end
 end
 
 function Tooltip:Disable()
 	if self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:Unhook(GameTooltip, 'OnTooltipSetItem');
-		print('Tooltips disabled');
+		AuctionFaster:Echo(2, 'Tooltips disabled');
 	end
 end
 

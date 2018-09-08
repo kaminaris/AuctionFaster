@@ -10,6 +10,29 @@ local Buy = AuctionFaster:GetModule('Buy');
 --- @type ChainBuy
 local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 
+function Buy:Enable()
+	self:AddBuyAuctionHouseTab();
+	self:InterceptLinkClick();
+end
+
+function Buy:OnShow()
+	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+
+	self.buyTab.auctions = {};
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
+	self:UpdatePager();
+end
+
+function Buy:OnHide()
+	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
+end
+
+function Buy:Disable()
+	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
+end
+
 ----------------------------------------------------------------------------
 --- Searching functions
 ----------------------------------------------------------------------------
@@ -108,17 +131,10 @@ end
 
 function Buy:UpdateQueue()
 	local buyTab = Buy.buyTab;
-	if ChainBuy.nextItemCallback then
-		buyTab.queueLabel:SetText('Queue: -');
+	buyTab.queueLabel:SetText('Queue Qty: ' .. ChainBuy:CalcRemainingQty());
 
-		buyTab.queueProgress:SetMinMaxValues(0, 0);
-		buyTab.queueProgress:SetValue(0);
-	else
-		buyTab.queueLabel:SetText('Queue: ' .. ChainBuy:CalcRemainingQty());
-
-		buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
-		buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
-	end
+	buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
+	buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
 end
 
 function Buy:AddToFavorites()
@@ -152,11 +168,12 @@ function Buy:RemoveFromFavorites(i)
 	self:DrawFavorites();
 end
 
-function Buy:SetFavoriteAsSearch(i)
+function Buy:SearchFavorite(i)
 	local favorites = AuctionFaster.db.favorites;
 
 	if favorites[i] then
 		self.buyTab.searchBox:SetText(favorites[i].text);
+		self:SearchAuctions(self.buyTab.searchBox:GetText(), false, 0);
 	end
 end
 
@@ -197,7 +214,6 @@ function Buy:LockBuyButton(lock)
 end
 
 function Buy:AUCTION_ITEM_LIST_UPDATE()
-	-- this unlocks the button after buying item
 	local items, hasAllInfo, shown, total = Auctions:CollectAuctionsFromList();
 
 	self.currentQuery.lastPage = ceil(total / 50) - 1;
@@ -248,7 +264,7 @@ function Buy:AddToQueueWithXStacks(amount)
 	end
 
 	if #queue == 0 then
-		print('No auctions found with requested stack count: ' .. amount);
+		AuctionFaster:Echo(3, 'No auctions found with requested stack count: ' .. amount);
 	end
 
 	ChainBuy:Start(queue);
@@ -285,7 +301,7 @@ end
 
 function Buy:FindFirstWithXStacks(minStacks, page)
 	if not self.currentQuery or not self.currentQuery.name or not self.currentQuery.lastPage then
-		print('Enter query and hit search button first');
+		AuctionFaster:Echo(3, 'Enter query and hit search button first');
 		return;
 	end
 
@@ -296,7 +312,7 @@ function Buy:FindFirstWithXStacks(minStacks, page)
 	end;
 
 	if page > self.currentQuery.lastPage then
-		print('No auction found for minimum stacks: ' .. minStacks);
+		AuctionFaster:Echo(3, 'No auction found for minimum stacks: ' .. minStacks);
 		return;
 	end
 

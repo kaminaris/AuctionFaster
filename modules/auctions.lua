@@ -67,12 +67,12 @@ function Auctions:QueryAuctions(query, callback)
 		self.currentlyQuerying = false;
 		if Auctions.retries < 5 then
 			Auctions.retries = Auctions.retries + 1;
-			print('Auctions.retries', Auctions.retries);
+			AuctionFaster:Echo(2, 'Query failed, retrying: ' .. Auctions.retries);
 
-			self:ScheduleTimer('QueryAuctions', 0.8);
+			self:ScheduleTimer('QueryAuctions', 1);
 			return;
 		else
-			print('Cannot query AH. Please reload UI');
+			AuctionFaster:Echo(3, 'Cannot query AH. Please wait a bit longer or reload UI');
 		end
 	end
 

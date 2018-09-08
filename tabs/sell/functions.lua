@@ -10,6 +10,25 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
 
+
+function Sell:Enable()
+	self:AddSellAuctionHouseTab();
+end
+
+function Sell:OnShow()
+	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
+	self:RegisterMessage('AFTER_INVENTORY_SCAN');
+	Inventory:ScanInventory();
+end
+
+function Sell:OnHide()
+	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
+end
+
+function Sell:Disable()
+	self:OnHide();
+end
+
 function Sell:AFTER_INVENTORY_SCAN()
 	if Auctions.isInMultisellProcess then
 		-- Do not update inventory while multiselling

@@ -11,7 +11,11 @@ ChainBuy.requests = {};
 ChainBuy.currentIndex = 0;
 ChainBuy.currentRequest = nil;
 ChainBuy.isPaused = true;
-ChainBuy.fastMode = true;
+ChainBuy.fastMode = false;
+
+local fastModeExplanation = 'Fast Mode - Auction Faster will NOT wait until you actually buy an item.\n\n'..
+'This may result in inaccurate amount of bought items and some missed auctions.\n' ..
+'|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r';
 
 function ChainBuy:Enable()
 end
@@ -20,10 +24,9 @@ function ChainBuy:Disable()
 end
 
 function ChainBuy:CHAT_MSG_SYSTEM(event, msg)
-	if strfind(msg, 'You won an auction') then
+	if string.match(msg, ERR_AUCTION_WON_S:gsub('%%s', '(.*)')) then
 		self:UnregisterEvent('UI_ERROR_MESSAGE');
 		self:UnregisterEvent('CHAT_MSG_SYSTEM');
-		--print(GetTime(), 'CHAT_MSG_SYSTEM');
 		self:ProcessNext(); -- we can move to next request
 	end
 end
@@ -31,10 +34,8 @@ end
 function ChainBuy:UI_ERROR_MESSAGE(msg, err)
 	self:UnregisterEvent('UI_ERROR_MESSAGE');
 	self:UnregisterEvent('CHAT_MSG_SYSTEM');
-	--print(GetTime(), 'UI_ERROR_MESSAGE', err);
+
 	if err == 443 then
-		--print('unlocking button')
-		-- last time we failed to buy so we reset
 		self.isPaused = false;
 		self:ShowWindow();
 	end
@@ -44,6 +45,10 @@ end
 function ChainBuy:AddBuyRequest(request)
 	tinsert(self.requests, request);
 	self:UpdateWindow();
+
+	if self.progressCallback then
+		self:progressCallback();
+	end
 end
 
 ---- Queue Processing
@@ -56,14 +61,15 @@ function ChainBuy:Start(initialQueue, progressCallback)
 		self.boughtSoFar = 0;
 	end
 
-	if progressCallback then
-		self.progressCallback = progressCallback;
-	end
-
 	if self.currentIndex == 0 then
 		self.isPaused = false;
 		self.boughtSoFar = 0;
 		self:ProcessNext();
+	end
+
+	if progressCallback then
+		self.progressCallback = progressCallback;
+		self:progressCallback();
 	end
 end
 
@@ -91,6 +97,10 @@ function ChainBuy:ProcessNext()
 	else
 		self:Cancel();
 	end
+
+	if self.progressCallback then
+		self:progressCallback();
+	end
 end
 
 function ChainBuy:ShowWindow()
@@ -101,7 +111,7 @@ function ChainBuy:ShowWindow()
 	end
 
 	local window = StdUi:Window(UIParent, 'Chain Buy', 400, 300);
-	window:SetPoint('CENTER');
+	StdUi:GlueBelow(window, AuctionFrame, 0, -40, 'CENTER');
 
 	window.itemIcon = StdUi:Texture(window, 32, 32, '');
 	window.itemName = StdUi:Label(window, '', 14);
@@ -113,6 +123,7 @@ function ChainBuy:ShowWindow()
 	window.buyButton = StdUi:Button(window, 70, 24, 'Buy');
 	window.skipButton = StdUi:Button(window, 70, 24, 'Skip');
 	window.closeButton = StdUi:Button(window, 150, 24, 'Close');
+	window.fastMode = StdUi:Checkbox(window, 'Fast Mode', 100, 24);
 
 	window.buyButton:SetScript('OnClick', function()
 		ChainBuy:PerformBuy();
@@ -131,6 +142,10 @@ function ChainBuy:ShowWindow()
 		ChainBuy.window:Hide();
 		self:Cancel();
 	end);
+
+	window.fastMode.OnValueChanged = function(_, flag)
+		self.fastMode = flag;
+	end
 
 	--- @type StatusBar
 	window.progressBar = StdUi:ProgressBar(window, 400, 20);
@@ -151,6 +166,10 @@ function ChainBuy:ShowWindow()
 	StdUi:GlueBottom(window.closeButton, window, -20, 40, 'RIGHT');
 	StdUi:GlueBottom(window.progressBar, window, 0, 0, 'CENTER');
 
+	StdUi:GlueBottom(window.fastMode, window, -10, 70, 'RIGHT');
+
+	StdUi:FrameTooltip(window.fastMode, fastModeExplanation, 'afCbFastMode', 'TOPRIGHT', true);
+
 	self.window = window;
 	self.window:Show();
 end
@@ -160,8 +179,7 @@ function ChainBuy:UpdateWindow()
 
 	local window = self.window;
 	local req = self.currentRequest;
-	--UIParentLoadAddOn("Blizzard_DebugTools")
-	--DevTools_Dump(req);
+
 	window.itemIcon:SetTexture(req.texture);
 	window.itemName:SetText(req.itemLink);
 	window.qty:SetText('Qty: ' .. req.count);
@@ -206,5 +224,18 @@ function ChainBuy:PerformBuy()
 	else
 		self:ProcessNext();
 	end
+end
+
+function ChainBuy:CalcRemainingQty()
+	local total = 0;
+	if #self.requests == 0 then
+		return 0;
+	end
+
+	for i = self.currentIndex, #self.requests do
+		total = total + self.requests[i].count;
+	end
+
+	return total;
 end
 

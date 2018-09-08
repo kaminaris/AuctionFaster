@@ -62,7 +62,7 @@ function AuctionFaster:AuctionFrameTab_OnClick(tab)
 	end
 
 	if tab.auctionFasterTab then
-		self:StripAhTextures()
+		self:StripAhTextures();
 		tab.auctionFasterTab:Show();
 	end
 end
@@ -78,7 +78,7 @@ function AuctionFaster:GetDefaultItemSettings()
 end
 
 AuctionFaster.auctionTabs = {};
-function AuctionFaster:AddAuctionHouseTab(buttonText, title)
+function AuctionFaster:AddAuctionHouseTab(buttonText, title, module)
 	local auctionTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, title, 160);
 	auctionTab.titlePanel:SetBackdrop(nil);
 	auctionTab:Hide();
@@ -100,9 +100,20 @@ function AuctionFaster:AddAuctionHouseTab(buttonText, title)
 	tabButton:Show();
 	-- reference the actual tab
 	tabButton.auctionFasterTab = auctionTab;
+	tabButton.auctionFasterTab.module = module;
 
 	PanelTemplates_SetNumTabs(AuctionFrame, n);
 	PanelTemplates_EnableTab(AuctionFrame, n);
 	tinsert(self.auctionTabs, auctionTab);
 	return auctionTab;
+end
+
+AuctionFaster.Colors = {
+	[1] = 'FFBCCF02', -- Success
+	[2] = 'FF1394CC', -- Info
+	[3] = 'FFF0563D', -- Error
+};
+
+function AuctionFaster:Echo(type, message)
+	self:Print(WrapTextInColorCode(message, self.Colors[type]));
 end

@@ -3,33 +3,26 @@ local StdUi = LibStub('StdUi');
 
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
+--- @type ChainBuy
+local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 
 --- @class Buy
 local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0');
-
-
-function Buy:Enable()
-	self:AddBuyAuctionHouseTab();
-	self:InterceptLinkClick();
-	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
-
-	self.buyTab.auctions = {};
-
-	self:UpdateSearchAuctions();
-	self:UpdateStateText();
-	self:UpdatePager();
-end
-
-function Buy:Disable()
-	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
-end
 
 function Buy:AddBuyAuctionHouseTab()
 	if self.buyTabAdded then
 		return ;
 	end
 
-	self.buyTab = AuctionFaster:AddAuctionHouseTab('Buy Items', 'Auction Faster - Buy');
+	self.buyTab = AuctionFaster:AddAuctionHouseTab('Buy Items', 'Auction Faster - Buy', self);
+
+	self.buyTab:SetScript('OnShow', function()
+		Buy:OnShow();
+	end);
+
+	self.buyTab:SetScript('OnHide', function()
+		Buy:OnHide();
+	end);
 
 	self.buyTabAdded = true;
 
@@ -147,11 +140,11 @@ function Buy:DrawSearchButtons()
 
 	local chainBuyButton = StdUi:Button(buyTab, 120, 20, 'Chain Buy');
 	local addToQueueButton = StdUi:Button(buyTab, 120, 20, 'Add to Queue');
-	local addWithXButton = StdUi:Button(buyTab, 120, 20, 'Add All With X Stacks');
+	local addWithXButton = StdUi:Button(buyTab, 120, 20, 'Add With Min Stacks');
 	local findXButton = StdUi:Button(buyTab, 120, 20, 'Find X Stacks');
 
-	local minStacksLabel = StdUi:Label(buyTab, 'Min Stacks: ');
-	local minStacks = StdUi:NumericBox(buyTab, 60, 20, 1);
+	local minStacksLabel = StdUi:Label(buyTab, 'Min Stacks: ', 12, nil, 100);
+	local minStacks = StdUi:NumericBox(buyTab, 100, 20, 1);
 	minStacks:SetMinMaxValue(1, 200);
 
 	StdUi:GlueBottom(chainBuyButton, buyTab, 300, 50, 'LEFT');
@@ -165,7 +158,7 @@ function Buy:DrawSearchButtons()
 	chainBuyButton:SetScript('OnClick', function()
 		local index = self.buyTab.searchResults:GetSelection();
 		if not index then
-			print('Please select auction first');
+			AuctionFaster:Echo(3, 'Please select auction first');
 		end
 		Buy:ChainBuyStart(index);
 	end);
@@ -176,7 +169,7 @@ function Buy:DrawSearchButtons()
 
 	findXButton:SetScript('OnClick', function()
 		if not minStacks.isValid then
-			print('Enter a correct stack amount 1-200');
+			AuctionFaster:Echo(3, 'Enter a correct stack amount 1-200');
 			return;
 		end
 
@@ -185,7 +178,7 @@ function Buy:DrawSearchButtons()
 
 	addWithXButton:SetScript('OnClick', function()
 		if not minStacks.isValid then
-			print('Enter a correct stack amount 1-200');
+			AuctionFaster:Echo(3, 'Enter a correct stack amount 1-200');
 			return;
 		end
 
@@ -198,13 +191,15 @@ end
 function Buy:DrawQueue()
 	local buyTab = self.buyTab;
 
-	local queueLabel = StdUi:Label(buyTab, 'Queue: 0', 12, nil, 100);
-	StdUi:GlueRight(queueLabel, buyTab.addToQueueButton, 30, 0);
+	local queueLabel = StdUi:Label(buyTab, 'Queue Qty: 0', 12, nil, 100);
+	StdUi:GlueRight(queueLabel, buyTab.addToQueueButton, 10, 0);
 
-	local queueProgress = StdUi:ProgressBar(self.window, 150, 20);
+	local queueProgress = StdUi:ProgressBar(buyTab, 100, 20);
 	queueProgress.TextUpdate = function(self, min, max, value)
 		return 'Auctions: ' .. value .. ' / ' .. max;
 	end;
+
+	StdUi:GlueRight(queueProgress, queueLabel, 10, 0);
 
 	buyTab.queueProgress = queueProgress;
 	buyTab.queueLabel = queueLabel;
@@ -300,7 +295,7 @@ function Buy:CreateFavoriteFrame(parent, lineHeight)
 	end);
 
 	favButton:SetScript('OnClick', function (self)
-		Buy:SetFavoriteAsSearch(self:GetParent().itemIndex);
+		Buy:SearchFavorite(self:GetParent().itemIndex);
 	end);
 
 	favoriteFrame.removeFav = removeFav;
@@ -383,6 +378,14 @@ function Buy:DrawSearchResultsTable()
 
 					tremove(Buy.buyTab.auctions, rowIndex);
 					Buy:UpdateSearchAuctions();
+				elseif IsAltKeyDown() then
+					ChainBuy:AddBuyRequest(rowData);
+					ChainBuy:Start(nil, self.UpdateQueue);
+
+					tremove(Buy.buyTab.auctions, rowIndex);
+					Buy:UpdateSearchAuctions();
+				elseif IsControlKeyDown() then
+					Buy:ChainBuyStart(rowIndex);
 				else
 					if table:GetSelection() == rowIndex then
 						table:ClearSelection();
