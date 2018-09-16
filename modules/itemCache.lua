@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @class ItemCache
 local ItemCache = AuctionFaster:NewModule('ItemCache');
 

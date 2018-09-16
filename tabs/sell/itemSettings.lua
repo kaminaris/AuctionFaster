@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 --- @type ItemCache
@@ -8,7 +10,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 function Sell:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
 
-	local pane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Item Settings');
+	local pane = StdUi:Window(sellTab, 'Item Settings', 200, 100);
 	StdUi:GlueAfter(pane, sellTab, 0, -150, 0, 0);
 	pane:Hide();
 
@@ -22,7 +24,7 @@ function Sell:DrawItemSettings()
 	local icon = StdUi:Texture(pane, 30, 30, nil);
 	StdUi:GlueTop(icon, pane, 10, -40, 'LEFT');
 
-	local itemName = StdUi:Label(pane, 'No Item selected', 14, nil, 150);
+	local itemName = StdUi:Label(pane, 'No Item selected', nil, 'GameFontNormalLarge', 150);
 	StdUi:GlueAfter(itemName, icon, 10, 0);
 
 	local rememberStack = StdUi:Checkbox(pane, 'Remember Stack Settings');

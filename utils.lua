@@ -1,3 +1,6 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
+
 function AuctionFaster:FormatDuration(duration)
 	if duration >= 172800 then
 		return format('%.1f %s', duration/86400, 'days ago')

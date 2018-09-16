@@ -1,4 +1,5 @@
-
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
 

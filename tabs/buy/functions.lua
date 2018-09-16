@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
 
@@ -23,6 +25,8 @@ function Buy:OnShow()
 	self:UpdateSearchAuctions();
 	self:UpdateStateText();
 	self:UpdatePager();
+
+	self:InitTutorial();
 end
 
 function Buy:OnHide()

@@ -1,10 +1,8 @@
---- @type StdUi
-local StdUi = LibStub('StdUi');
---- @type ItemCache
-local ItemCache = AuctionFaster:GetModule('ItemCache');
---- @type ItemCache
-local Inventory = AuctionFaster:GetModule('Inventory');
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 
+--- @type Inventory
+local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Auctions
 local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceTimer-3.0');
 

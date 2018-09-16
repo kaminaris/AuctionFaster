@@ -1,9 +1,9 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
-
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
-
 --- @class ChainBuy
 local ChainBuy = AuctionFaster:NewModule('ChainBuy', 'AceEvent-3.0', 'AceTimer-3.0');
 

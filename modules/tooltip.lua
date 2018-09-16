@@ -1,4 +1,5 @@
-
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 local Tooltip = AuctionFaster:NewModule('Tooltip', 'AceHook-3.0');
 local ItemCache = AuctionFaster:GetModule('ItemCache');
 

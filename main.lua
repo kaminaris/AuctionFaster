@@ -1,15 +1,19 @@
+local addonName, addonTable = ...;
+
 ---@class AuctionFaster
-AuctionFaster = LibStub('AceAddon-3.0'):NewAddon('AuctionFaster', 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0');
+local AuctionFaster = LibStub('AceAddon-3.0'):NewAddon(
+	'AuctionFaster', 'AceConsole-3.0', 'AceEvent-3.0', 'AceHook-3.0'
+);
+AuctionFaster.Version = GetAddOnMetadata(addonName, 'Version');
+addonTable[1] = AuctionFaster;
+
+_G[addonName] = AuctionFaster;
 
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 
 function AuctionFaster:OnInitialize()
-	if not AuctionFasterDb or type(AuctionFasterDb) ~= 'table' or AuctionFasterDb.global then
-		AuctionFasterDb = self.defaults;
-	end
-
-	self.db = AuctionFasterDb;
+	self:InitDatabase();
 	self:RegisterOptionWindow();
 
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
@@ -26,6 +30,7 @@ function AuctionFaster:OnInitialize()
 	self:EnableModule('Inventory');
 	self:EnableModule('Auctions');
 	self:EnableModule('ChainBuy');
+	self:EnableModule('Tutorial');
 end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()

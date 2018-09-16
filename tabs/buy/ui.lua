@@ -1,11 +1,11 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
-
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type ChainBuy
 local ChainBuy = AuctionFaster:GetModule('ChainBuy');
-
 --- @class Buy
 local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0');
 
@@ -34,6 +34,8 @@ function Buy:AddBuyAuctionHouseTab()
 	self:DrawPager();
 
 	self:DrawFilterFrame();
+
+	self:DrawHelpButton();
 end
 
 function Buy:DrawSearchPane()
@@ -74,36 +76,39 @@ function Buy:DrawSearchPane()
 	end);
 
 	buyTab.searchBox = searchBox;
+	buyTab.addFavoritesButton = addFavoritesButton;
+	buyTab.filtersButton = filtersButton;
 end
 
 function Buy:DrawFilterFrame()
 	local buyTab = self.buyTab;
 
-	local filtersPane = StdUi:PanelWithTitle(buyTab, 200, 100, 'Filters');
+	local filtersPane = StdUi:Window(buyTab, 'Filters', 200, 100);
 	filtersPane:Hide();
 	StdUi:GlueAfter(filtersPane, buyTab, 0, 0, 0, 0);
 
 	local exactMatch = StdUi:Checkbox(filtersPane, 'Exact Match');
-	StdUi:GlueTop(exactMatch, filtersPane, 10, -20, 'LEFT');
 
-	local minLevel = StdUi:NumericBox(filtersPane, 50, 20, '');
+	local minLevel = StdUi:NumericBox(filtersPane, 80, 20, '');
 	StdUi:AddLabel(filtersPane, minLevel, 'Level from', 'TOP');
 
-	local maxLevel = StdUi:NumericBox(filtersPane, 50, 20, '');
+	local maxLevel = StdUi:NumericBox(filtersPane, 80, 20, '');
 	StdUi:AddLabel(filtersPane, maxLevel, 'Level to', 'TOP');
-
-	StdUi:GlueBelow(minLevel, exactMatch, 0, -30, 'LEFT');
-	StdUi:GlueRight(maxLevel, minLevel, 20, 0);
 
 	self:GetSearchCategories();
 	local category = StdUi:Dropdown(filtersPane, 150, 20, self.categories, 0);
-	StdUi:AddLabel(filtersPane, category, 'Category', 'TOP');
 	StdUi:GlueBelow(category, minLevel, 0, -30, 'LEFT');
 
 	local subCategory = StdUi:Dropdown(filtersPane, 150, 20, {}, 0);
 	StdUi:AddLabel(filtersPane, subCategory, 'Sub Category', 'TOP');
-	StdUi:GlueBelow(subCategory, category, 0, -30, 'LEFT');
 	subCategory:Disable();
+
+
+	StdUi:GlueTop(exactMatch, filtersPane, 10, -40, 'LEFT');
+	StdUi:GlueBelow(minLevel, exactMatch, 0, -30, 'LEFT');
+	StdUi:GlueRight(maxLevel, minLevel, 10, 0);
+	StdUi:AddLabel(filtersPane, category, 'Category', 'TOP');
+	StdUi:GlueBelow(subCategory, category, 0, -30, 'LEFT');
 
 	category.OnValueChanged = function(dropdown, value, text)
 		local subCategories = Buy.subCategories[value];
@@ -143,7 +148,7 @@ function Buy:DrawSearchButtons()
 	local addWithXButton = StdUi:Button(buyTab, 120, 20, 'Add With Min Stacks');
 	local findXButton = StdUi:Button(buyTab, 120, 20, 'Find X Stacks');
 
-	local minStacksLabel = StdUi:Label(buyTab, 'Min Stacks: ', 12, nil, 100);
+	local minStacksLabel = StdUi:Label(buyTab, 'Min Stacks: ', nil, nil, 100);
 	local minStacks = StdUi:NumericBox(buyTab, 100, 20, 1);
 	minStacks:SetMinMaxValue(1, 200);
 
@@ -186,18 +191,24 @@ function Buy:DrawSearchButtons()
 	end);
 
 	buyTab.addToQueueButton = addToQueueButton;
+	buyTab.chainBuyButton = chainBuyButton;
+	buyTab.addWithXButton = addWithXButton;
+	buyTab.findXButton = findXButton;
+	buyTab.minStacks = minStacks;
 end
 
 function Buy:DrawQueue()
 	local buyTab = self.buyTab;
 
-	local queueLabel = StdUi:Label(buyTab, 'Queue Qty: 0', 12, nil, 100);
+	local queueLabel = StdUi:Label(buyTab, 'Queue Qty: 0', nil, nil, 100);
 	StdUi:GlueRight(queueLabel, buyTab.addToQueueButton, 10, 0);
 
 	local queueProgress = StdUi:ProgressBar(buyTab, 100, 20);
 	queueProgress.TextUpdate = function(self, min, max, value)
 		return 'Auctions: ' .. value .. ' / ' .. max;
 	end;
+	queueProgress:SetMinMaxValues(0, 0);
+	queueProgress:SetValue(0);
 
 	StdUi:GlueRight(queueProgress, queueLabel, 10, 0);
 

@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 local Gratuity = LibStub('LibGratuity-3.0');
 ---@type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');

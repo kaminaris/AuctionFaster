@@ -1,12 +1,11 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
-
 ---@type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
-
 --- @class Sell
 local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
-
 
 function Sell:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
@@ -27,6 +26,7 @@ function Sell:AddSellAuctionHouseTab()
 
 	self:DrawItemsFrame();
 	self:DrawRightPane();
+	self:DrawHelpButton();
 	self:EnableAuctionTabControls(false);
 end
 
@@ -55,8 +55,10 @@ function Sell:DrawItemsFrame()
 	local function callback(value, groupName)
 		if groupName == 'dd-sortBy' then
 			self.sortInventoryBy = value;
+			AuctionFaster.db.sell.sortInventoryBy = value;
 		else
 			self.sortInventoryOrder = value;
+			AuctionFaster.db.sell.sortInventoryOrder = value;
 		end
 
 		self:DoFilterSort();
@@ -109,8 +111,8 @@ function Sell:DrawItemsFrame()
 	sellTab.scrollFrame = scrollFrame;
 	sellTab.scrollChild = scrollChild;
 
-	self.sortInventoryBy = 'itemName'; -- quality, price
-	self.sortInventoryOrder = 'asc';
+	self.sortInventoryBy = AuctionFaster.db.sell.sortInventoryBy or 'itemName'; -- quality, price
+	self.sortInventoryOrder = AuctionFaster.db.sell.sortInventoryOrder or 'asc';
 	self.filterText = false;
 
 	self.safeToDrawItems = true;
@@ -190,7 +192,6 @@ function Sell:DrawRightPane()
 	self:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize);
 	self:DrawRightPaneItemPrices(-25);
 	self:DrawRightPaneStackSettings(10);
-	self:InitEditboxTooltips();
 
 	self:DrawRightPaneCurrentAuctionsTable(leftMargin);
 	self:DrawRightPaneButtons();
@@ -205,20 +206,20 @@ end
 function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	local sellTab = self.sellTab;
 
-	local iconBackdrop = StdUi:Panel(sellTab, iconSize, iconSize);
-	StdUi:GlueTop(iconBackdrop, sellTab, leftMargin, topMargin, 'LEFT');
+	sellTab.iconBackdrop = StdUi:Panel(sellTab, iconSize, iconSize);
+	StdUi:GlueTop(sellTab.iconBackdrop, sellTab, leftMargin, topMargin, 'LEFT');
 
-	sellTab.itemIcon = StdUi:Texture(iconBackdrop, iconSize, iconSize, '');
-	StdUi:GlueAcross(sellTab.itemIcon, iconBackdrop, 1, -1, -1, 1);
+	sellTab.itemIcon = StdUi:Texture(sellTab.iconBackdrop, iconSize, iconSize, '');
+	StdUi:GlueAcross(sellTab.itemIcon, sellTab.iconBackdrop, 1, -1, -1, 1);
 
-	sellTab.itemName = StdUi:Label(sellTab, 'No item selected', 16, nil, 250, 20);
+	sellTab.itemName = StdUi:Label(sellTab, 'No item selected', nil, 'GameFontNormalLarge', 250, 20);
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
-	sellTab.itemQty = StdUi:Label(sellTab, 'Qty: O, Max Stacks: 0', 14, nil, 250, 20);
+	sellTab.itemQty = StdUi:Label(sellTab, 'Qty: O, Max Stacks: 0', nil, nil, 250, 20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
-	sellTab.lastScan = StdUi:Label(sellTab, 'Last scan: ---', 12);
+	sellTab.lastScan = StdUi:Label(sellTab, 'Last scan: ---');
 	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 
@@ -285,12 +286,6 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 	end;
 end
 
-function Sell:InitEditboxTooltips()
-	local sellTab = self.sellTab;
-
-	StdUi:FrameTooltip(sellTab.maxStacks, 'Left text', 'NoStacksTooltip', 'TOPLEFT', true);
-end
-
 function Sell:DrawRightPaneButtons()
 	local sellTab = self.sellTab;
 
@@ -326,13 +321,13 @@ end
 function Sell:DrawTabButtons(leftMargin)
 	local sellTab = self.sellTab;
 
-	local postButton = StdUi:Button(sellTab, 60, 20, 'Post All');
+	local postButton = StdUi:Button(sellTab, 120, 20, 'Post All');
 	StdUi:GlueBottom(postButton, sellTab, -20, 20, 'RIGHT');
 
-	local postOneButton = StdUi:Button(sellTab, 60, 20, 'Post One');
+	local postOneButton = StdUi:Button(sellTab, 120, 20, 'Post One');
 	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
 
-	local buyItemButton = StdUi:Button(sellTab, 60, 20, 'Buy Item');
+	local buyItemButton = StdUi:Button(sellTab, 120, 20, 'Buy Item');
 	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()

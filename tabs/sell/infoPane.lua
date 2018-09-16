@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
 --- @type Auctions
@@ -8,7 +10,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 function Sell:DrawInfoPane()
 	local sellTab = self.sellTab;
 
-	sellTab.infoPane = StdUi:PanelWithTitle(sellTab, 200, 100, 'Auction Info');
+	sellTab.infoPane = StdUi:Window(sellTab, 'Auction Info', 200, 100);
 	sellTab.infoPane:Hide();
 	StdUi:GlueAfter(sellTab.infoPane, sellTab, 0, 0, 0, sellTab:GetHeight() - 150);
 

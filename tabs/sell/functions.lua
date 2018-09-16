@@ -1,3 +1,5 @@
+---@type AuctionFaster
+local AuctionFaster = unpack(select(2, ...));
 --- @type ItemCache
 local StdUi = LibStub('StdUi');
 --- @type ItemCache
@@ -18,6 +20,7 @@ end
 function Sell:OnShow()
 	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
 	self:RegisterMessage('AFTER_INVENTORY_SCAN');
+	self:InitTutorial();
 	Inventory:ScanInventory();
 end
 
