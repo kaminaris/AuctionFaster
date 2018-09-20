@@ -8,6 +8,8 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
+--- @type ChainBuy
+local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
@@ -366,14 +368,8 @@ function Sell:LockBuyButton(lock)
 	end
 end
 
-function Sell:RemoveCurrentSearchAuction()
-	local index = self.sellTab.currentAuctions:GetSelection();
-	if not index then
-		return ;
-	end
-
+function Sell:RemoveSearchAuction(index)
 	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
-
 	if not cacheItem.auctions[index] then
 		return;
 	end
@@ -381,62 +377,96 @@ function Sell:RemoveCurrentSearchAuction()
 	tremove(cacheItem.auctions, index);
 	self:UpdateSellTabAuctions(cacheItem);
 
+	return cacheItem;
+end
+
+function Sell:RemoveCurrentSearchAuction()
+	local index = self.sellTab.currentAuctions:GetSelection();
+	if not index then
+		return ;
+	end
+
+	local cacheItem = Sell:RemoveSearchAuction(index);
+
 	if cacheItem.auctions[index] then
 		self.sellTab.currentAuctions:SetSelection(index);
 	end
 end
 
-local alreadyBought = 0;
-function Sell:BuySelectedItem(boughtSoFar, fresh)
-	local auctionData = self.sellTab.currentAuctions:GetSelectedItem();
-	if not auctionData then
-		return ;
+function Sell:InstantBuy(rowData, rowIndex)
+	if not Auctions:HasAuctionsList() then
+		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		return;
 	end
 
-	boughtSoFar = boughtSoFar or 0;
-	alreadyBought = alreadyBought + boughtSoFar;
-	if fresh then
-		alreadyBought = 0;
+	Auctions:BuyItem(rowData);
+
+	Sell:RemoveSearchAuction(rowIndex);
+	Sell:GetCurrentAuctions(true);
+end
+
+function Sell:CloseCallback()
+	Sell:GetCurrentAuctions(true);
+end
+
+function Sell:ChainBuyStart(index)
+	if not Auctions:HasAuctionsList() then
+		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		return;
 	end
 
-	local buttons = {
-		ok     = {
-			text    = 'Yes',
-			onClick = function(self)
-				local parent = self:GetParent();
-				parent:Hide();
+	local queue = {};
+	local filtered = self.sellTab.currentAuctions.filtered;
+	local filteredIndex = 0;
 
-				Auctions:BuyItem(parent.auctionData);
-				Sell:LockBuyButton(true);
-				Sell:RemoveCurrentSearchAuction();
+	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	if not cacheItem.auctions[index] then
+		return;
+	end
 
-				-- Chain buy
-				Sell:BuySelectedItem(parent.count);
-			end
-		},
-		cancel = {
-			text    = 'No',
-			onClick = function(self)
-				self:GetParent():Hide();
-			end
-		}
-	};
+	for i = 1, #filtered do
+		if filtered[i] == index then filteredIndex = i; break; end
+	end
 
-	self.confirmFrame = StdUi:Confirm(
-		'Confirm Buy',
-		'Buying ' .. auctionData.itemLink .. '\n'..
-			'qty: ' .. auctionData.count .. '\n\n' ..
-			'per item: ' .. StdUi.Util.formatMoney(auctionData.buy) .. '\n' ..
-			'Total: ' .. StdUi.Util.formatMoney(auctionData.buy * auctionData.count) .. '\n\n' ..
+	for i = filteredIndex, #cacheItem.auctions do
+		local rowIndex = filtered[i];
+		tinsert(queue, cacheItem.auctions[rowIndex]);
+	end
 
-			'Bought so far: ' .. alreadyBought,
-		buttons,
-		'afConfirmBuy'
-	);
+	ChainBuy:Start(queue, nil, Sell.CloseCallback);
+end
 
-	self.confirmFrame:SetHeight(200);
-	self.confirmFrame.count = auctionData.count;
-	self.confirmFrame.auctionData = auctionData;
+function Sell:AddToQueue(rowData, rowIndex)
+	if not Auctions:HasAuctionsList() then
+		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		return;
+	end
+
+	ChainBuy:AddBuyRequest(rowData);
+	ChainBuy:Start();
+
+	Sell:RemoveSearchAuction(rowIndex);
+end
+
+function Sell:AddToQueueWithXStacks(amount)
+	local queue = {};
+	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	if not cacheItem.auctions[index] then
+		return;
+	end
+
+	for i = 1, #cacheItem.auctions do
+		local auction = cacheItem.auctions[i];
+		if auction.count >= amount then
+			tinsert(queue, auction);
+		end
+	end
+
+	if #queue == 0 then
+		AuctionFaster:Echo(3, 'No auctions found with requested stack count: ' .. amount);
+	end
+
+	ChainBuy:Start(queue);
 end
 
 function Sell:SellCurrentItem(singleStack)

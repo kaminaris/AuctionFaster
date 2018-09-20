@@ -333,11 +333,21 @@ function Buy:DrawSearchResultsTable()
 			sortable	 = false,
 			events		 = {
 				OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
-					AuctionFaster:ShowTooltip(cellFrame, rowData.itemLink, true, rowData.itemId);
+					if AuctionFaster.db.buy.tooltips.enabled then
+						AuctionFaster:ShowTooltip(
+							cellFrame,
+							rowData.itemLink,
+							true,
+							rowData.itemId,
+							AuctionFaster.db.buy.tooltips.anchor
+						);
+					end
 					return false;
 				end,
 				OnLeave = function(table, cellFrame)
-					AuctionFaster:ShowTooltip(cellFrame, nil, false);
+					if AuctionFaster.db.buy.tooltips.enabled then
+						AuctionFaster:ShowTooltip(cellFrame, nil, false);
+					end
 					return false;
 				end
 			},

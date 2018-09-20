@@ -150,11 +150,23 @@ function Sell:CreateItemFrame(parent, lineHeight, margin)
 	local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
 
 	holdingFrame:SetScript('OnEnter', function(self)
-		AuctionFaster:ShowTooltip(self, self.itemLink, true, self.item.itemId);
+		if AuctionFaster.db.sell.tooltips.itemEnabled then
+			AuctionFaster:ShowTooltip(
+				self,
+				self.itemLink,
+				true,
+				self.item.itemId,
+				AuctionFaster.db.sell.tooltips.itemAnchor or 'RIGHT'
+			);
+		end
 	end);
+
 	holdingFrame:SetScript('OnLeave', function(self)
-		AuctionFaster:ShowTooltip(self, nil, false);
+		if AuctionFaster.db.sell.tooltips.itemEnabled then
+			AuctionFaster:ShowTooltip(self, nil, false);
+		end
 	end);
+
 	holdingFrame:SetScript('OnClick', function(self)
 		Sell:SelectItem(self.itemIndex);
 	end);
@@ -327,7 +339,7 @@ function Sell:DrawTabButtons(leftMargin)
 	local postOneButton = StdUi:Button(sellTab, 120, 20, 'Post One');
 	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
 
-	local buyItemButton = StdUi:Button(sellTab, 120, 20, 'Buy Item');
+	local buyItemButton = StdUi:Button(sellTab, 120, 20, 'Chain Buy');
 	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()
@@ -339,7 +351,12 @@ function Sell:DrawTabButtons(leftMargin)
 	end);
 
 	buyItemButton:SetScript('OnClick', function()
-		Sell:BuySelectedItem(0, true);
+		local index = sellTab.currentAuctions:GetSelection();
+		if not index then
+			AuctionFaster:Echo(3, 'Please select item first');
+			return ;
+		end
+		Sell:ChainBuyStart(index);
 	end);
 
 	sellTab.buttons.postButton = postButton;
@@ -357,6 +374,26 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
+			events		 = {
+				OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
+					if AuctionFaster.db.sell.tooltips.enabled then
+						AuctionFaster:ShowTooltip(
+							cellFrame,
+							rowData.itemLink,
+							true,
+							rowData.itemId,
+							AuctionFaster.db.sell.tooltips.anchor
+						);
+					end
+					return false;
+				end,
+				OnLeave = function(table, cellFrame)
+					if AuctionFaster.db.sell.tooltips.enabled then
+						AuctionFaster:ShowTooltip(cellFrame, nil, false);
+					end
+					return false;
+				end
+			},
 		},
 		{
 			name         = 'Qty',
@@ -383,5 +420,25 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	sellTab.currentAuctions = StdUi:ScrollTable(sellTab, cols, 10, 18);
 	sellTab.currentAuctions:EnableSelection(true);
+	sellTab.currentAuctions:RegisterEvents({
+		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
+			if button == 'LeftButton' then
+				if IsShiftKeyDown() then
+					Sell:InstantBuy(rowData, rowIndex)
+				elseif IsAltKeyDown() then
+					Sell:AddToQueue(rowData, rowIndex);
+				elseif IsControlKeyDown() then
+					Sell:ChainBuyStart(rowIndex);
+				else
+					if table:GetSelection() == rowIndex then
+						table:ClearSelection();
+					else
+						table:SetSelection(rowIndex);
+					end
+				end
+			end
+			return true;
+		end
+	});
 	StdUi:GlueAcross(sellTab.currentAuctions, sellTab, leftMargin, -200, -20, 55);
 end

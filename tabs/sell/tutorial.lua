@@ -38,7 +38,7 @@ function Sell:DrawHelpButton()
 end
 
 function Sell:InitTutorial(force)
-	if not AuctionFaster.db.tutorials.buy and not force then
+	if not AuctionFaster.db.tutorials.sell and not force then
 		return;
 	end
 

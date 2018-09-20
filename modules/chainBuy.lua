@@ -53,7 +53,7 @@ end
 
 ---- Queue Processing
 
-function ChainBuy:Start(initialQueue, progressCallback)
+function ChainBuy:Start(initialQueue, progressCallback, closeCallback)
 	if initialQueue then
 		self.requests = initialQueue;
 		self.initialQueue = initialQueue;
@@ -71,6 +71,8 @@ function ChainBuy:Start(initialQueue, progressCallback)
 		self.progressCallback = progressCallback;
 		self:progressCallback();
 	end
+
+	self.closeCallback = closeCallback;
 end
 
 function ChainBuy:Cancel()
@@ -141,6 +143,12 @@ function ChainBuy:ShowWindow()
 	window.closeBtn:SetScript('OnClick', function()
 		ChainBuy.window:Hide();
 		self:Cancel();
+	end);
+
+	window:SetScript('OnHide', function()
+		if ChainBuy.closeCallback then
+			ChainBuy.closeCallback();
+		end
 	end);
 
 	window.fastMode.OnValueChanged = function(_, flag)

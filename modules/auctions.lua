@@ -197,6 +197,11 @@ function Auctions:CalculateDeposit(itemId, itemName, settings)
 	);
 end
 
+function Auctions:HasAuctionsList()
+	local auctionName = GetAuctionItemInfo('list', 1);
+	return auctionName and true or false;
+end
+
 function Auctions:FindAuctionIndex(auctionData, randomizeIndex)
 
 	local indexes = {};

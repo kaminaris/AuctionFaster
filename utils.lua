@@ -1,5 +1,7 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
+--- @type StdUi
+local StdUi = LibStub('StdUi');
 
 function AuctionFaster:FormatDuration(duration)
 	if duration >= 172800 then
@@ -36,7 +38,6 @@ function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
 	if show then
 
 		GameTooltip:SetOwner(frame);
-		GameTooltip:SetPoint(anchor or 'TOPLEFT');
 
 		if itemId == 82800 then
 			local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(':', link);
@@ -51,10 +52,12 @@ function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
 				string.gsub(string.gsub(link, '^(.*)%[', ''), '%](.*)$', '')
 			);
 			BattlePetTooltip:ClearAllPoints();
-			BattlePetTooltip:SetPoint('BOTTOMLEFT', frame, 'TOPLEFT', 0, 0);
+			StdUi:GlueOpposite(BattlePetTooltip, frame, 0, 0, anchor);
 		else
 			GameTooltip:SetHyperlink(link);
 			GameTooltip:Show();
+			GameTooltip:ClearAllPoints();
+			StdUi:GlueOpposite(GameTooltip, frame, 0, 0, anchor);
 		end
 	else
 		GameTooltip:Hide();
