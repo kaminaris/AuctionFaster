@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
 ## Notes: Simple auction interface
-## Version: 8.0.11
+## Version: 8.0.12
 ## Author: Kaminaris
 ## Interface: 80000
 ## SavedVariables: AuctionFasterDb

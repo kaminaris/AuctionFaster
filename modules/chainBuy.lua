@@ -77,7 +77,7 @@ end
 
 function ChainBuy:Cancel()
 	self:Pause();
-	wipe(self.requests);
+	self.requests = {};
 	self.currentIndex = 0;
 	self.boughtSoFar = 0;
 	self.currentRequest = nil;
@@ -135,20 +135,19 @@ function ChainBuy:ShowWindow()
 		ChainBuy:ProcessNext();
 	end);
 
-	window.closeButton:SetScript('OnClick', function()
+	local closeHandler = function()
 		ChainBuy.window:Hide();
 		self:Cancel();
-	end);
 
-	window.closeBtn:SetScript('OnClick', function()
-		ChainBuy.window:Hide();
-		self:Cancel();
-	end);
-
-	window:SetScript('OnHide', function()
 		if ChainBuy.closeCallback then
 			ChainBuy.closeCallback();
 		end
+	end
+
+	window.closeButton:SetScript('OnClick', closeHandler);
+	window.closeBtn:SetScript('OnClick', closeHandler);
+
+	window:SetScript('OnHide', function()
 	end);
 
 	window.fastMode.OnValueChanged = function(_, flag)
@@ -236,11 +235,12 @@ end
 
 function ChainBuy:CalcRemainingQty()
 	local total = 0;
-	if #self.requests == 0 then
+	if not self.requests or #self.requests == 0 then
 		return 0;
 	end
 
-	for i = self.currentIndex, #self.requests do
+	local start = self.currentIndex == 0 and 1 or self.currentIndex;
+	for i = start, #self.requests do
 		total = total + self.requests[i].count;
 	end
 

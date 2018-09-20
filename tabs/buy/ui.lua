@@ -2,10 +2,6 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
---- @type Auctions
-local Auctions = AuctionFaster:GetModule('Auctions');
---- @type ChainBuy
-local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 --- @class Buy
 local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0');
 
@@ -395,16 +391,9 @@ function Buy:DrawSearchResultsTable()
 		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
 			if button == 'LeftButton' then
 				if IsShiftKeyDown() then
-					Auctions:BuyItem(rowData);
-
-					tremove(Buy.buyTab.auctions, rowIndex);
-					Buy:UpdateSearchAuctions();
+					Buy:InstantBuy(rowData, rowIndex);
 				elseif IsAltKeyDown() then
-					ChainBuy:AddBuyRequest(rowData);
-					ChainBuy:Start(nil, self.UpdateQueue);
-
-					tremove(Buy.buyTab.auctions, rowIndex);
-					Buy:UpdateSearchAuctions();
+					Buy:AddToQueue(rowData, rowIndex);
 				elseif IsControlKeyDown() then
 					Buy:ChainBuyStart(rowIndex);
 				else

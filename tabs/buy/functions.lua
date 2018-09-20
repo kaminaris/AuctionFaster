@@ -58,6 +58,15 @@ function Buy:SearchAuctions(name, exact, page)
 	end);
 end
 
+function Buy:RefreshSearchAuctions()
+	if not self.currentQuery then
+		AuctionFaster:Echo(3, 'No query was searched before');
+		return;
+	end
+
+	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page);
+end
+
 function Buy:SearchNextPage()
 	-- if last page is not yet defined or it would be over last page, just abandon
 	if not self.currentQuery.lastPage or self.currentQuery.page + 1 > self.currentQuery.lastPage then
@@ -229,6 +238,18 @@ function Buy:AUCTION_ITEM_LIST_UPDATE()
 	self:UpdatePager();
 end
 
+function Buy.CloseCallback()
+	Buy:UpdateQueue();
+	Buy:RefreshSearchAuctions();
+end
+
+function Buy:InstantBuy(rowData, rowIndex)
+	Auctions:BuyItem(rowData);
+
+	tremove(Buy.buyTab.auctions, rowIndex);
+	self:UpdateSearchAuctions();
+end
+
 function Buy:ChainBuyStart(index)
 	local queue = {};
 	local filtered = self.buyTab.searchResults.filtered;
@@ -243,19 +264,24 @@ function Buy:ChainBuyStart(index)
 		tinsert(queue, self.buyTab.auctions[rowIndex]);
 	end
 
-	ChainBuy:Start(queue);
+	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
 end
 
-function Buy:AddToQueue()
-	local auctionData = self.buyTab.searchResults:GetSelectedItem();
-	if not auctionData then
-		return ;
+function Buy:AddToQueue(rowData, rowIndex)
+	if not rowData then
+		rowIndex = self.buyTab.searchResults:GetSelection();
+		rowData = self.buyTab.searchResults:GetSelectedItem();
+		if not rowData then
+			AuctionFaster:Echo(3, 'Please select item first');
+			return;
+		end
 	end
 
-	ChainBuy:AddBuyRequest(auctionData);
-	ChainBuy:Start(nil, self.UpdateQueue);
+	ChainBuy:AddBuyRequest(rowData);
+	ChainBuy:Start(nil, self.UpdateQueue, self.CloseCallback);
 
-	Buy:RemoveCurrentSearchAuction();
+	tremove(Buy.buyTab.auctions, rowIndex);
+	Buy:UpdateSearchAuctions();
 end
 
 function Buy:AddToQueueWithXStacks(amount)
@@ -271,7 +297,7 @@ function Buy:AddToQueueWithXStacks(amount)
 		AuctionFaster:Echo(3, 'No auctions found with requested stack count: ' .. amount);
 	end
 
-	ChainBuy:Start(queue);
+	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
 end
 
 function Buy:SearchStacksCallback(items, minStacks, page)
