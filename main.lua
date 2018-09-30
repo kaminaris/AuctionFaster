@@ -22,7 +22,7 @@ function AuctionFaster:OnInitialize()
 		self.db.auctionDb = {};
 	end
 
-	if self.db.tooltipsEnabled then
+	if self.db.enableToolTips then
 		self:EnableModule('Tooltip');
 	end
 
