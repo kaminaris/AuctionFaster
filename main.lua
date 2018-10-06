@@ -27,6 +27,7 @@ function AuctionFaster:OnInitialize()
 	end
 
 	-- These modules must be enabled on start, they handle events themselves
+	self:EnableModule('ItemCache');
 	self:EnableModule('Inventory');
 	self:EnableModule('Auctions');
 	self:EnableModule('ChainBuy');

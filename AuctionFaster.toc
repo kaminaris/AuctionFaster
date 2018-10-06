@@ -23,6 +23,7 @@ options.lua
 utils.lua
 
 modules\itemCache.lua
+modules\auctionCache.lua
 modules\tooltip.lua
 modules\inventory.lua
 modules\auctions.lua

@@ -30,21 +30,6 @@ function Sell:DrawInfoPane()
 	sellTab.infoPane.auctionNo = auctionNo;
 	sellTab.infoPane.deposit = deposit;
 	sellTab.infoPane.duration = duration;
-
-
-	-- Figure out what to do with
-	--local columns = {
-	--	{header = 'Name', dataIndex = 'name', width = 80, align = 'RIGHT'},
-	--	{header = 'Price', dataIndex = 'price', width = 80},
-	--};
-	--local data = {
-	--	{name = 'Item one', price = StdUi.Util.formatMoney(random(10000, 999999))},
-	--	{name = 'Item two', price = StdUi.Util.formatMoney(random(10000, 999999))},
-	--	{name = 'Item three', price = StdUi.Util.formatMoney(random(10000, 999999))},
-	--}
-	--
-	--local tab = StdUi:Table(sellTab.infoPane, 160, 80, 20, columns, data);
-	--StdUi:GlueTop(tab, sellTab.infoPane, 10, -20, 'RIGHT');
 end
 
 function Sell:UpdateInfoPaneText()

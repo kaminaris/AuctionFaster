@@ -138,7 +138,7 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	end
 
 	if not found then
-		local scanPrice = ItemCache:GetLowestPrice(itemId, itemName);
+		local scanPrice = ItemCache:GetLastScanPrice(itemId, itemName);
 		if not scanPrice then
 			scanPrice = '---';
 		end
