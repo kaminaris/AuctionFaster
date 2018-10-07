@@ -150,19 +150,25 @@ function Auctions:AUCTION_ITEM_LIST_UPDATE()
 	self.currentCallback = nil;
 end
 
-function Auctions:PutItemInSellBox(itemId, itemName)
+function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
+	-- Since there is no way to check level of sold item, clear item regardless
 	local currentItemName = GetAuctionSellItemInfo();
-	if currentItemName and currentItemName == itemName then
-		return true;
+	if currentItemName then
+		if CursorHasItem() then
+			ClearCursor();
+		end
+		ClickAuctionSellItemButton();
+		ClearCursor();
 	end
 
-	local bag, slot = Inventory:GetItemFromInventory(itemId, itemName);
+	local bag, slot = Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel);
 	if not bag or not slot then
 		return false;
 	end
 
 	PickupContainerItem(bag, slot);
 	if not CursorHasItem() then
+		AuctionFaster:Echo(3, 'Could not pick up item from inventory');
 		return false;
 	end
 
@@ -177,12 +183,12 @@ function Auctions:PutItemInSellBox(itemId, itemName)
 	return true;
 end
 
-function Auctions:CalculateDeposit(itemId, itemName, settings)
+function Auctions:CalculateDeposit(itemId, itemName, itemQuality, itemLevel, settings)
 	if not AuctionFrameAuctions.duration then
 		AuctionFrameAuctions.duration = settings.duration;
 	end
 
-	if not self:PutItemInSellBox(itemId, itemName) then
+	if not self:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
 		return 0;
 	end
 

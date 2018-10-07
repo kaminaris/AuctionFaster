@@ -48,6 +48,8 @@ function Sell:UpdateInfoPaneText()
 	local deposit = Auctions:CalculateDeposit(
 		self.selectedItem.itemId,
 		self.selectedItem.itemName,
+		self.selectedItem.quality,
+		self.selectedItem.level,
 		sellSettings
 	);
 

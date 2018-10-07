@@ -6,6 +6,8 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 ---@class Inventory
 local Inventory = AuctionFaster:NewModule('Inventory', 'AceEvent-3.0');
 
+local battlePetId = 82800;
+
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
 function Inventory:Enable()
 	self.inventoryItems = {};
@@ -72,7 +74,7 @@ end
 function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	local canSell = false;
 
-	if itemId == 82800 then
+	if itemId == battlePetId then
 		canSell = true;
 	else
 		Gratuity:SetBagItem(bag, slot);
@@ -103,23 +105,19 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 	end
 
-	local itemName, itemIcon, itemStackCount, additionalInfo, quality;
+	local itemName, itemIcon, itemStackCount, additionalInfo, quality, level;
 
-	if itemId == 82800 then
-		local _, speciesId, _, breedQuality = strsplit(":", link)
-		speciesId = tonumber(speciesId);
-		quality = tonumber(breedQuality);
-
-		if speciesId then
-			local n, i, _, _, tooltipSource = C_PetJournal.GetPetInfoBySpeciesID(speciesId);
-			itemName = n;
-			itemIcon = i;
-			itemStackCount = 1;
-		else
-			return;
-		end
+	if itemId == battlePetId then
+		local n, icon, speciesId, petLevel, breedQuality = AuctionFaster:ParseBattlePetLink(link);
+		itemName = n;
+		quality = breedQuality;
+		itemIcon = icon;
+		level = petLevel;
+		itemStackCount = 1;
 	else
 		local n, _, q, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
+		level = GetDetailedItemLevelInfo(link);
+
 		itemName = n;
 		itemStackCount = c;
 		quality = q;
@@ -128,12 +126,15 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 
 
 	local found = false;
-	for i = 1, #self.inventoryItems do
-		local ii = self.inventoryItems[i];
-		if ii.itemId == itemId and ii.itemName == itemName then
-			found = true;
-			self.inventoryItems[i].count = self.inventoryItems[i].count + count;
-			break ;
+	-- don't stack battle pets
+	if itemId ~= battlePetId then
+		for i = 1, #self.inventoryItems do
+			local ii = self.inventoryItems[i];
+			if ii.itemId == itemId and ii.itemName == itemName then
+				found = true;
+				self.inventoryItems[i].count = self.inventoryItems[i].count + count;
+				break ;
+			end
 		end
 	end
 
@@ -144,13 +145,14 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		end
 
 		tinsert(self.inventoryItems, {
-			icon           = itemIcon,
+			itemName       = itemName,
+			link           = link,
+			quality        = quality,
+			level          = level,
 			count          = count,
 			maxStackSize   = itemStackCount,
-			itemName       = itemName,
+			icon           = itemIcon,
 			additionalInfo = additionalInfo,
-			quality        = quality,
-			link           = link,
 			itemId         = itemId,
 			price          = scanPrice
 		});
@@ -167,19 +169,35 @@ function Inventory:UpdateInventoryItemPrice(itemId, itemName, newPrice)
 	end
 end
 
-function Inventory:GetItemFromInventory(id, name)
+function Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel)
 	local firstBag, firstSlot, remainingQty;
 
 	for bag = 0, 4 do
 		for slot = 1, GetContainerNumSlots(bag) do
-			local itemId = GetContainerItemID(bag, slot);
-			if itemId then
+			local id = GetContainerItemID(bag, slot);
+			if id then
 				local link = GetContainerItemLink(bag, slot);
 				local _, count = GetContainerItemInfo(bag, slot);
-				local itemName, _, _, _, _, _, _, itemStackCount = GetItemInfo(link);
 
-				if id == itemId and name == itemName then
-					return bag, slot;
+				if id == battlePetId then
+					local name, icon, speciesId, petLevel, breedQuality = AuctionFaster:ParseBattlePetLink(link);
+					if id == itemId and
+						name == itemName and
+						breedQuality == itemQuality and
+						petLevel == itemLevel
+					then
+						return bag, slot;
+					end
+				else
+					local name, _, quality, _, _, _, _, itemStackCount = GetItemInfo(link);
+					local level = GetDetailedItemLevelInfo(link);
+					if id == itemId and
+						name == itemName and
+						quality == itemQuality and
+						level == itemLevel
+					then
+						return bag, slot;
+					end
 				end
 			end
 		end

@@ -344,9 +344,11 @@ end
 
 function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 	self.sellTab.currentAuctions:SetData(auctionRecord.auctions, true);
-	self.sellTab.lastScan:SetText(
-		'Last Scan: ' .. AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime)
-	);
+	if auctionRecord.lastScanTime then
+		self.sellTab.lastScan:SetText(
+			'Last Scan: ' .. AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime)
+		);
+	end
 
 	local minBid, minBuy = AuctionCache:FindLowestBidBuy(auctionRecord);
 
@@ -456,8 +458,10 @@ function Sell:SellCurrentItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
+	local itemQuality = selectedItem.quality;
+	local itemLevel = selectedItem.level;
 
-	if not Auctions:PutItemInSellBox(itemId, itemName) then
+	if not Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
 		return false;
 	end
 
@@ -501,7 +505,7 @@ function Sell:CheckEverythingSold()
 
 	local currentItemName = GetAuctionSellItemInfo();
 	if not currentItemName or currentItemName ~= itemName then
-		Auctions:PutItemInSellBox(itemId, itemName);
+		Auctions:PutItemInSellBox(itemId, itemName, selectedItem.quality, selectedItem.level);
 	end
 
 	-- Check if item is still in inventory

@@ -66,6 +66,9 @@ function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	end
 
 	local cacheItem = ItemCache:GetItemFromCache(82800, petData.name, true);
+	if not cacheItem then
+		return;
+	end
 
 	tooltip.afPane.bid:SetText(StdUi.Util.formatMoney(cacheItem.bid));
 	tooltip.afPane.buy:SetText(StdUi.Util.formatMoney(cacheItem.buy));

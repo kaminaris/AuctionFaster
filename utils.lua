@@ -34,6 +34,17 @@ function AuctionFaster:TableCombine(keys, values)
 	return result;
 end
 
+function AuctionFaster:ParseBattlePetLink(link)
+	local _, speciesId, petLevel, breedQuality = strsplit(":", link);
+	speciesId = tonumber(speciesId);
+	petLevel = tonumber(petLevel);
+	breedQuality = tonumber(breedQuality);
+
+	local itemName, icon, _, _, tooltipSource = C_PetJournal.GetPetInfoBySpeciesID(speciesId);
+
+	return itemName, icon, speciesId, petLevel, breedQuality;
+end
+
 function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
 	if show then
 
