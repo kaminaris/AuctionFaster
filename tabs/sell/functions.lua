@@ -317,10 +317,10 @@ function Sell:CurrentAuctionsCallback(shown, total, items)
 	end ;
 
 	-- we skip any auctions that are not the same as selected item so no problem
-	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
-	AuctionCache:ParseScanResults(items);
-	cacheItem.lastScanTime = GetServerTime(); -- cache item needs this duplicated because of tooltips
 
+	AuctionCache:ParseScanResults(items);
+
+	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
 	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(selectedId, selectedName);
 
 	self:UpdateSellTabAuctions(cacheItem, auctionRecord);

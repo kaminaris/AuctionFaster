@@ -61,5 +61,6 @@ function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
 		end
 	else
 		GameTooltip:Hide();
+		BattlePetTooltip:Hide();
 	end
 end

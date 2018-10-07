@@ -108,7 +108,7 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	if itemId == 82800 then
 		local _, speciesId, _, breedQuality = strsplit(":", link)
 		speciesId = tonumber(speciesId);
-		quality = breedQuality;
+		quality = tonumber(breedQuality);
 
 		if speciesId then
 			local n, i, _, _, tooltipSource = C_PetJournal.GetPetInfoBySpeciesID(speciesId);

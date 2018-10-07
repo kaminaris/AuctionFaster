@@ -8,6 +8,9 @@ AuctionFaster.defaults = {
 	fastMode = true,
 	enableToolTips = true,
 	auctionDuration = 3,
+	sniper = {
+		refreshInterval = 5
+	},
 	tutorials = {
 		buy = true,
 		sell = true,
@@ -66,6 +69,10 @@ function AuctionFaster:InitDatabase()
 				anchor = 'BOTTOMRIGHT'
 			}
 		};
+	end
+
+	if not self.db.sniper then
+		self.db.sniper = { refreshInterval = 5 };
 	end
 end
 

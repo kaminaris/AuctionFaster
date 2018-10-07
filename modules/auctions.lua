@@ -102,9 +102,8 @@ local itemKeys = {
 function Auctions:GetItemFromAuctionList(index)
 	local itemInfo = AuctionFaster:TableCombine(itemKeys, {GetAuctionItemInfo('list', index)});
 
-	local _, itemLink = GetItemInfo(itemInfo.itemId);
-	itemInfo.itemLink = itemLink;
-	itemInfo.itemIndex = i;
+	itemInfo.itemLink = GetAuctionItemLink('list', index);
+	itemInfo.itemIndex = index;
 	itemInfo.bid = floor(itemInfo.minBid / itemInfo.count);
 	itemInfo.buy = floor(itemInfo.buyoutPrice / itemInfo.count);
 

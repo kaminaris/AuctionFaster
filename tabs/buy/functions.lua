@@ -11,6 +11,8 @@ local Buy = AuctionFaster:GetModule('Buy');
 
 --- @type ChainBuy
 local ChainBuy = AuctionFaster:GetModule('ChainBuy');
+--- @type AuctionCache
+local AuctionCache = AuctionFaster:GetModule('AuctionCache');
 
 function Buy:Enable()
 	self:AddBuyAuctionHouseTab();
@@ -90,13 +92,9 @@ end
 ----------------------------------------------------------------------------
 
 function Buy:SearchAuctionsCallback(shown, total, items)
-	--self.currentQuery.lastPage = ceil(total / 50) - 1;
-	--
-	--self.buyTab.auctions = items;
-	--
-	--self:UpdateSearchAuctions();
-	--self:UpdateStateText();
-	--self:UpdatePager();
+	if self.currentQuery.page == 0 then
+		AuctionCache:ParseScanResults(items);
+	end
 end
 
 function Buy:UpdateStateText(inProgress)

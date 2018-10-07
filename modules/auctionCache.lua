@@ -3,6 +3,8 @@ local AuctionFaster = unpack(select(2, ...));
 
 --- @class AuctionCache
 local AuctionCache = AuctionFaster:NewModule('AuctionCache');
+--- @type ItemCache
+local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 AuctionCache.cache = {};
 
@@ -25,6 +27,17 @@ function AuctionCache:ParseScanResults(items)
 		local item = items[i];
 		local cacheItem = self.cache[item.itemId .. item.name];
 		tinsert(cacheItem.auctions, item);
+
+		local itemRecord = ItemCache:FindOrCreateCacheItem(item.itemId, item.name);
+		itemRecord.lastScanTime = serverTime;
+
+		if not itemRecord.buy or itemRecord.buy > item.buy then
+			itemRecord.buy = item.buy;
+		end
+
+		if not itemRecord.bid or itemRecord.bid > item.bid then
+			itemRecord.bid = item.bid;
+		end
 	end
 end
 
