@@ -302,24 +302,23 @@ function Sell:DrawRightPaneButtons()
 	local sellTab = self.sellTab;
 
 	local itemSettings = StdUi:Button(sellTab, 120, 20, 'Item Settings');
-	StdUi:GlueRight(itemSettings, sellTab.stackSize, 20, 20);
-
 	local infoPane = StdUi:Button(sellTab, 120, 20, 'Auction Info');
-	StdUi:GlueBelow(infoPane, itemSettings, 0, -5);
-
 	local refresh = StdUi:Button(sellTab, 120, 20, 'Refresh Auctions');
+
+	StdUi:GlueRight(itemSettings, sellTab.stackSize, 20, 20);
+	StdUi:GlueBelow(infoPane, itemSettings, 0, -5);
 	StdUi:GlueBelow(refresh, infoPane, 0, -5);
 
 	itemSettings:SetScript('OnClick', function()
-		Sell:ToggleItemSettingsPane();
+		self:ToggleItemSettingsPane();
 	end);
 
 	infoPane:SetScript('OnClick', function()
-		Sell:ToggleInfoPane();
+		self:ToggleInfoPane();
 	end);
 
 	refresh:SetScript('OnClick', function()
-		Sell:GetCurrentAuctions(true);
+		self:GetCurrentAuctions(true);
 	end);
 
 	sellTab.buttons = {
@@ -370,7 +369,7 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	local cols = {
 		{
 			name         = 'Seller',
-			width        = 150,
+			width        = 120,
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
@@ -397,9 +396,16 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 		},
 		{
 			name         = 'Qty',
-			width        = 40,
+			width        = 35,
 			align        = 'LEFT',
 			index        = 'count',
+			format       = 'number',
+		},
+		{
+			name         = 'Lvl',
+			width        = 35,
+			align        = 'LEFT',
+			index        = 'level',
 			format       = 'number',
 		},
 		{

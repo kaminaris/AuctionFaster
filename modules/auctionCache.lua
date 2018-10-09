@@ -23,6 +23,7 @@ function AuctionCache:ParseScanResults(items)
 	end
 
 	-- Add all auctions to cache
+	local touchedRecords = {};
 	for i = 1, #items do
 		local item = items[i];
 		local cacheItem = self.cache[item.itemId .. item.name];
@@ -30,6 +31,9 @@ function AuctionCache:ParseScanResults(items)
 
 		local itemRecord = ItemCache:FindOrCreateCacheItem(item.itemId, item.name);
 		itemRecord.lastScanTime = serverTime;
+		if not tContains(touchedRecords, itemRecord) then
+			tinsert(touchedRecords, itemRecord);
+		end
 
 		if not itemRecord.buy or itemRecord.buy > item.buy then
 			itemRecord.buy = item.buy;
@@ -38,6 +42,10 @@ function AuctionCache:ParseScanResults(items)
 		if not itemRecord.bid or itemRecord.bid > item.bid then
 			itemRecord.bid = item.bid;
 		end
+	end
+
+	for i = 1, #touchedRecords do
+		ItemCache:RefreshHistoricalData(touchedRecords[i], serverTime, items);
 	end
 end
 

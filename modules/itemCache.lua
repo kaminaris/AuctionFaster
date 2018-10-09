@@ -20,8 +20,73 @@ function ItemCache:Enable()
 	end
 end
 
-function ItemCache:ParseScan()
+local function isDateOlder(date1, date2)
+	if date1.year < date2.year then
+		return true;
+	end
 
+	if date1.month < date2.month then
+		return true
+	end
+
+	if date1.day < date2.day then
+		return true;
+	end
+
+	return false; -- same day
+end
+
+
+function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions)
+	---@type Pricing
+	local Pricing = AuctionFaster:GetModule('Pricing');
+
+	if not itemRecord.prices then
+		itemRecord.prices = {};
+	end
+
+	-- we need to filter out the same items
+	local filter = function(auction)
+		return itemRecord.itemName == auction.name and itemRecord.itemId == auction.itemId;
+	end
+
+	local auctionInfo = Pricing:CalculateStatData(itemRecord, auctions, 1, 1, filter);
+	auctionInfo.itemRecord = nil;
+	auctionInfo.auctions = nil;
+	auctionInfo.stackSize = nil;
+	auctionInfo.scanTime = serverTime;
+
+
+	local cacheLifetime = AuctionFaster.db.historical.keepDays * 24 * 60 * 60;
+	local limit = serverTime - cacheLifetime;
+
+	for i = #itemRecord.prices, 1, -1 do
+		local historicalData = itemRecord.prices[i];
+
+		if historicalData.scanTime < limit then
+			-- remove old records
+			tremove(itemRecord.prices, i);
+		end
+	end
+
+	-- if there are no records, just insert and bail out
+	if #itemRecord.prices == 0 then
+		tinsert(itemRecord.prices, auctionInfo);
+		return;
+	end
+
+	-- since it is impossible to perform future scans we can be sure that last record is newest
+	local lastHistoricalData = itemRecord.prices[#itemRecord.prices];
+	local lastDate = date('*t', lastHistoricalData.scanTime);
+	local currentDate = date('*t', serverTime);
+
+	if isDateOlder(lastDate, currentDate) then
+		-- last date is older than today, we can safely insert new one
+		tinsert(itemRecord.prices, auctionInfo);
+	else
+		-- same day, replace last record
+		itemRecord.prices[#itemRecord.prices] = auctionInfo;
+	end
 end
 
 function ItemCache:GetLastScanPrice(itemId, itemName)

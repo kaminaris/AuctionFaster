@@ -12,6 +12,8 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @type ChainBuy
 local ChainBuy = AuctionFaster:GetModule('ChainBuy');
+--- @type Pricing
+local Pricing = AuctionFaster:GetModule('Pricing');
 
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
@@ -54,19 +56,18 @@ function Sell:AFTER_INVENTORY_SCAN()
 	Auctions.lastSoldItem = nil;
 end
 
-function Sell:GetSelectedItemFromCache()
+function Sell:GetSelectedItemRecord()
 	if not self.selectedItem then
 		return nil;
 	end
 
-	local itemId, itemName = self.selectedItem.itemId, self.selectedItem.itemName;
-	return ItemCache:GetItemFromCache(itemId, itemName, true);
+	return ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 end
 
 function Sell:GetSellSettings()
 	local sellTab = self.sellTab;
 
-	local cacheItem = self:GetSelectedItemFromCache();
+	local itemRecord = self:GetSelectedItemRecord();
 
 	local bidPerItem = sellTab.bidPerItem:GetValue();
 	local buyPerItem = sellTab.buyPerItem:GetValue();
@@ -85,8 +86,8 @@ function Sell:GetSellSettings()
 	end
 
 	local duration = AuctionFaster.db.auctionDuration;
-	if cacheItem.settings.duration and cacheItem.settings.useCustomDuration then
-		duration = cacheItem.settings.duration;
+	if itemRecord.settings.duration and itemRecord.settings.useCustomDuration then
+		duration = itemRecord.settings.duration;
 	end
 
 	return {
@@ -136,7 +137,7 @@ function Sell:UpdateCacheItemVariable(editBox, variable)
 		return;
 	end
 
-	local cacheItem = self:GetSelectedItemFromCache();
+	local cacheItem = self:GetSelectedItemRecord();
 
 	cacheItem[variable] = editBox:GetValue();
 end
@@ -164,7 +165,7 @@ function Sell:GetCurrentAuctions(force)
 	local itemId = selectedItem.itemId;
 	local itemName = selectedItem.itemName;
 
-	local cacheItem = ItemCache:FindOrCreateCacheItem(itemId, itemName);
+	local itemRecord = ItemCache:FindOrCreateCacheItem(itemId, itemName);
 	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemId, itemName);
 
 	local cacheLifetime = 60 * 5; -- 5 minutes
@@ -173,8 +174,8 @@ function Sell:GetCurrentAuctions(force)
 		(auctionRecord.lastScanTime == nil or auctionRecord.lastScanTime + cacheLifetime < GetServerTime());
 
 	-- We still have pretty recent results from auction house, no need to scan again
-	if not needRescan and cacheItem and auctionRecord and #auctionRecord.auctions > 0 then
-		self:UpdateSellTabAuctions(cacheItem, auctionRecord);
+	if not needRescan and itemRecord and auctionRecord and #auctionRecord.auctions > 0 then
+		self:UpdateSellTabAuctions(itemRecord, auctionRecord);
 		self:UpdateInfoPaneText();
 		return ;
 	end
@@ -307,39 +308,65 @@ function Sell:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	end
 end
 
-
 function Sell:CurrentAuctionsCallback(shown, total, items)
-	local selectedId, selectedName = self:GetSelectedItemIdName();
-
-	if not selectedId then
-		-- No item selected ? - should not happen
-		return ;
-	end ;
+	local itemRecord = self:GetSelectedItemRecord();
+	-- No item selected ? - should not happen
+	if not itemRecord then return; end
 
 	-- we skip any auctions that are not the same as selected item so no problem
-
 	AuctionCache:ParseScanResults(items);
 
-	local cacheItem = ItemCache:FindOrCreateCacheItem(selectedId, selectedName);
-	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(selectedId, selectedName);
+	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemId, itemRecord.itemName);
 
-	self:UpdateSellTabAuctions(cacheItem, auctionRecord);
+	self:UpdateSellTabAuctions(itemRecord, auctionRecord);
 	self:UpdateInfoPaneText();
 end
 
-function Sell:UnderCutPrices(auctionRecord, lowestBid, lowestBuy)
-	if #auctionRecord.auctions < 1 then
+function Sell:CalculatePrice(itemRecord, auctionRecord)
+	local priceModel = itemRecord.settings.priceModel or 'Simple';
+	local sellSettings = self:GetSellSettings();
+	local lowestBid, lowestBuy, success, message = Pricing:CalculatePrice(
+		priceModel,
+		itemRecord,
+		auctionRecord.auctions,
+		sellSettings.stackSize,
+		1 --- @TODO: Update this
+	);
+
+	if success == false and message then
+		AuctionFaster:Echo(3, message);
+	end
+
+	self:UpdateTabPrices(lowestBid, lowestBuy);
+
+	return lowestBuy;
+end
+
+function Sell:RecalculatePrice(itemRecord, auctionRecord)
+	if not itemRecord then return; end
+
+	local minBuy;
+
+	if itemRecord.settings.alwaysUndercut then
+		minBuy = self:CalculatePrice(itemRecord, auctionRecord);
+	elseif itemRecord.settings.rememberLastPrice then
+		self:UpdateTabPrices(itemRecord.bid, itemRecord.buy);
+		minBuy = itemRecord.buy;
+	end
+
+	Inventory:UpdateInventoryItemPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
+	-- update the UI
+	self:UpdateItemsTabPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
+end
+
+function Sell:RecalculateCurrentPrice()
+	if not self.selectedItem then
 		return;
 	end
 
-	if not lowestBid or not lowestBuy then
-		lowestBid, lowestBuy = AuctionCache:FindLowestBidBuy(auctionRecord);
-	end
-
-	auctionRecord.bid = lowestBid - 1;
-	auctionRecord.buy = lowestBuy - 1;
-
-	self:UpdateTabPrices(lowestBid - 1, lowestBuy - 1);
+	local itemRecord = self:GetSelectedItemRecord();
+	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemId, itemRecord.itemName);
+	self:RecalculatePrice(itemRecord, auctionRecord);
 end
 
 function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
@@ -350,17 +377,7 @@ function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 		);
 	end
 
-	local minBid, minBuy = AuctionCache:FindLowestBidBuy(auctionRecord);
-
-	if itemRecord.settings.alwaysUndercut then
-		self:UnderCutPrices(auctionRecord, minBid, minBuy);
-	elseif itemRecord.settings.rememberLastPrice then
-		self:UpdateTabPrices(itemRecord.bid, itemRecord.buy);
-	end
-
-	Inventory:UpdateInventoryItemPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
-	-- update the UI
-	self:UpdateItemsTabPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
+	self:RecalculatePrice(itemRecord, auctionRecord);
 end
 
 function Sell:RemoveSearchAuction(index)
@@ -369,10 +386,10 @@ function Sell:RemoveSearchAuction(index)
 		return;
 	end
 
-	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	local itemRecord = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
 	tremove(auctionRecord.auctions, index);
-	self:UpdateSellTabAuctions(cacheItem, auctionRecord);
+	self:UpdateSellTabAuctions(itemRecord, auctionRecord);
 
 	return auctionRecord;
 end

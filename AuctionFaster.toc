@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
 ## Notes: Simple auction interface
-## Version: 8.0.14.1
+## Version: 8.0.15
 ## Author: Kaminaris
 ## Interface: 80000
 ## SavedVariables: AuctionFasterDb
@@ -17,6 +17,7 @@ Libs\AceHook-3.0\AceHook-3.0.xml
 Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 Libs\StdUi\StdUi.xml
+Libs\LibGraph-2.0\LibGraph-2.0.lua
 
 main.lua
 options.lua
@@ -24,6 +25,7 @@ utils.lua
 
 modules\itemCache.lua
 modules\auctionCache.lua
+modules\pricing.lua
 modules\tooltip.lua
 modules\inventory.lua
 modules\auctions.lua

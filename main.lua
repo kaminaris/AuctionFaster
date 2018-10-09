@@ -79,6 +79,7 @@ function AuctionFaster:GetDefaultItemSettings()
 		rememberLastPrice = false,
 		alwaysUndercut = true,
 		useCustomDuration = false,
+		priceModel = 'Simple',
 		duration = self.db.auctionDuration,
 	}
 end

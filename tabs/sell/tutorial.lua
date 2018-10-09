@@ -55,7 +55,7 @@ function Sell:InitTutorial(force)
 			{
 				text   = 'Here is the list of all inventory items you can sell, no need to drag anything.\n\n' ..
 					C('After you select item, AuctionFaster will automatically make a scan of first page and undercut'..
-					' bid/buy price by one copper.', red),
+					' set bid/buy according to price model selected.', red),
 				anchor = 'LEFT',
 				parent = sellTab.itemsList,
 			},

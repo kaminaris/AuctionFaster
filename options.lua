@@ -29,6 +29,9 @@ AuctionFaster.defaults = {
 			enabled = true,
 			anchor  = 'BOTTOMRIGHT'
 		}
+	},
+	historical = {
+		keepDays = 20
 	}
 };
 
@@ -73,6 +76,10 @@ function AuctionFaster:InitDatabase()
 
 	if not self.db.sniper then
 		self.db.sniper = { refreshInterval = 5 };
+	end
+
+	if not self.db.historical then
+		self.db.historical = { keepDays = 20 };
 	end
 end
 

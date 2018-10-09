@@ -22,22 +22,16 @@ function Sell:DrawItemSettings()
 	local pane = self.sellTab.itemSettingsPane;
 
 	local icon = StdUi:Texture(pane, 30, 30, nil);
-	StdUi:GlueTop(icon, pane, 10, -40, 'LEFT');
 
 	local itemName = StdUi:Label(pane, 'No Item selected', nil, 'GameFontNormalLarge', 150);
-	StdUi:GlueAfter(itemName, icon, 10, 0);
 
 	local rememberStack = StdUi:Checkbox(pane, 'Remember Stack Settings');
-	StdUi:GlueBelow(rememberStack, icon, 0, -10, 'LEFT');
 
 	local rememberLastPrice = StdUi:Checkbox(pane, 'Remember Last Price');
-	StdUi:GlueBelow(rememberLastPrice, rememberStack, 0, -10, 'LEFT');
 
 	local alwaysUndercut = StdUi:Checkbox(pane, 'Always Undercut');
-	StdUi:GlueBelow(alwaysUndercut, rememberLastPrice, 0, -10, 'LEFT');
 
 	local useCustomDuration = StdUi:Checkbox(pane, 'Use Custom Duration');
-	StdUi:GlueBelow(useCustomDuration, alwaysUndercut, 0, -10, 'LEFT');
 
 	local options = {
 		{text = '12h', value = 1},
@@ -45,8 +39,20 @@ function Sell:DrawItemSettings()
 		{text = '48h', value = 3}
 	}
 	local duration = StdUi:Dropdown(pane, 150, 20, options);
-	StdUi:GlueBelow(duration, useCustomDuration, 0, -30, 'LEFT');
 	StdUi:AddLabel(pane, duration, 'Auction Duration', 'TOP');
+
+	local priceModels = AuctionFaster:GetModule('Pricing'):GetPricingModels();
+	local priceModel = StdUi:Dropdown(pane, 150, 20, priceModels);
+	StdUi:AddLabel(pane, priceModel, 'Pricing Model', 'TOP');
+
+	StdUi:GlueTop(icon, pane, 10, -40, 'LEFT');
+	StdUi:GlueAfter(itemName, icon, 10, 0);
+	StdUi:GlueBelow(rememberStack, icon, 0, -10, 'LEFT');
+	StdUi:GlueBelow(rememberLastPrice, rememberStack, 0, -10, 'LEFT');
+	StdUi:GlueBelow(alwaysUndercut, rememberLastPrice, 0, -10, 'LEFT');
+	StdUi:GlueBelow(useCustomDuration, alwaysUndercut, 0, -10, 'LEFT');
+	StdUi:GlueBelow(duration, useCustomDuration, 0, -30, 'LEFT');
+	StdUi:GlueBelow(priceModel, duration, 0, -30, 'LEFT');
 
 	pane.icon = icon;
 	pane.itemName = itemName;
@@ -55,6 +61,7 @@ function Sell:DrawItemSettings()
 	pane.alwaysUndercut = alwaysUndercut;
 	pane.useCustomDuration = useCustomDuration;
 	pane.duration = duration;
+	pane.priceModel = priceModel;
 
 	self:LoadItemSettings();
 	self:InitItemSettingsScripts();
@@ -85,6 +92,13 @@ function Sell:InitItemSettingsScripts()
 	pane.duration.OnValueChanged = function(self, value)
 		Sell:UpdateItemSettings('duration', value);
 	end;
+
+	pane.priceModel.OnValueChanged = function(_, value)
+		if not self.loadingItemSettings then
+			self:UpdateItemSettings('priceModel', value);
+			self:RecalculateCurrentPrice();
+		end
+	end
 end
 
 function Sell:UpdateItemSettingsCustomDuration(useCustomDuration)
@@ -139,13 +153,15 @@ function Sell:LoadItemSettings()
 		pane.alwaysUndercut:SetChecked(true);
 		pane.useCustomDuration:SetChecked(false);
 		pane.duration:SetValue(2);
+		pane.priceModel:SetValue('Simple');
+
 		self:EnableDisableItemSettings(false);
 
 		self.loadingItemSettings = false;
 		return;
 	end
 
-	local item = self:GetSelectedItemFromCache();
+	local item = self:GetSelectedItemRecord();
 
 	self:EnableDisableItemSettings(true);
 	pane.icon:SetTexture(self.selectedItem.icon);
@@ -155,6 +171,10 @@ function Sell:LoadItemSettings()
 	pane.alwaysUndercut:SetChecked(item.settings.alwaysUndercut);
 	pane.useCustomDuration:SetChecked(item.settings.useCustomDuration);
 	pane.duration:SetValue(item.settings.duration);
+	if not item.settings.priceModel then
+		item.settings.priceModel = 'Simple';
+	end
+	pane.priceModel:SetValue(item.settings.priceModel);
 
 	Sell:UpdateItemSettingsCustomDuration(item.settings.useCustomDuration);
 
@@ -169,13 +189,14 @@ function Sell:EnableDisableItemSettings(enable)
 		pane.alwaysUndercut:Enable();
 		pane.useCustomDuration:Enable();
 		pane.duration:Enable();
+		pane.priceModel:Enable();
 	else
 		pane.rememberStack:Disable();
 		pane.rememberLastPrice:Disable();
 		pane.alwaysUndercut:Disable();
 		pane.useCustomDuration:Disable();
 		pane.duration:Disable();
-
+		pane.priceModel:Disable();
 	end
 end
 
