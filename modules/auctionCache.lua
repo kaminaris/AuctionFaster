@@ -9,7 +9,7 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 AuctionCache.cache = {};
 
 -- Make sure to call this only on first page
-function AuctionCache:ParseScanResults(items)
+function AuctionCache:ParseScanResults(items, total)
 	local serverTime = GetServerTime();
 
 	-- Clean all found items first
@@ -19,6 +19,7 @@ function AuctionCache:ParseScanResults(items)
 		self.cache[cacheKey] = {
 			lastScanTime = serverTime,
 			auctions     = {},
+			totalItems   = total --this will be a little over the real total items
 		};
 	end
 
@@ -44,8 +45,10 @@ function AuctionCache:ParseScanResults(items)
 		end
 	end
 
-	for i = 1, #touchedRecords do
-		ItemCache:RefreshHistoricalData(touchedRecords[i], serverTime, items);
+	if AuctionFaster.db.historical.enabled then
+		for i = 1, #touchedRecords do
+			ItemCache:RefreshHistoricalData(touchedRecords[i], serverTime, items, total);
+		end
 	end
 end
 

@@ -25,8 +25,8 @@ function Pricing:GetPricingModels()
 	return builtFunctions;
 end
 
-function Pricing:CalculateStatData(itemRecord, auctions, stackSize, auctionPages, filter)
-	local maxBidDeviation = AuctionFaster.db.sell.maxBidDeviation;
+function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filter)
+	local maxBidDeviation = AuctionFaster.db.pricing.maxBidDeviation;
 	if not maxBidDeviation then
 		maxBidDeviation = 20;
 	end
@@ -36,9 +36,9 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, auctionPages
 		auctions           = {},
 		stackSize          = stackSize,
 		maxBidDeviation    = maxBidDeviation,
-		auctionPages       = auctionPages,
-		count              = 0,
+		totalItems         = total,
 		totalQty           = 0,
+		averageQty         = 0,
 		totalBuy           = 0, -- Total price without quantity
 		totalBid           = 0,
 		weightedTotalBuy   = 0, -- Total price including quantity
@@ -55,6 +55,7 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, auctionPages
 	}
 
 	local playerName = UnitName('player');
+
 	for i = 1, #auctions do
 		local auction = auctions[i];
 		if auction.owner ~= playerName and (not filter or filter(auction)) then
@@ -85,19 +86,20 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, auctionPages
 		end
 	end
 
+	local averageQty = auctionInfo.totalQty / #auctions;
 	auctionInfo.averageBuy = math.floor(auctionInfo.totalBuy / #auctionInfo.auctions);
 	auctionInfo.averageBid = math.floor(auctionInfo.totalBid / #auctionInfo.auctions);
 
 	auctionInfo.weightedAverageBuy = math.floor(auctionInfo.weightedTotalBuy / auctionInfo.totalQty);
 	auctionInfo.weightedAverageBid = math.floor(auctionInfo.weightedTotalBid / auctionInfo.totalQty);
 
-	auctionInfo.estimatedVolume = auctionInfo.totalQty * auctionPages;
+	auctionInfo.estimatedVolume = averageQty * total;
 
 	return auctionInfo;
 end
 
-function Pricing:CalculatePrice(priceModel, itemRecord, auctions, stackSize, auctionPages)
-	local auctionInfo = self:CalculateStatData(itemRecord, auctions, stackSize, auctionPages);
+function Pricing:CalculatePrice(priceModel, itemRecord, auctions, stackSize, total)
+	local auctionInfo = self:CalculateStatData(itemRecord, auctions, stackSize, total);
 
 	if self[priceModel] then
 		return self[priceModel](self, auctionInfo);
@@ -176,7 +178,8 @@ end
 function Pricing:Stack(auctionInfo)
 	local lowestBid, lowestBuy = auctionInfo.lowestBid, auctionInfo.lowestBuy;
 
-	local minQty = auctionInfo.stackSize * 0.5;
+	local minQty = math.floor(auctionInfo.stackSize * 0.5);
+
 	for i = 1, #auctionInfo.auctions do
 		local auction = auctionInfo.auctions[i];
 		if auction.count >= minQty then
@@ -188,5 +191,5 @@ function Pricing:Stack(auctionInfo)
 	end
 
 	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
-	return lowestBid, lowestBuy, true, 'No auction found with minimum quantity';
+	return lowestBid, lowestBuy, true, 'No auction found with minimum quantity: ' .. minQty;
 end

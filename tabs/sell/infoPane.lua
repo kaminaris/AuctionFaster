@@ -86,35 +86,56 @@ function Sell:ToggleInfoPane()
 end
 
 function Sell:PrepareHistoricalData(itemRecord)
-	if #itemRecord.prices == 0 then
+	if #itemRecord.prices < 2 then
 		AuctionFaster:Echo(3, 'No historical data available for: ' .. itemRecord.itemName);
 		return false;
 	end
 
 	local result = {
 		stats = {
+			itemRecord = itemRecord,
 			startingStamp = 0,
+			maxLowestBuy = itemRecord.prices[1].lowestBuy,
+			minLowestBuy = itemRecord.prices[1].lowestBuy,
 		},
-		lowestBuy     = { text = 'Lowest Buy', color = { 1.0, 0.0, 0.0, 0.8 }, series = {} },
-		averageBuy    = { text = 'Average Buy', color = { 1.0, 1.0, 0.0, 0.8 }, series = {} },
-		highestBuy    = { text = 'Highest Buy', color = { 1.0, 1.0, 1.0, 0.8 }, series = {} },
 	};
 
+	local lowestBuy, trendLowest, averageBuy, trendAverage, highestBuy = {}, {}, {}, {}, {};
+	local X, YLow, YAvg = {}, {}, {};
 	local yts = 0;
 	for i = 1, #itemRecord.prices do
 		local historicalData = itemRecord.prices[i];
 		if i == 1 then
-			yts = historicalData.scanTime;
+			yts = historicalData.scanTime - 1;
 			result.stats.startingStamp = yts;
 		end
 
-		local ts = ((historicalData.scanTime - yts) / 3600) + (24 * (i - 1));
+		local ts = ((historicalData.scanTime - yts) / 3600); -- + (24 * (i - 1))
 
-		tinsert(result.lowestBuy.series, { ts, historicalData.lowestBuy / 10000 });
-		tinsert(result.averageBuy.series, { ts, historicalData.averageBuy / 10000 });
-		tinsert(result.highestBuy.series, { ts, historicalData.highestBuy / 10000 });
+		tinsert(lowestBuy, { ts, historicalData.lowestBuy / 10000 });
+		tinsert(averageBuy, { ts, historicalData.averageBuy / 10000 });
+		tinsert(highestBuy, { ts, historicalData.highestBuy / 10000 });
 
+		tinsert(X, ts);
+		tinsert(YAvg, historicalData.averageBuy / 10000);
+		tinsert(YLow, historicalData.lowestBuy / 10000);
+
+		result.stats.maxLowestBuy = math.max(result.stats.maxLowestBuy, historicalData.lowestBuy);
+		result.stats.minLowestBuy = math.min(result.stats.minLowestBuy, historicalData.lowestBuy);
 	end
+
+	trendLowest = AuctionFaster:TrendLine(X, YLow);
+	trendAverage = AuctionFaster:TrendLine(X, YAvg);
+
+	result.data = {
+		{ text = 'Lowest Buy',        color = { 0.0, 1.0, 0.0, 0.8 }, series = lowestBuy },
+		{ text = 'Trend Lowest Buy',  color = { 0.0, 1.0, 0.0, 0.5 }, series = trendLowest },
+
+		{ text = 'Average Buy',       color = { 1.0, 1.0, 0.0, 0.8 }, series = averageBuy },
+		{ text = 'Trend Average Buy', color = { 1.0, 1.0, 0.0, 0.5 }, series = trendAverage },
+
+		{ text = 'Highest Buy',       color = { 1.0, 0.0, 0.0, 0.8 }, series = highestBuy },
+	}
 
 	return result;
 end
@@ -124,9 +145,6 @@ function Sell:RescaleLines(historicalData)
 	local g = self.historicalWindow.g;
 	local horizontalDivs = self.historicalWindow.horizontalDivs;
 	local verticalDivs = self.historicalWindow.verticalDivs;
-
-	print(g.YMax);
-	print(g.YMin);
 
 	local yStep = (g.YMax - g.YMin) / 7;
 
@@ -140,7 +158,9 @@ function Sell:RescaleLines(historicalData)
 	local xOffset = g.XMin * -1 * xTotal;
 	local xStep = 48 * xTotal;
 
-	local numLines = math.ceil(#historicalData.lowestBuy.series / 2);
+	local s = historicalData.data[1].series;
+	local diff = s[#s][1] - s[1][1];
+	local numLines = math.ceil(diff / 48);
 
 	for i = 1, #horizontalDivs do
 		horizontalDivs[i]:Hide();
@@ -176,6 +196,40 @@ function Sell:RescaleLines(historicalData)
 
 end
 
+function Sell:UpdateHistoricalWindowLegend(historicalData)
+	local historicalWindow = self.historicalWindow;
+	local legend = historicalWindow.legend;
+	if not legend.items then
+		legend.items = {};
+	end
+
+	local function createLegendLabel(parent, data, key)
+		if key == 'stats' then
+			return nil;
+		end
+
+		local panel = StdUi:Panel(parent, 200, 20);
+		panel.texture = StdUi:Texture(panel, 16, 16);
+		panel.text = StdUi:Label(panel, '');
+
+		StdUi:GlueLeft(panel.texture, panel, 5, 0, true);
+		StdUi:GlueRight(panel.text, panel.texture, 5, 0);
+
+		return panel;
+	end
+
+	local function updateLegendLabel(parent, panel, data, key)
+		if key == 'stats' then
+			return nil;
+		end
+
+		panel.texture:SetColorTexture(unpack(data.color));
+		panel.text:SetText(data.text);
+	end
+
+	StdUi:ObjectList(legend, legend.items, createLegendLabel, updateLegendLabel, historicalData.data);
+end
+
 function Sell:ShowHistoricalWindow(historicalData)
 	local historicalWindow, g;
 	if not self.historicalWindow then
@@ -183,11 +237,16 @@ function Sell:ShowHistoricalWindow(historicalData)
 		historicalWindow:SetPoint('CENTER');
 		historicalWindow:Show();
 
+		historicalWindow.legend = StdUi:Panel(historicalWindow, 200, 100);
+
+		StdUi:GlueTop(historicalWindow.legend, historicalWindow, 10, -30, 'LEFT');
+
 		local graphWidth = 480;
 		local graphHeight = 300;
 
-		g = Graph:CreateGraphLine('TestLineGraph', historicalWindow, 'TOPLEFT', 'TOPLEFT', 100, -100,
+		g = Graph:CreateGraphLine(nil, historicalWindow, 'TOPLEFT', 'TOPLEFT', 100, -160,
 			graphWidth, graphHeight);
+
 		g:SetXAxis(-1, 1);
 		g:SetYAxis(-1, 1);
 		g:SetGridSpacing(false, false);
@@ -222,12 +281,12 @@ function Sell:ShowHistoricalWindow(historicalData)
 	historicalWindow = self.historicalWindow;
 	g = self.historicalWindow.g;
 
+	historicalWindow.titlePanel.label:SetText('Historical Data: ' .. historicalData.stats.itemRecord.itemName);
+
 	g:ResetData();
 
-	for k, val in pairs(historicalData) do
-		if k ~= 'stats' then
-			g:AddDataSeries(val.series, val.color, nil, 'line');
-		end
+	for k, val in ipairs(historicalData.data) do
+		g:AddDataSeries(val.series, val.color, nil, 'line');
 	end
 
 	--UIParentLoadAddOn('Blizzard_DebugTools')
@@ -235,5 +294,8 @@ function Sell:ShowHistoricalWindow(historicalData)
 
 	C_Timer.After(0.1, function()
 		self:RescaleLines(historicalData);
-	end)
+		self:UpdateHistoricalWindowLegend(historicalData);
+	end);
+
+	historicalWindow:Show();
 end

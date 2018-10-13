@@ -314,7 +314,7 @@ function Sell:CurrentAuctionsCallback(shown, total, items)
 	if not itemRecord then return; end
 
 	-- we skip any auctions that are not the same as selected item so no problem
-	AuctionCache:ParseScanResults(items);
+	AuctionCache:ParseScanResults(items, total);
 
 	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemId, itemRecord.itemName);
 
@@ -325,7 +325,7 @@ end
 function Sell:CalculatePrice(itemRecord, auctionRecord)
 	local priceModel = itemRecord.settings.priceModel or 'Simple';
 	local sellSettings = self:GetSellSettings();
-	local lowestBid, lowestBuy, success, message = Pricing:CalculatePrice(
+	local lowestBid, lowestBuy, fail, message = Pricing:CalculatePrice(
 		priceModel,
 		itemRecord,
 		auctionRecord.auctions,
@@ -333,7 +333,7 @@ function Sell:CalculatePrice(itemRecord, auctionRecord)
 		1 --- @TODO: Update this
 	);
 
-	if success == false and message then
+	if fail == true and message then
 		AuctionFaster:Echo(3, message);
 	end
 

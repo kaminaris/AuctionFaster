@@ -30,8 +30,12 @@ AuctionFaster.defaults = {
 			anchor  = 'BOTTOMRIGHT'
 		}
 	},
+	pricing = {
+		maxBidDeviation = 20
+	},
 	historical = {
-		keepDays = 20
+		enabled = true,
+		keepDays = 20,
 	}
 };
 
@@ -79,12 +83,62 @@ function AuctionFaster:InitDatabase()
 	end
 
 	if not self.db.historical then
-		self.db.historical = { keepDays = 20 };
+		self.db.historical = { enabled = true, keepDays = 20 };
+		self.db.pricing = { maxBidDeviation = 20 };
 	end
 end
 
 function AuctionFaster:IsFastMode()
 	return self.db.fastMode;
+end
+
+function AuctionFaster:RegisterHistoricalOptionWindow()
+	local optionsFrame = self.optionsFrame
+
+	optionsFrame.historicalOptions = StdUi:PanelWithTitle(UIParent, 100, 100, 'Auction Faster - Historical Options');
+	local historicalOptions = optionsFrame.historicalOptions;
+	historicalOptions.name = 'Historical Options';
+	historicalOptions.parent = optionsFrame.name;
+	historicalOptions:Hide();
+
+	local enabled = StdUi:Checkbox(historicalOptions, 'Enable Historical Data Collection');
+	local keepDays = StdUi:NumericBox(historicalOptions, 160, 20);
+	keepDays:SetMinMaxValue(5, 50);
+	keepDays:SetValue(self.db.historical.keepDays);
+
+	StdUi:AddLabel(historicalOptions, keepDays, 'Days to keep data (5-50):', 'TOP');
+
+	StdUi:GlueTop(enabled, historicalOptions, 10, -40, 'LEFT');
+	StdUi:GlueBelow(keepDays, enabled, 0, -30, 'LEFT');
+
+	if self.db.historical.enabled then enabled:SetChecked(true); end
+
+	enabled.OnValueChanged = function(_, flag) self.db.historical.enabled = flag; end;
+	keepDays.OnValueChanged = function(_, value) self.db.historical.keepDays = value; end;
+
+	InterfaceOptions_AddCategory(historicalOptions);
+end
+
+function AuctionFaster:RegisterPricingOptionWindow()
+	local optionsFrame = self.optionsFrame
+
+	optionsFrame.pricingOptions = StdUi:PanelWithTitle(UIParent, 100, 100, 'Auction Faster - Pricing Options');
+	local pricingOptions = optionsFrame.pricingOptions;
+	pricingOptions.name = 'Pricing Options';
+	pricingOptions.parent = optionsFrame.name;
+	pricingOptions:Hide();
+
+	local maxBidDeviation = StdUi:NumericBox(pricingOptions, 160, 20);
+	maxBidDeviation:SetMinMaxValue(1, 100);
+	maxBidDeviation:SetValue(self.db.pricing.maxBidDeviation);
+
+	StdUi:AddLabel(pricingOptions, maxBidDeviation, 'Maximum difference bid to buy (1-100%)', 'TOP');
+
+	StdUi:GlueTop(maxBidDeviation, pricingOptions, 10, -60, 'LEFT');
+
+	maxBidDeviation.OnValueChanged = function(_, value) self.db.pricing.maxBidDeviation = value; end;
+
+	InterfaceOptions_AddCategory(pricingOptions);
 end
 
 function AuctionFaster:RegisterOptionWindow()
@@ -94,6 +148,7 @@ function AuctionFaster:RegisterOptionWindow()
 
 	self.optionsFrame = StdUi:PanelWithTitle(UIParent, 100, 100, 'Auction Faster Options');
 	self.optionsFrame.name = 'Auction Faster';
+	self.optionsFrame:Hide();
 
 	local enabled = StdUi:Checkbox(self.optionsFrame, 'Enable Auction Faster');
 	local fastMode = StdUi:Checkbox(self.optionsFrame, 'Fast Mode');
@@ -196,6 +251,8 @@ function AuctionFaster:RegisterOptionWindow()
 	sellItemTooltips.OnValueChanged = function(_, flag) self.db.sell.tooltips.itemEnabled = flag; end;
 
 	InterfaceOptions_AddCategory(self.optionsFrame);
+	self:RegisterHistoricalOptionWindow();
+	self:RegisterPricingOptionWindow();
 end
 
 function AuctionFaster:OpenSettingsWindow()

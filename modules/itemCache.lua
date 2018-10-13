@@ -20,24 +20,12 @@ function ItemCache:Enable()
 	end
 end
 
-local function isDateOlder(date1, date2)
-	if date1.year < date2.year then
-		return true;
-	end
-
-	if date1.month < date2.month then
-		return true
-	end
-
-	if date1.day < date2.day then
-		return true;
-	end
-
-	return false; -- same day
+local function isSameDate(date1, date2)
+	return date1.year == date2.year and date1.month == date2.month and date1.day == date2.day;
 end
 
 
-function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions)
+function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions, total)
 	---@type Pricing
 	local Pricing = AuctionFaster:GetModule('Pricing');
 
@@ -50,12 +38,12 @@ function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions)
 		return itemRecord.itemName == auction.name and itemRecord.itemId == auction.itemId;
 	end
 
-	local auctionInfo = Pricing:CalculateStatData(itemRecord, auctions, 1, 1, filter);
+	local auctionInfo = Pricing:CalculateStatData(itemRecord, auctions, 1, total, filter);
 	auctionInfo.itemRecord = nil;
 	auctionInfo.auctions = nil;
 	auctionInfo.stackSize = nil;
+	auctionInfo.maxBidDeviation = nil;
 	auctionInfo.scanTime = serverTime;
-
 
 	local cacheLifetime = AuctionFaster.db.historical.keepDays * 24 * 60 * 60;
 	local limit = serverTime - cacheLifetime;
@@ -80,12 +68,12 @@ function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions)
 	local lastDate = date('*t', lastHistoricalData.scanTime);
 	local currentDate = date('*t', serverTime);
 
-	if isDateOlder(lastDate, currentDate) then
-		-- last date is older than today, we can safely insert new one
-		tinsert(itemRecord.prices, auctionInfo);
-	else
+	if isSameDate(lastDate, currentDate) then
 		-- same day, replace last record
 		itemRecord.prices[#itemRecord.prices] = auctionInfo;
+	else
+		-- last date is older than today, we can safely insert new one
+		tinsert(itemRecord.prices, auctionInfo);
 	end
 end
 

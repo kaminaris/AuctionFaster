@@ -93,7 +93,7 @@ end
 
 function Buy:SearchAuctionsCallback(shown, total, items)
 	if self.currentQuery.page == 0 then
-		AuctionCache:ParseScanResults(items);
+		AuctionCache:ParseScanResults(items, total);
 	end
 end
 
