@@ -132,7 +132,7 @@ function Pricing:Simple(auctionInfo)
 		lowestBuy = lowestBid;
 	end
 
-	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy, false;
+	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy - 1, false;
 end
 
 function Pricing:WeightedAverage(auctionInfo)
@@ -186,7 +186,7 @@ function Pricing:Stack(auctionInfo)
 			lowestBid, lowestBuy = auction.bid, auction.buy;
 			lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
 
-			return lowestBid, lowestBuy, false;
+			return lowestBid, lowestBuy - 1, false;
 		end
 	end
 
