@@ -47,15 +47,17 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 end
 
 function AuctionFaster:StripAhTextures()
-	for i = 1, AuctionFrame:GetNumRegions() do
-		---@type Region
-		local region = select(i, AuctionFrame:GetRegions());
+	if not IsAddOnLoaded('ElvUI') then
+		for i = 1, AuctionFrame:GetNumRegions() do
+			---@type Region
+			local region = select(i, AuctionFrame:GetRegions());
 
-		if region and region:GetObjectType() == 'Texture' then
-			if region:GetName() ~= 'AuctionPortraitTexture' then
-				region:SetTexture(nil);
-			else
-				region:Hide();
+			if region and region:GetObjectType() == 'Texture' then
+				if region:GetName() ~= 'AuctionPortraitTexture' then
+					region:SetTexture(nil);
+				else
+					region:Hide();
+				end
 			end
 		end
 	end
