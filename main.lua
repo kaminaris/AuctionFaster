@@ -43,6 +43,12 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 			self:Hook('AuctionFrameTab_OnClick', true);
 			self.onTabClickHooked = true;
 		end
+
+		if self.db.defaultTab == 'SELL' then
+			AuctionFrameTab_OnClick(self.auctionTabs[1].tabButton);
+		elseif self.db.defaultTab == 'BUY' then
+			AuctionFrameTab_OnClick(self.auctionTabs[2].tabButton);
+		end
 	end
 end
 
@@ -88,12 +94,13 @@ end
 
 AuctionFaster.auctionTabs = {};
 function AuctionFaster:AddAuctionHouseTab(buttonText, title, module)
+	local n = AuctionFrame.numTabs + 1;
+
 	local auctionTab = StdUi:PanelWithTitle(AuctionFrame, nil, nil, title, 160);
 	auctionTab.titlePanel:SetBackdrop(nil);
 	auctionTab:Hide();
 	auctionTab:SetAllPoints();
-
-	local n = AuctionFrame.numTabs + 1;
+	auctionTab.tabId = n;
 
 	local tabButton = CreateFrame('Button', 'AuctionFrameTab' .. n, AuctionFrame, 'AuctionTabTemplate');
 	StdUi:StripTextures(tabButton);
@@ -110,6 +117,8 @@ function AuctionFaster:AddAuctionHouseTab(buttonText, title, module)
 	-- reference the actual tab
 	tabButton.auctionFasterTab = auctionTab;
 	tabButton.auctionFasterTab.module = module;
+
+	auctionTab.tabButton = tabButton;
 
 	PanelTemplates_SetNumTabs(AuctionFrame, n);
 	PanelTemplates_EnableTab(AuctionFrame, n);

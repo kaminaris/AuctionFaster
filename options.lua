@@ -86,6 +86,10 @@ function AuctionFaster:InitDatabase()
 		self.db.historical = { enabled = true, keepDays = 20 };
 		self.db.pricing = { maxBidDeviation = 20 };
 	end
+
+	if not self.db.defaultTab then
+		self.db.defaultTab = 'NONE';
+	end
 end
 
 function AuctionFaster:IsFastMode()
@@ -172,13 +176,22 @@ function AuctionFaster:RegisterOptionWindow()
 		{text = '48 Hours', value = 3},
 	};
 
-	local auctionDuration = StdUi:Dropdown(self.optionsFrame, 160, 20, durations, self.db.auctionDuration);
+	local defaultTabs = {
+		{text = 'Do not set', value = 'NONE'},
+		{text = 'Sell Tab', value = 'SELL'},
+		{text = 'Buy Tab', value = 'BUY'},
+	}
+
+	local auctionDuration = StdUi:Dropdown(self.optionsFrame, 140, 20, durations, self.db.auctionDuration);
+	local defaultTab = StdUi:Dropdown(self.optionsFrame, 140, 20, defaultTabs, self.db.defaultTab);
 	local wipeSettings = StdUi:Button(self.optionsFrame, 140, 20, 'Wipe Item Cache');
 	local resetTutorials = StdUi:Button(self.optionsFrame, 140, 20, 'Reset Tutorials');
 
-	StdUi:AddLabel(self.optionsFrame, auctionDuration, 'Auction Duration', 'TOP');
+	StdUi:AddLabel(self.optionsFrame, auctionDuration, 'Auction Duration');
+	StdUi:AddLabel(self.optionsFrame, defaultTab, 'Set Default Tab');
 
 	auctionDuration.OnValueChanged = function(_, value) AuctionFaster.db.auctionDuration = value; end;
+	defaultTab.OnValueChanged = function(_, value) AuctionFaster.db.defaultTab = value; end;
 
 	wipeSettings:SetScript('OnClick', function()
 		AuctionFaster:GetModule('ItemCache'):WipeItemCache();
@@ -196,6 +209,7 @@ function AuctionFaster:RegisterOptionWindow()
 	end);
 
 	StdUi:GlueTop(auctionDuration, self.optionsFrame, 300, -60, 'LEFT');
+	StdUi:GlueRight(defaultTab, auctionDuration, 10, 0);
 	StdUi:GlueBelow(wipeSettings, auctionDuration, 0, -10, 'LEFT');
 	StdUi:GlueRight(resetTutorials, wipeSettings, 10, 0);
 
