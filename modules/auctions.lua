@@ -1,6 +1,8 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
 
+local StdUi = LibStub('StdUi');
+
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Auctions
@@ -294,5 +296,12 @@ function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
 		return false, false;
 	end
 
+	AuctionFaster:Echo(
+		1,
+		'Posting: ' .. self.lastSoldItem .. ' for:\n'..
+		'per auction: ' ..  StdUi.Util.formatMoney(buy) .. '\n' ..
+		'per item: ' ..  StdUi.Util.formatMoney(buy / stackSize) .. '\n' ..
+		'# stacks: ' .. numStacks .. ' stack size: ' .. stackSize
+	);
 	return true, isMultisell;
 end
