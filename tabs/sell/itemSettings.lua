@@ -12,7 +12,15 @@ function Sell:DrawItemSettingsPane()
 
 	local pane = StdUi:Window(sellTab, 'Item Settings', 200, 100);
 	StdUi:GlueAfter(pane, sellTab, 0, -150, 0, 0);
-	pane:Hide();
+
+	if AuctionFaster.db.itemSettingsOpened then
+		pane:Show();
+	else
+		pane:Hide();
+	end
+
+	pane:SetScript('OnShow', function() AuctionFaster.db.itemSettingsOpened = true end);
+	pane:SetScript('OnHide', function() AuctionFaster.db.itemSettingsOpened = false end);
 
 	sellTab.itemSettingsPane = pane;
 	self:DrawItemSettings();

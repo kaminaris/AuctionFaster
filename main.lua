@@ -17,6 +17,7 @@ function AuctionFaster:OnInitialize()
 	self:RegisterOptionWindow();
 
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
+	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 
 	if not self.db.auctionDb then
 		self.db.auctionDb = {};
@@ -50,6 +51,11 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 			AuctionFrameTab_OnClick(self.auctionTabs[2].tabButton);
 		end
 	end
+end
+
+function AuctionFaster:AUCTION_HOUSE_CLOSED()
+	self:DisableModule('Sell');
+	self:DisableModule('Buy');
 end
 
 function AuctionFaster:StripAhTextures()

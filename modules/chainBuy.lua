@@ -18,9 +18,15 @@ local fastModeExplanation = 'Fast Mode - Auction Faster will NOT wait until you 
 '|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r';
 
 function ChainBuy:Enable()
+	self:RegisterEvent('AUCTION_HOUSE_CLOSED')
 end
 
 function ChainBuy:Disable()
+	self:UnregisterEvent('AUCTION_HOUSE_CLOSED');
+end
+
+function ChainBuy:AUCTION_HOUSE_CLOSED()
+	self:Cancel();
 end
 
 function ChainBuy:CHAT_MSG_SYSTEM(event, msg)
@@ -81,7 +87,9 @@ function ChainBuy:Cancel()
 	self.currentIndex = 0;
 	self.boughtSoFar = 0;
 	self.currentRequest = nil;
-	self.window:Hide();
+	if self.window then
+		self.window:Hide();
+	end
 end
 
 function ChainBuy:Pause()

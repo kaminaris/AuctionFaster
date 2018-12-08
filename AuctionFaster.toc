@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
-## Notes: Simple auction interface
-## Version: 8.0.17
+## Notes: Super Fast AuctionHouse Addon
+## Version: 8.0.18
 ## Author: Kaminaris
 ## Interface: 80000
 ## SavedVariables: AuctionFasterDb

@@ -18,7 +18,15 @@ function Sell:DrawInfoPane()
 
 	local infoPane = StdUi:Window(sellTab, 'Auction Info', 200, 100);
 	sellTab.infoPane = infoPane;
-	infoPane:Hide();
+
+	if AuctionFaster.db.infoPaneOpened then
+		infoPane:Show();
+	else
+		infoPane:Hide();
+	end
+
+	infoPane:SetScript('OnShow', function() AuctionFaster.db.infoPaneOpened = true; end);
+	infoPane:SetScript('OnHide', function() AuctionFaster.db.infoPaneOpened = false; end);
 
 	local totalLabel = StdUi:Label(infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
 	local deposit = StdUi:Label(infoPane, 'Deposit: ' .. StdUi.Util.formatMoney(0));
