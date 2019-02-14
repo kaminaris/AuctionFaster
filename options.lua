@@ -78,6 +78,10 @@ function AuctionFaster:InitDatabase()
 		};
 	end
 
+	if not self.db.chainBuy then
+		self.db.chainBuy = {};
+	end
+
 	if not self.db.sniper then
 		self.db.sniper = { refreshInterval = 5 };
 	end

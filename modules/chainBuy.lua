@@ -121,8 +121,22 @@ function ChainBuy:ShowWindow()
 	end
 
 	local window = StdUi:Window(UIParent, 'Chain Buy', 400, 300);
-	StdUi:GlueBelow(window, AuctionFrame, 0, -40, 'CENTER');
+	if AuctionFaster.db.chainBuy.moved then
+		local settings = AuctionFaster.db.chainBuy;
+		window:SetPoint(settings.point, nil, settings.relativePoint, settings.xOfs, settings.yOfs);
+	else
+		StdUi:GlueBelow(window, AuctionFrame, 0, -40, 'CENTER');
+	end
 
+	window:SetScript('OnDragStop', function(self)
+		local settings = {};
+		self:StopMovingOrSizing();
+		settings.point, _, settings.relativePoint, settings.xOfs, settings.yOfs = self:GetPoint();
+		settings.moved = true;
+		AuctionFaster.db.chainBuy = settings;
+	end);
+
+	window.resetBtn = StdUi:Button(window, 100, 16, 'Reset Pos');
 	window.itemIcon = StdUi:Texture(window, 32, 32, '');
 	window.itemName = StdUi:Label(window, '', 14);
 	window.qty = StdUi:Label(window, '', 20);
@@ -141,6 +155,12 @@ function ChainBuy:ShowWindow()
 
 	window.skipButton:SetScript('OnClick', function()
 		ChainBuy:ProcessNext();
+	end);
+
+	window.resetBtn:SetScript('OnClick', function()
+		AuctionFaster.db.chainBuy = {};
+		window:ClearAllPoints();
+		StdUi:GlueBelow(window, AuctionFrame, 0, -40, 'CENTER');
 	end);
 
 	local closeHandler = function()
@@ -168,6 +188,7 @@ function ChainBuy:ShowWindow()
 		return value .. ' / ' .. max;
 	end;
 
+	StdUi:GlueTop(window.resetBtn, window, -40, -10, 'RIGHT');
 	StdUi:GlueTop(window.itemIcon, window, 40, -40, 'LEFT');
 	StdUi:GlueRight(window.itemName, window.itemIcon, 10, 0);
 
