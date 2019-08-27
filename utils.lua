@@ -122,29 +122,12 @@ function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
 	if show then
 
 		GameTooltip:SetOwner(frame);
+		GameTooltip:SetHyperlink(link);
+		GameTooltip:Show();
+		GameTooltip:ClearAllPoints();
+		StdUi:GlueOpposite(GameTooltip, frame, 0, 0, anchor);
 
-		if itemId == 82800 then
-			local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(':', link);
-
-			BattlePetToolTip_Show(
-				tonumber(speciesID),
-				tonumber(level),
-				tonumber(breedQuality),
-				tonumber(maxHealth),
-				tonumber(power),
-				tonumber(speed),
-				string.gsub(string.gsub(link, '^(.*)%[', ''), '%](.*)$', '')
-			);
-			BattlePetTooltip:ClearAllPoints();
-			StdUi:GlueOpposite(BattlePetTooltip, frame, 0, 0, anchor);
-		else
-			GameTooltip:SetHyperlink(link);
-			GameTooltip:Show();
-			GameTooltip:ClearAllPoints();
-			StdUi:GlueOpposite(GameTooltip, frame, 0, 0, anchor);
-		end
 	else
 		GameTooltip:Hide();
-		BattlePetTooltip:Hide();
 	end
 end

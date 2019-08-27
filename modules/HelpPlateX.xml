@@ -1,0 +1,297 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+	<Texture name="HelpPlateXBox-Shadow-BottomRight" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="25" y="25"/>
+		<TexCoords left="0.89062500" right="0.98828125" top="0.36523438" bottom="0.41406250"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Shadow-TopLeft" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="25" y="25"/>
+		<TexCoords left="0.89062500" right="0.98828125" top="0.45703125" bottom="0.50585938"/>
+	</Texture>
+	<Texture name="HelpPlateXArrowDOWN" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="53" y="21"/>
+		<TexCoords left="0.78515625" right="0.99218750" top="0.54687500" bottom="0.58789063"/>
+	</Texture>
+	<Texture name="HelpPlateXArrowUP" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="53" y="21"/>
+		<TexCoords left="0.78515625" right="0.99218750" bottom="0.54687500" top="0.58789063"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Glow-TopLeft" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="11" y="11"/>
+		<TexCoords left="0.91796875" right="0.96093750" top="0.65625000" bottom="0.67773438"/>
+	</Texture>
+	<Texture name="HelpPlateXArrow-Shadow" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="101" y="41"/>
+		<TexCoords left="0.00390625" right="0.39843750" top="0.68359375" bottom="0.76367188"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Glow-TopRight" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="11" y="11"/>
+		<TexCoords left="0.12890625" right="0.17187500" top="0.96679688" bottom="0.98828125"/>
+	</Texture>
+	<Texture name="HelpPlateXArrow-GlowDOWN" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="65" y="28"/>
+		<TexCoords left="0.40625000" right="0.66015625" top="0.77343750" bottom="0.82812500"/>
+	</Texture>
+	<Texture name="HelpPlateXArrow-GlowUP" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="65" y="28"/>
+		<TexCoords left="0.40625000" right="0.66015625" bottom="0.77343750" top="0.82812500"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Glow-BottomLeft" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="11" y="11"/>
+		<TexCoords left="0.30859375" right="0.35156250" top="0.96679688" bottom="0.98828125"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Glow-BottomRight" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true">
+		<Size x="11" y="11"/>
+		<TexCoords left="0.94921875" right="0.99218750" top="0.32226563" bottom="0.34375000"/>
+	</Texture>
+	<Texture name="_HelpPlateXBox-Glow-Top" file="Interface\TalentFrame\TalentFrame-Horizontal2" virtual="true" horizTile="true">
+		<Size x="32" y="11"/>
+		<TexCoords left="0.00000000" right="1.00000000" top="0.29687500" bottom="0.33984375"/>
+	</Texture>
+	<Texture name="_HelpPlateXBox-Shadow-Top" file="Interface\TalentFrame\TalentFrame-Horizontal2" virtual="true" horizTile="true">
+		<Size x="32" y="25"/>
+		<TexCoords left="0.00000000" right="1.00000000" top="0.34765625" bottom="0.44531250"/>
+	</Texture>
+	<Texture name="_HelpPlateXBox-Shadow-Bottom" file="Interface\TalentFrame\TalentFrame-Horizontal2" virtual="true" horizTile="true">
+		<Size x="32" y="25"/>
+		<TexCoords left="0.00000000" right="1.00000000" top="0.45312500" bottom="0.55078125"/>
+	</Texture>
+	<Texture name="_HelpPlateXBox-Glow-Bottom" file="Interface\TalentFrame\TalentFrame-Horizontal2" virtual="true" horizTile="true">
+		<Size x="32" y="11"/>
+		<TexCoords left="0.00000000" right="1.00000000" top="0.24609375" bottom="0.28906250"/>
+	</Texture>
+	<Texture name="!HelpPlateXBox-Glow-Right" file="Interface\TalentFrame\TalentFrame-Vertical2" virtual="true" vertTile="true" >
+		<Size x="11" y="32"/>
+		<TexCoords left="0.20703125" right="0.25000000" top="0.00000000" bottom="1.00000000"/>
+	</Texture>
+	<Texture name="!HelpPlateXBox-Glow-Left" file="Interface\TalentFrame\TalentFrame-Vertical2" virtual="true" vertTile="true" >
+		<Size x="11" y="32"/>
+		<TexCoords left="0.25781250" right="0.30078125" top="0.00000000" bottom="1.00000000"/>
+	</Texture>
+	<Texture name="!HelpPlateXBox-Shadow-Left" file="Interface\TalentFrame\TalentFrame-Vertical2" virtual="true" vertTile="true" >
+		<Size x="25" y="32"/>
+		<TexCoords left="0.30859375" right="0.40625000" top="0.00000000" bottom="1.00000000"/>
+	</Texture>
+	<Texture name="!HelpPlateXBox-Shadow-Right" file="Interface\TalentFrame\TalentFrame-Vertical2" virtual="true" vertTile="true" >
+		<Size x="25" y="32"/>
+		<TexCoords left="0.41406250" right="0.51171875" top="0.00000000" bottom="1.00000000"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Shadow-TopRight" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true" >
+		<Size x="25" y="25"/>
+		<TexCoords left="0.66796875" right="0.76562500" top="0.77343750" bottom="0.82226563"/>
+	</Texture>
+	<Texture name="HelpPlateXBox-Shadow-BottomLeft" file="Interface\TalentFrame\TalentFrame-Parts" virtual="true" >
+		<Size x="25" y="25"/>
+		<TexCoords left="0.77343750" right="0.87109375" top="0.77343750" bottom="0.82226563"/>
+	</Texture>
+
+	<Frame name="GlowBoxXTemplate" virtual="true">
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture name="$parentBg" parentKey="BG">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="1" y="-1"/>
+						<Anchor point="BOTTOMRIGHT" x="-1" y="1"/>
+					</Anchors>
+					<Color r="1" g="1" b="1"/>
+					<Gradient orientation="VERTICAL">
+						<MinColor r="0.23" g="0.19" b="0"/>
+						<MaxColor r="0" g="0" b="0"/>
+					</Gradient>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="-1">
+				<Texture name="$parentGlowTopLeft" inherits="HelpPlateXBox-Glow-TopLeft" parentKey="GlowTopLeft" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-6" y="6"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentGlowTopRight" inherits="HelpPlateXBox-Glow-TopRight" parentKey="GlowTopRight" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="6" y="6"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentGlowBottomLeft" inherits="HelpPlateXBox-Glow-BottomLeft" parentKey="GlowBottomLeft" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="-6" y="-6"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentGlowBottomRight" inherits="HelpPlateXBox-Glow-BottomRight" parentKey="GlowBottomRight" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="6" y="-6"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentGlowTop" inherits="_HelpPlateXBox-Glow-Top" parentKey="GlowTop" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.GlowTopLeft" relativePoint="TOPRIGHT"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.GlowTopRight" relativePoint="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentGlowBottom" inherits="_HelpPlateXBox-Glow-Bottom" parentKey="GlowBottom" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent.GlowBottomLeft" relativePoint="BOTTOMRIGHT"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.GlowBottomRight" relativePoint="BOTTOMLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentGlowLeft" inherits="!HelpPlateXBox-Glow-Left" parentKey="GlowLeft" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.GlowTopLeft" relativePoint="BOTTOMLEFT"/>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent.GlowBottomLeft" relativePoint="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentGlowRight" inherits="!HelpPlateXBox-Glow-Right" parentKey="GlowRight" alphaMode="ADD">
+					<Anchors>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.GlowTopRight" relativePoint="BOTTOMRIGHT"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.GlowBottomRight" relativePoint="TOPRIGHT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BACKGROUND" textureSubLevel="-2">
+				<Texture name="$parentShadowTopLeft" inherits="HelpPlateXBox-Shadow-TopLeft" parentKey="ShadowTopLeft">
+					<Anchors>
+						<Anchor point="TOPLEFT" x="-16" y="16"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentShadowTopRight" inherits="HelpPlateXBox-Shadow-TopRight" parentKey="ShadowTopRight">
+					<Anchors>
+						<Anchor point="TOPRIGHT" x="16" y="16"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentShadowBottomLeft" inherits="HelpPlateXBox-Shadow-BottomLeft" parentKey="ShadowBottomLeft">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" x="-16" y="-16"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentShadowBottomRight" inherits="HelpPlateXBox-Shadow-BottomRight" parentKey="ShadowBottomRight">
+					<Anchors>
+						<Anchor point="BOTTOMRIGHT" x="16" y="-16"/>
+					</Anchors>
+				</Texture>
+
+				<Texture name="$parentShadowTop" inherits="_HelpPlateXBox-Shadow-Top" parentKey="ShadowTop">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.ShadowTopLeft" relativePoint="TOPRIGHT"/>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.ShadowTopRight" relativePoint="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentShadowBottom" inherits="_HelpPlateXBox-Shadow-Bottom" parentKey="ShadowBottom">
+					<Anchors>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent.ShadowBottomLeft" relativePoint="BOTTOMRIGHT"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ShadowBottomRight" relativePoint="BOTTOMLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentShadowLeft" inherits="!HelpPlateXBox-Shadow-Left" parentKey="ShadowLeft">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativeKey="$parent.ShadowTopLeft" relativePoint="BOTTOMLEFT"/>
+						<Anchor point="BOTTOMLEFT" relativeKey="$parent.ShadowBottomLeft" relativePoint="TOPLEFT"/>
+					</Anchors>
+				</Texture>
+				<Texture name="$parentShadowRight" inherits="!HelpPlateXBox-Shadow-Right" parentKey="ShadowRight">
+					<Anchors>
+						<Anchor point="TOPRIGHT" relativeKey="$parent.ShadowTopRight" relativePoint="BOTTOMRIGHT"/>
+						<Anchor point="BOTTOMRIGHT" relativeKey="$parent.ShadowBottomRight" relativePoint="TOPRIGHT"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+	</Frame>
+
+	<!--
+	*******************************************************************************
+		Help Plate System
+	*******************************************************************************
+	-->
+
+	<Frame name="HelpPlateXTooltip" inherits="GlowBoxXTemplate" parent="UIParent" hidden="true" frameStrata="FULLSCREEN_DIALOG" frameLevel="2">
+		<Size x="220" y="100"/>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString parentKey="Text" inherits="GameFontHighlightLeft">
+					<Size x="200" y="0"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="15" y="-15"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+			<Layer level="ARTWORK">
+				<Texture parentKey="ArrowUP" inherits="HelpPlateXArrowDOWN" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowDOWN" inherits="HelpPlateXArrowUP" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="BOTTOM" relativePoint="TOP" x="0" y="-3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowRIGHT" inherits="HelpPlateXArrowDOWN" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" x="3" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowLEFT" inherits="HelpPlateXArrowDOWN" hidden="true">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" x="-3" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="BORDER">
+				<Texture parentKey="ArrowGlowUP" inherits="HelpPlateXArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="TOP" relativePoint="BOTTOM" x="0" y="3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowDOWN" inherits="HelpPlateXArrow-GlowUP" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="BOTTOM" relativePoint="TOP" x="0" y="-3"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowRIGHT" inherits="HelpPlateXArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT" x="3" y="0"/>
+					</Anchors>
+				</Texture>
+				<Texture parentKey="ArrowGlowLEFT" inherits="HelpPlateXArrow-GlowDOWN" hidden="true" alphaMode="ADD" alpha="0.5">
+					<Size x="53" y="21"/>
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="RIGHT" x="-3" y="0"/>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Animations>
+			<AnimationGroup parentKey="LingerAndFade">
+				<Alpha childKey="FadeOut" startDelay="5" fromAlpha="1" toAlpha="0" duration="1" smoothing="IN_OUT" order="2"/>
+				<Scripts>
+					<OnFinished>
+						self:GetParent():Hide();
+					</OnFinished>
+				</Scripts>
+			</AnimationGroup>
+		</Animations>
+		<Scripts>
+			<OnLoad>
+				self.Text:SetSpacing(4);
+				SetClampedTextureRotation(self.ArrowLEFT, 270);
+				SetClampedTextureRotation(self.ArrowRIGHT, 90);
+				SetClampedTextureRotation(self.ArrowGlowLEFT, 270);
+				SetClampedTextureRotation(self.ArrowGlowRIGHT, 90);
+			</OnLoad>
+			<OnShow>
+				self:SetHeight(self.Text:GetHeight()+30);
+			</OnShow>
+		</Scripts>
+	</Frame>
+</Ui>
