@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
@@ -62,7 +63,7 @@ end
 
 function Buy:RefreshSearchAuctions()
 	if not self.currentQuery then
-		AuctionFaster:Echo(3, 'No query was searched before');
+		AuctionFaster:Echo(3, L['No query was searched before']);
 		return;
 	end
 
@@ -99,10 +100,10 @@ end
 
 function Buy:UpdateStateText(inProgress)
 	if inProgress then
-		self.buyTab.stateLabel:SetText('Search in progress...');
+		self.buyTab.stateLabel:SetText(L['Search in progress...']);
 		self.buyTab.stateLabel:Show();
 	elseif #self.buyTab.auctions == 0 then
-		self.buyTab.stateLabel:SetText('Nothing was found for this query.');
+		self.buyTab.stateLabel:SetText(L['Nothing was found for this query.']);
 		self.buyTab.stateLabel:Show();
 	else
 		self.buyTab.stateLabel:Hide();
@@ -117,7 +118,7 @@ function Buy:UpdatePager()
 	local pager = self.buyTab.pager;
 	self.updatingPagerLock = true;
 
-	pager.pageText:SetText('Pages: ' .. lp);
+	pager.pageText:SetText(L['Pages: '] .. lp);
 
 	pager.leftButton:Enable();
 	pager.rightButton:Enable();
@@ -142,7 +143,7 @@ end
 
 function Buy:UpdateQueue()
 	local buyTab = Buy.buyTab;
-	buyTab.queueLabel:SetText('Queue Qty: ' .. ChainBuy:CalcRemainingQty());
+	buyTab.queueLabel:SetText(L['Queue Qty: '] .. ChainBuy:CalcRemainingQty());
 
 	buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
 	buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
@@ -270,7 +271,7 @@ function Buy:AddToQueue(rowData, rowIndex)
 		rowIndex = self.buyTab.searchResults:GetSelection();
 		rowData = self.buyTab.searchResults:GetSelectedItem();
 		if not rowData then
-			AuctionFaster:Echo(3, 'Please select item first');
+			AuctionFaster:Echo(3, L['Please select item first']);
 			return;
 		end
 	end
@@ -292,7 +293,7 @@ function Buy:AddToQueueWithXStacks(amount)
 	end
 
 	if #queue == 0 then
-		AuctionFaster:Echo(3, 'No auctions found with requested stack count: ' .. amount);
+		AuctionFaster:Echo(3, L['No auctions found with requested stack count: '] .. amount);
 	end
 
 	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
@@ -329,7 +330,7 @@ end
 
 function Buy:FindFirstWithXStacks(minStacks, page)
 	if not self.currentQuery or not self.currentQuery.name or not self.currentQuery.lastPage then
-		AuctionFaster:Echo(3, 'Enter query and hit search button first');
+		AuctionFaster:Echo(3, L['Enter query and hit search button first']);
 		return;
 	end
 
@@ -340,7 +341,7 @@ function Buy:FindFirstWithXStacks(minStacks, page)
 	end;
 
 	if page > self.currentQuery.lastPage then
-		AuctionFaster:Echo(3, 'No auction found for minimum stacks: ' .. minStacks);
+		AuctionFaster:Echo(3, L['No auction found for minimum stacks: '] .. minStacks);
 		return;
 	end
 

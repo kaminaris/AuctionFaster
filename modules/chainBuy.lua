@@ -2,6 +2,8 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
+
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
 --- @class ChainBuy
@@ -13,9 +15,9 @@ ChainBuy.currentRequest = nil;
 ChainBuy.isPaused = true;
 ChainBuy.fastMode = false;
 
-local fastModeExplanation = 'Fast Mode - Auction Faster will NOT wait until you actually buy an item.\n\n'..
+local fastModeExplanation = L['Fast Mode - Auction Faster will NOT wait until you actually buy an item.\n\n'..
 'This may result in inaccurate amount of bought items and some missed auctions.\n' ..
-'|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r';
+'|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r'];
 
 function ChainBuy:Enable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED')
@@ -120,7 +122,7 @@ function ChainBuy:ShowWindow()
 		return;
 	end
 
-	local window = StdUi:Window(UIParent, 'Chain Buy', 400, 300);
+	local window = StdUi:Window(UIParent, L['Chain Buy'], 400, 300);
 	if AuctionFaster.db.chainBuy.moved then
 		local settings = AuctionFaster.db.chainBuy;
 		window:SetPoint(settings.point, nil, settings.relativePoint, settings.xOfs, settings.yOfs);
@@ -218,18 +220,18 @@ function ChainBuy:UpdateWindow()
 
 	window.itemIcon:SetTexture(req.texture);
 	window.itemName:SetText(req.itemLink);
-	window.qty:SetText('Qty: ' .. req.count);
-	window.pricePerItem:SetText('Per Item: ' .. StdUi.Util.formatMoney(req.buy));
-	window.priceTotal:SetText('Total: ' .. StdUi.Util.formatMoney(req.buy * req.count));
-	window.boughtSoFar:SetText('Bought so far: ' .. self.boughtSoFar);
+	window.qty:SetText(L['Qty: '] .. req.count);
+	window.pricePerItem:SetText(L['Per Item: '] .. StdUi.Util.formatMoney(req.buy));
+	window.priceTotal:SetText(L['Total: '] .. StdUi.Util.formatMoney(req.buy * req.count));
+	window.boughtSoFar:SetText(L['Bought so far: '] .. self.boughtSoFar);
 
 	window.progressBar:SetMinMaxValues(0, #self.requests);
 	window.progressBar:SetValue(self.currentIndex);
 
 	if self.initialQueue then
-		window:SetWindowTitle('Chain Buy');
+		window:SetWindowTitle(L['Chain Buy']);
 	else
-		window:SetWindowTitle('Queue');
+		window:SetWindowTitle(L['Queue']);
 	end
 
 

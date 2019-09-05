@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 ---@type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Sell
@@ -12,7 +13,7 @@ function Sell:AddSellAuctionHouseTab()
 		return ;
 	end
 
-	self.sellTab = AuctionFaster:AddAuctionHouseTab('Sell Items', 'Auction Faster - Sell', self);
+	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['Auction Faster - Sell'], self);
 
 	self.sellTab:SetScript('OnShow', function()
 		Sell:OnShow();
@@ -41,7 +42,7 @@ function Sell:DrawItemsFrame()
 	refreshInventory.icon = StdUi:Texture(refreshInventory, 12, 12, [[Interface\Buttons\UI-RefreshButton]]);
 	refreshInventory.icon:SetPoint('CENTER', 0, 0);
 	StdUi:GlueAbove(refreshInventory, panel, 0, 5, 'RIGHT');
-	StdUi:FrameTooltip(refreshInventory, 'Refresh inventory', 'af_refresh', 'TOPRIGHT', true);
+	StdUi:FrameTooltip(refreshInventory, L['Refresh inventory'], 'af_refresh', 'TOPRIGHT', true);
 	refreshInventory:SetScript('OnClick', function()
 		Inventory:ScanInventory();
 	end);
@@ -50,7 +51,7 @@ function Sell:DrawItemsFrame()
 	sortSettings.icon = StdUi:Texture(sortSettings, 12, 12, [[Interface\GossipFrame\BinderGossipIcon]]);
 	sortSettings.icon:SetPoint('CENTER', 0, 0);
 	StdUi:GlueLeft(sortSettings, refreshInventory, -5, 0);
-	StdUi:FrameTooltip(sortSettings, 'Sort settings', 'af_sort', 'TOPRIGHT', true);
+	StdUi:FrameTooltip(sortSettings, L['Sort settings'], 'af_sort', 'TOPRIGHT', true);
 
 	local function callback(value, groupName)
 		if groupName == 'dd-sortBy' then
@@ -65,15 +66,15 @@ function Sell:DrawItemsFrame()
 	end
 
 	local settDrops = {
-		{title = 'Sort by', color = {1, 0.9, 0}},
-		{radio = 'Name',    value = 'itemName', radioGroup = 'dd-sortBy'},
-		{radio = 'Price',   value = 'price',    radioGroup = 'dd-sortBy'},
-		{radio = 'Quality', value = 'quality',  radioGroup = 'dd-sortBy'},
+		{title = L['Sort by'], color = {1, 0.9, 0}},
+		{radio = L['Name'],    value = 'itemName', radioGroup = 'dd-sortBy'},
+		{radio = L['Price'],   value = 'price',    radioGroup = 'dd-sortBy'},
+		{radio = L['Quality'], value = 'quality',  radioGroup = 'dd-sortBy'},
 
 		{isSeparator = true},
-		{title = 'Direction', color = {1, 0.9, 0}},
-		{radio = 'Ascending',  value = 'asc',  radioGroup = 'dd-sortOrder'},
-		{radio = 'Descending', value = 'desc', radioGroup = 'dd-sortOrder'},
+		{title = L['Direction'], color = {1, 0.9, 0}},
+		{radio = L['Ascending'],  value = 'asc',  radioGroup = 'dd-sortOrder'},
+		{radio = L['Descending'], value = 'desc', radioGroup = 'dd-sortOrder'},
 	}
 
 	local sortContext = StdUi:ContextMenu(sortSettings, settDrops, true);
@@ -93,7 +94,7 @@ function Sell:DrawItemsFrame()
 		end
 	end);
 
-	local filter = StdUi:SearchEditBox(sellTab, 240, 20, 'Filter items');
+	local filter = StdUi:SearchEditBox(sellTab, 240, 20, L['Filter items']);
 	StdUi:GlueAbove(filter, panel, 0, 5, 'LEFT');
 
 	sellTab.filterText = false;
@@ -224,14 +225,14 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	sellTab.itemIcon = StdUi:Texture(sellTab.iconBackdrop, iconSize, iconSize, '');
 	StdUi:GlueAcross(sellTab.itemIcon, sellTab.iconBackdrop, 1, -1, -1, 1);
 
-	sellTab.itemName = StdUi:Label(sellTab, 'No item selected', nil, 'GameFontNormalLarge', 250, 20);
+	sellTab.itemName = StdUi:Label(sellTab, L['No item selected'], nil, 'GameFontNormalLarge', 250, 20);
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
-	sellTab.itemQty = StdUi:Label(sellTab, 'Qty: O, Max Stacks: 0', nil, nil, 250, 20);
+	sellTab.itemQty = StdUi:Label(sellTab, L['Qty: O, Max Stacks: 0'], nil, nil, 250, 20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
-	sellTab.lastScan = StdUi:Label(sellTab, 'Last scan: ---');
+	sellTab.lastScan = StdUi:Label(sellTab, L['Last scan: ---']);
 	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 
@@ -240,14 +241,14 @@ function Sell:DrawRightPaneItemPrices(marginToIcon)
 
 	-- Bid per item edit box
 	sellTab.bidPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
-	StdUi:AddLabel(sellTab, sellTab.bidPerItem,  'Bid Per Item', 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.bidPerItem,  L['Bid Per Item'], 'TOP');
 
 	sellTab.bidPerItem:Validate();
 	StdUi:GlueBelow(sellTab.bidPerItem, sellTab.itemIcon, 0, marginToIcon, 'LEFT');
 
 	-- Buy per item edit box
 	sellTab.buyPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
-	StdUi:AddLabel(sellTab, sellTab.buyPerItem,  'Buy Per Item', 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.buyPerItem,  L['Buy Per Item'], 'TOP');
 
 	sellTab.buyPerItem:Validate();
 	StdUi:GlueBelow(sellTab.buyPerItem, sellTab.bidPerItem, 0, -20);
@@ -276,13 +277,13 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 
 	-- Stack Size
 	sellTab.stackSize = StdUi:NumericBox(sellTab, 150, 20, '1');
-	StdUi:AddLabel(sellTab, sellTab.stackSize, 'Stack Size', 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.stackSize, L['Stack Size'], 'TOP');
 
 	sellTab.stackSize:SetValue(0);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
 	sellTab.maxStacks = StdUi:NumericBox(sellTab, 150, 20, '0');
-	StdUi:AddLabel(sellTab, sellTab.maxStacks, '# Stacks', 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.maxStacks, L['# Stacks'], 'TOP');
 
 	sellTab.maxStacks:SetValue(0);
 	StdUi:GlueRight(sellTab.maxStacks, sellTab.buyPerItem, marginToPrices, 0);
@@ -301,9 +302,9 @@ end
 function Sell:DrawRightPaneButtons()
 	local sellTab = self.sellTab;
 
-	local itemSettings = StdUi:Button(sellTab, 120, 20, 'Item Settings');
-	local infoPane = StdUi:Button(sellTab, 120, 20, 'Auction Info');
-	local refresh = StdUi:Button(sellTab, 120, 20, 'Refresh Auctions');
+	local itemSettings = StdUi:Button(sellTab, 120, 20, L['Item Settings']);
+	local infoPane = StdUi:Button(sellTab, 120, 20, L['Auction Info']);
+	local refresh = StdUi:Button(sellTab, 120, 20, L['Refresh Auctions']);
 
 	StdUi:GlueRight(itemSettings, sellTab.stackSize, 20, 20);
 	StdUi:GlueBelow(infoPane, itemSettings, 0, -5);
@@ -332,13 +333,13 @@ end
 function Sell:DrawTabButtons(leftMargin)
 	local sellTab = self.sellTab;
 
-	local postButton = StdUi:Button(sellTab, 120, 20, 'Post All');
+	local postButton = StdUi:Button(sellTab, 120, 20, L['Post All']);
 	StdUi:GlueBottom(postButton, sellTab, -20, 20, 'RIGHT');
 
-	local postOneButton = StdUi:Button(sellTab, 120, 20, 'Post One');
+	local postOneButton = StdUi:Button(sellTab, 120, 20, L['Post One']);
 	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
 
-	local buyItemButton = StdUi:Button(sellTab, 120, 20, 'Chain Buy');
+	local buyItemButton = StdUi:Button(sellTab, 120, 20, L['Chain Buy']);
 	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()
@@ -352,7 +353,7 @@ function Sell:DrawTabButtons(leftMargin)
 	buyItemButton:SetScript('OnClick', function()
 		local index = sellTab.currentAuctions:GetSelection();
 		if not index then
-			AuctionFaster:Echo(3, 'Please select item first');
+			AuctionFaster:Echo(3, L['Please select item first']);
 			return ;
 		end
 		Sell:ChainBuyStart(index);
@@ -368,7 +369,7 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	local cols = {
 		{
-			name         = 'Seller',
+			name         = L['Seller'],
 			width        = 120,
 			align        = 'LEFT',
 			index        = 'owner',
@@ -395,28 +396,28 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			},
 		},
 		{
-			name         = 'Qty',
+			name         = L['Qty'],
 			width        = 35,
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
 		},
 		{
-			name         = 'Lvl',
+			name         = L['Lvl'],
 			width        = 35,
 			align        = 'LEFT',
 			index        = 'level',
 			format       = 'number',
 		},
 		{
-			name         = 'Bid / Item',
+			name         = L['Bid / Item'],
 			width        = 120,
 			align        = 'RIGHT',
 			index        = 'bid',
 			format       = 'money',
 		},
 		{
-			name         = 'Buy / Item',
+			name         = L['Buy / Item'],
 			width        = 120,
 			align        = 'RIGHT',
 			index        = 'buy',

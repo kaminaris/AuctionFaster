@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 --- @type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');
 --- @type Sell
@@ -10,7 +11,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 function Sell:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
 
-	local pane = StdUi:Window(sellTab, 'Item Settings', 200, 100);
+	local pane = StdUi:Window(sellTab, L['Item Settings'], 200, 100);
 	StdUi:GlueAfter(pane, sellTab, 0, -150, 0, 0);
 
 	if AuctionFaster.db.itemSettingsOpened then
@@ -31,27 +32,23 @@ function Sell:DrawItemSettings()
 
 	local icon = StdUi:Texture(pane, 30, 30, nil);
 
-	local itemName = StdUi:Label(pane, 'No Item selected', nil, 'GameFontNormalLarge', 150);
-
-	local rememberStack = StdUi:Checkbox(pane, 'Remember Stack Settings');
-
-	local rememberLastPrice = StdUi:Checkbox(pane, 'Remember Last Price');
-
-	local alwaysUndercut = StdUi:Checkbox(pane, 'Always Undercut');
-
-	local useCustomDuration = StdUi:Checkbox(pane, 'Use Custom Duration');
+	local itemName = StdUi:Label(pane, L['No Item selected'], nil, 'GameFontNormalLarge', 150);
+	local rememberStack = StdUi:Checkbox(pane, L['Remember Stack Settings']);
+	local rememberLastPrice = StdUi:Checkbox(pane, L['Remember Last Price']);
+	local alwaysUndercut = StdUi:Checkbox(pane, L['Always Undercut']);
+	local useCustomDuration = StdUi:Checkbox(pane, L['Use Custom Duration']);
 
 	local options = {
-		{text = '12h', value = 1},
-		{text = '24h', value = 2},
-		{text = '48h', value = 3}
+		{text = L['12h'], value = 1},
+		{text = L['24h'], value = 2},
+		{text = L['48h'], value = 3}
 	}
 	local duration = StdUi:Dropdown(pane, 150, 20, options);
-	StdUi:AddLabel(pane, duration, 'Auction Duration', 'TOP');
+	StdUi:AddLabel(pane, duration, L['Auction Duration'], 'TOP');
 
 	local priceModels = AuctionFaster:GetModule('Pricing'):GetPricingModels();
 	local priceModel = StdUi:Dropdown(pane, 150, 20, priceModels);
-	StdUi:AddLabel(pane, priceModel, 'Pricing Model', 'TOP');
+	StdUi:AddLabel(pane, priceModel, L['Pricing Model'], 'TOP');
 
 	StdUi:GlueTop(icon, pane, 10, -40, 'LEFT');
 	StdUi:GlueAfter(itemName, icon, 10, 0);
@@ -124,26 +121,26 @@ function Sell:InitItemSettingsTooltips()
 
 	StdUi:FrameTooltip(
 		pane.rememberStack,
-		'Checking this option will make\nAuctionFaster remember how much\n' ..
-		'stacks you wish to sell at once\nand how big is stack',
+		L['Checking this option will make\nAuctionFaster remember how much\n' ..
+		'stacks you wish to sell at once\nand how big is stack'],
 		'AFInfoTT', 'TOPLEFT', true
 	);
 
 	StdUi:FrameTooltip(
 		pane.rememberLastPrice, function(tip)
-			tip:AddLine('If there is no auctions of this item,');
-			tip:AddLine('remember last price.');
+			tip:AddLine(L['If there is no auctions of this item,']);
+			tip:AddLine(L['remember last price.']);
 			tip:AddLine('');
-			tip:AddLine('Your price will be overriden', 1, 0, 0);
-			tip:AddLine('if "Always Undercut" options is checked!', 1, 0, 0);
+			tip:AddLine(L['Your price will be overriden'], 1, 0, 0);
+			tip:AddLine(L['if "Always Undercut" options is checked!'], 1, 0, 0);
 		end,
 		'AFInfoTTX', 'TOPLEFT', true
 	);
 
 	StdUi:FrameTooltip(
 		pane.alwaysUndercut,
-		'By default, AuctionFaster always undercuts price,\neven if you toggle "Remember Last Price"\n'..
-		'If you uncheck this option AuctionFaster\nwill never undercut items for you',
+		L['By default, AuctionFaster always undercuts price,\neven if you toggle "Remember Last Price"\n'..
+		'If you uncheck this option AuctionFaster\nwill never undercut items for you'],
 		'AFInfoTT', 'TOPLEFT', true
 	);
 end
@@ -155,7 +152,7 @@ function Sell:LoadItemSettings()
 	if not self.selectedItem then
 		pane.icon:SetTexture(nil);
 
-		pane.itemName:SetText('No Item selected');
+		pane.itemName:SetText(L['No Item selected']);
 		pane.rememberStack:SetChecked(true);
 		pane.rememberLastPrice:SetChecked(false);
 		pane.alwaysUndercut:SetChecked(true);

@@ -4,36 +4,37 @@ local AuctionFaster = unpack(select(2, ...));
 local StdUi = LibStub('StdUi');
 --- @type Buy
 local Buy = AuctionFaster:GetModule('Buy');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 
 function Buy:DrawFilterFrame()
 	local buyTab = self.buyTab;
 
-	local filtersPane = StdUi:Window(buyTab, 'Filters', 200, 100);
+	local filtersPane = StdUi:Window(buyTab, L['Filters'], 200, 100);
 	filtersPane:Hide();
 	StdUi:GlueAfter(filtersPane, buyTab, 0, 0, 0, 0);
 
-	local exactMatch = StdUi:Checkbox(filtersPane, 'Exact Match');
+	local exactMatch = StdUi:Checkbox(filtersPane, L['Exact Match']);
 
 	local minLevel = StdUi:NumericBox(filtersPane, 80, 20, '');
-	StdUi:AddLabel(filtersPane, minLevel, 'Level from', 'TOP');
+	StdUi:AddLabel(filtersPane, minLevel, L['Level from'], 'TOP');
 
 	local maxLevel = StdUi:NumericBox(filtersPane, 80, 20, '');
-	StdUi:AddLabel(filtersPane, maxLevel, 'Level to', 'TOP');
+	StdUi:AddLabel(filtersPane, maxLevel, L['Level to'], 'TOP');
 
 	self:GetSearchCategories();
 	local category = StdUi:Dropdown(filtersPane, 150, 20, self.categories, 0);
 	StdUi:GlueBelow(category, minLevel, 0, -30, 'LEFT');
 
 	local subCategory = StdUi:Dropdown(filtersPane, 150, 20, {}, 0);
-	StdUi:AddLabel(filtersPane, subCategory, 'Sub Category', 'TOP');
+	StdUi:AddLabel(filtersPane, subCategory, L['Sub Category'], 'TOP');
 	subCategory:Disable();
 
 
 	StdUi:GlueTop(exactMatch, filtersPane, 10, -40, 'LEFT');
 	StdUi:GlueBelow(minLevel, exactMatch, 0, -30, 'LEFT');
 	StdUi:GlueRight(maxLevel, minLevel, 10, 0);
-	StdUi:AddLabel(filtersPane, category, 'Category', 'TOP');
+	StdUi:AddLabel(filtersPane, category, L['Category'], 'TOP');
 	StdUi:GlueBelow(subCategory, category, 0, -30, 'LEFT');
 
 	category.OnValueChanged = function(dropdown, value, text)

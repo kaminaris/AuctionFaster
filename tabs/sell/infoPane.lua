@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 --- @type Auctions
 local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Sell
@@ -16,7 +17,7 @@ function Sell:DrawInfoPane()
 
 	local sellTab = self.sellTab;
 
-	local infoPane = StdUi:Window(sellTab, 'Auction Info', 200, 100);
+	local infoPane = StdUi:Window(sellTab, L['Auction Info'], 200, 100);
 	sellTab.infoPane = infoPane;
 
 	if AuctionFaster.db.infoPaneOpened then
@@ -28,11 +29,11 @@ function Sell:DrawInfoPane()
 	infoPane:SetScript('OnShow', function() AuctionFaster.db.infoPaneOpened = true; end);
 	infoPane:SetScript('OnHide', function() AuctionFaster.db.infoPaneOpened = false; end);
 
-	local totalLabel = StdUi:Label(infoPane, 'Total: ' .. StdUi.Util.formatMoney(0));
-	local deposit = StdUi:Label(infoPane, 'Deposit: ' .. StdUi.Util.formatMoney(0));
-	local auctionNo = StdUi:Label(infoPane, '# Auctions: 0');
-	local duration = StdUi:Label(infoPane, 'Duration: 24h');
-	local historicalBtn = StdUi:Button(infoPane, 180, 20, 'Historical Data')
+	local totalLabel = StdUi:Label(infoPane, L['Total: '] .. StdUi.Util.formatMoney(0));
+	local deposit = StdUi:Label(infoPane, L['Deposit: '] .. StdUi.Util.formatMoney(0));
+	local auctionNo = StdUi:Label(infoPane, L['# Auctions: 0']);
+	local duration = StdUi:Label(infoPane, L['Duration: 24h']);
+	local historicalBtn = StdUi:Button(infoPane, 180, 20, L['Historical Data'])
 
 	StdUi:GlueAfter(infoPane, sellTab, 0, 0, 0, sellTab:GetHeight() - 150);
 	StdUi:GlueTop(totalLabel, infoPane, 5, -40, 'LEFT');
@@ -79,10 +80,10 @@ function Sell:UpdateInfoPaneText()
 		sellSettings
 	);
 
-	infoPane.totalLabel:SetText('Per auction: ' .. StdUi.Util.formatMoney(total));
-	infoPane.auctionNo:SetText('# Auctions: ' .. sellSettings.maxStacks);
-	infoPane.deposit:SetText('Deposit: ' .. StdUi.Util.formatMoney(deposit));
-	infoPane.duration:SetText('Duration: ' .. AuctionFaster:FormatAuctionDuration(sellSettings.duration));
+	infoPane.totalLabel:SetText(L['Per auction: '] .. StdUi.Util.formatMoney(total));
+	infoPane.auctionNo:SetText(L['# Auctions: '] .. sellSettings.maxStacks);
+	infoPane.deposit:SetText(L['Deposit: '] .. StdUi.Util.formatMoney(deposit));
+	infoPane.duration:SetText(L['Duration: '] .. AuctionFaster:FormatAuctionDuration(sellSettings.duration));
 end
 
 function Sell:ToggleInfoPane()
@@ -95,7 +96,7 @@ end
 
 function Sell:PrepareHistoricalData(itemRecord)
 	if #itemRecord.prices < 2 then
-		AuctionFaster:Echo(3, 'No historical data available for: ' .. itemRecord.itemName);
+		AuctionFaster:Echo(3, L['No historical data available for: '] .. itemRecord.itemName);
 		return false;
 	end
 
@@ -136,13 +137,13 @@ function Sell:PrepareHistoricalData(itemRecord)
 	trendAverage = AuctionFaster:TrendLine(X, YAvg);
 
 	result.data = {
-		{ text = 'Lowest Buy',        color = { 0.0, 1.0, 0.0, 0.8 }, series = lowestBuy },
-		{ text = 'Trend Lowest Buy',  color = { 0.0, 1.0, 0.0, 0.5 }, series = trendLowest },
+		{ text = L['Lowest Buy'],        color = { 0.0, 1.0, 0.0, 0.8 }, series = lowestBuy },
+		{ text = L['Trend Lowest Buy'],  color = { 0.0, 1.0, 0.0, 0.5 }, series = trendLowest },
 
-		{ text = 'Average Buy',       color = { 1.0, 1.0, 0.0, 0.8 }, series = averageBuy },
-		{ text = 'Trend Average Buy', color = { 1.0, 1.0, 0.0, 0.5 }, series = trendAverage },
+		{ text = L['Average Buy'],       color = { 1.0, 1.0, 0.0, 0.8 }, series = averageBuy },
+		{ text = L['Trend Average Buy'], color = { 1.0, 1.0, 0.0, 0.5 }, series = trendAverage },
 
-		{ text = 'Highest Buy',       color = { 1.0, 0.0, 0.0, 0.8 }, series = highestBuy },
+		{ text = L['Highest Buy'],       color = { 1.0, 0.0, 0.0, 0.8 }, series = highestBuy },
 	}
 
 	return result;
@@ -241,7 +242,7 @@ end
 function Sell:ShowHistoricalWindow(historicalData)
 	local historicalWindow, g;
 	if not self.historicalWindow then
-		historicalWindow = StdUi:Window(UIParent, 'Test Line', 600, 500);
+		historicalWindow = StdUi:Window(UIParent, L['Test Line'], 600, 500);
 		historicalWindow:SetPoint('CENTER');
 		historicalWindow:Show();
 
@@ -289,7 +290,7 @@ function Sell:ShowHistoricalWindow(historicalData)
 	historicalWindow = self.historicalWindow;
 	g = self.historicalWindow.g;
 
-	historicalWindow.titlePanel.label:SetText('Historical Data: ' .. historicalData.stats.itemRecord.itemName);
+	historicalWindow.titlePanel.label:SetText(L['Historical Data: '] .. historicalData.stats.itemRecord.itemName);
 
 	g:ResetData();
 

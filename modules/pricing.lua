@@ -1,8 +1,15 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
 
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
+
 --- @class Pricing
 local Pricing = AuctionFaster:NewModule('Pricing');
+
+local TableInsert = tinsert;
+local floor = math.floor;
+local pow = math.pow;
+local sqrt = math.sqrt;
 
 Pricing.models = {};
 
@@ -12,14 +19,14 @@ end
 
 function Pricing:GetPricingModels()
 	local builtFunctions = {
-		{ text = 'LowestPrice', value = 'Simple' },
-		{ text = 'WeightedAverage', value = 'WeightedAverage' },
-		{ text = 'StackAware', value = 'Stack' },
-		{ text = 'StandardDeviation', value = 'StandardDeviation' },
+		{ text = L['LowestPrice'], value = 'Simple' },
+		{ text = L['WeightedAverage'], value = 'WeightedAverage' },
+		{ text = L['StackAware'], value = 'Stack' },
+		{ text = L['StandardDeviation'], value = 'StandardDeviation' },
 	}
 
 	for name, v in pairs(self.models) do
-		tinsert(builtFunctions, { text = name, value = name });
+		TableInsert(builtFunctions, { text = name, value = name });
 	end
 
 	return builtFunctions;
@@ -38,6 +45,8 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 		maxBidDeviation    = maxBidDeviation,
 		totalItems         = total,
 		totalQty           = 0,
+		totalQtyWithBuy    = 0,
+		totalBuy           = 0,
 		averageQty         = 0,
 		totalBuy           = 0, -- Total price without quantity
 		totalBid           = 0,
@@ -58,40 +67,56 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 
 	for i = 1, #auctions do
 		local auction = auctions[i];
-		if auction.owner ~= playerName and (not filter or filter(auction)) then
-			tinsert(auctionInfo.auctions, auction);
+		if
+			auction.owner ~= playerName and
+			(not filter or filter(auction))
+		then
+			local bid, buy = auction.bid, auction.buy;
+
+			TableInsert(auctionInfo.auctions, auction);
 			auctionInfo.totalQty = auctionInfo.totalQty + auction.count;
 
-			auctionInfo.weightedTotalBuy = auctionInfo.weightedTotalBuy + (auction.count * auction.buy);
-			auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * auction.bid);
-
-			auctionInfo.totalBuy = auctionInfo.totalBuy + auction.buy;
-			auctionInfo.totalBid = auctionInfo.totalBid + auction.bid;
-
-			if not auctionInfo.lowestBuy or auctionInfo.lowestBuy > auction.buy then
-				auctionInfo.lowestBuy = auction.buy;
+			if buy and buy > 0 then
+				auctionInfo.weightedTotalBuy = auctionInfo.weightedTotalBuy + (auction.count * buy);
+				auctionInfo.totalQtyWithBuy = auctionInfo.totalQtyWithBuy + auction.count;
+				auctionInfo.totalBuy = auctionInfo.totalBuy + 1;
 			end
 
-			if not auctionInfo.lowestBid or auctionInfo.lowestBid > auction.bid then
-				auctionInfo.lowestBid = auction.bid;
+			auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * bid);
+
+			if buy and buy > 0 then
+				auctionInfo.totalBuy = auctionInfo.totalBuy + buy;
+			end
+			auctionInfo.totalBid = auctionInfo.totalBid + bid;
+
+			if buy and buy > 0 and (not auctionInfo.lowestBuy or auctionInfo.lowestBuy > buy) then
+				auctionInfo.lowestBuy = buy;
 			end
 
-			if not auctionInfo.highestBuy or auctionInfo.highestBuy < auction.buy then
-				auctionInfo.highestBuy = auction.buy;
+			if not auctionInfo.lowestBid or auctionInfo.lowestBid > bid then
+				auctionInfo.lowestBid = bid;
 			end
 
-			if not auctionInfo.highestBid or auctionInfo.highestBid < auction.bid then
-				auctionInfo.highestBid = auction.bid;
+			if buy and buy > 0 and (not auctionInfo.highestBuy or auctionInfo.highestBuy < buy) then
+				auctionInfo.highestBuy = buy;
+			end
+
+			if not auctionInfo.highestBid or auctionInfo.highestBid < bid then
+				auctionInfo.highestBid = bid;
 			end
 		end
 	end
 
 	local averageQty = auctionInfo.totalQty / #auctions;
-	auctionInfo.averageBuy = math.floor(auctionInfo.totalBuy / #auctionInfo.auctions);
-	auctionInfo.averageBid = math.floor(auctionInfo.totalBid / #auctionInfo.auctions);
+	if auctionInfo.totalBuy > 0 then
+		auctionInfo.averageBuy = floor(auctionInfo.totalBuy / auctionInfo.totalBuy);
+	end
+	auctionInfo.averageBid = floor(auctionInfo.totalBid / #auctionInfo.auctions);
 
-	auctionInfo.weightedAverageBuy = math.floor(auctionInfo.weightedTotalBuy / auctionInfo.totalQty);
-	auctionInfo.weightedAverageBid = math.floor(auctionInfo.weightedTotalBid / auctionInfo.totalQty);
+	if auctionInfo.totalQtyWithBuy > 0 then
+		auctionInfo.weightedAverageBuy = floor(auctionInfo.weightedTotalBuy / auctionInfo.totalQtyWithBuy);
+	end
+	auctionInfo.weightedAverageBid = floor(auctionInfo.weightedTotalBid / auctionInfo.totalQty);
 
 	auctionInfo.estimatedVolume = averageQty * total;
 
@@ -119,7 +144,7 @@ end
 ---@return number, number, boolean
 function Pricing:Simple(auctionInfo)
 	if auctionInfo.totalQty == 0 then
-		return nil, nil, true, 'No auctions found';
+		return nil, nil, true, L['No auctions found'];
 	end
 
 	local lowestBid, lowestBuy = auctionInfo.lowestBid, auctionInfo.lowestBuy;
@@ -132,12 +157,12 @@ function Pricing:Simple(auctionInfo)
 		lowestBuy = lowestBid;
 	end
 
-	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy - 1, false;
+	return self:ClampBid(lowestBid, lowestBuy - 1, auctionInfo.maxBidDeviation), lowestBuy - 1, false;
 end
 
 function Pricing:WeightedAverage(auctionInfo)
 	if auctionInfo.totalQty == 0 then
-		return nil, nil, true, 'No auctions found';
+		return nil, nil, true, L['No auctions found'];
 	end
 
 	local lowestBid, lowestBuy = auctionInfo.weightedAverageBid, auctionInfo.weightedAverageBuy;
@@ -158,17 +183,17 @@ function Pricing:StandardDeviation(auctionInfo)
 
 	for i = 1, #auctionInfo.auctions do
 		local auction = auctionInfo.auctions[i];
-		buyVariance = buyVariance + (math.pow(auction.buy - auctionInfo.weightedAverageBuy, 2) * auction.count);
-		bidVariance = bidVariance + (math.pow(auction.bid - auctionInfo.weightedAverageBid, 2) * auction.count);
+		buyVariance = buyVariance + (pow(auction.buy - auctionInfo.weightedAverageBuy, 2) * auction.count);
+		bidVariance = bidVariance + (pow(auction.bid - auctionInfo.weightedAverageBid, 2) * auction.count);
 	end
 
-	local buyStdDev = math.sqrt(buyVariance / auctionInfo.totalQty);
-	local bidStdDev = math.sqrt(bidVariance / auctionInfo.totalQty);
+	local buyStdDev = sqrt(buyVariance / auctionInfo.totalQty);
+	local bidStdDev = sqrt(bidVariance / auctionInfo.totalQty);
 
 	local lowestBid, lowestBuy = auctionInfo.lowestBid, auctionInfo.lowestBuy;
 
-	lowestBuy = math.floor(lowestBuy + buyStdDev);
-	lowestBid = math.floor(lowestBid + bidStdDev);
+	lowestBuy = floor(lowestBuy + buyStdDev);
+	lowestBid = floor(lowestBid + bidStdDev);
 
 	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
 
@@ -178,18 +203,18 @@ end
 function Pricing:Stack(auctionInfo)
 	local lowestBid, lowestBuy = auctionInfo.lowestBid, auctionInfo.lowestBuy;
 
-	local minQty = math.floor(auctionInfo.stackSize * 0.5);
+	local minQty = floor(auctionInfo.stackSize * 0.5);
 
 	for i = 1, #auctionInfo.auctions do
 		local auction = auctionInfo.auctions[i];
 		if auction.count >= minQty then
 			lowestBid, lowestBuy = auction.bid, auction.buy;
-			lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
+			lowestBid = self:ClampBid(lowestBid, lowestBuy - 1, auctionInfo.maxBidDeviation);
 
 			return lowestBid, lowestBuy - 1, false;
 		end
 	end
 
 	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
-	return lowestBid, lowestBuy, true, 'No auction found with minimum quantity: ' .. minQty;
+	return lowestBid, lowestBuy, true, L['No auction found with minimum quantity: '] .. minQty;
 end

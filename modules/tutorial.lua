@@ -13,9 +13,21 @@ local KEY_BUTTON1 = '\124TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:
 local KEY_BUTTON2 = '\124TInterface\\TutorialFrame\\UI-Tutorial-Frame:12:12:0:0:512:512:10:65:330:385\124t' -- right mouse button
 
 
-local HelpPlate_TooltipHide = HelpPlate_TooltipHide;
-local HelpPlateTooltip = HelpPlateTooltip;
-local plateStrata = HelpPlateTooltip:GetFrameStrata();
+local HelpPlateXTooltip = HelpPlateXTooltip;
+local HelpPlateX_TooltipHide = function()
+	HelpPlateXTooltip.ArrowUP:Hide();
+	HelpPlateXTooltip.ArrowGlowUP:Hide();
+	HelpPlateXTooltip.ArrowDOWN:Hide();
+	HelpPlateXTooltip.ArrowGlowDOWN:Hide();
+	HelpPlateXTooltip.ArrowLEFT:Hide();
+	HelpPlateXTooltip.ArrowGlowLEFT:Hide();
+	HelpPlateXTooltip.ArrowRIGHT:Hide();
+	HelpPlateXTooltip.ArrowGlowRIGHT:Hide();
+	HelpPlateXTooltip:ClearAllPoints();
+	HelpPlateXTooltip:Hide();
+end
+
+local plateStrata = HelpPlateXTooltip:GetFrameStrata();
 local currentTutorialIndex;
 
 local Clicker;
@@ -84,21 +96,21 @@ local function plate(self, tutorial)
 			y = 0;
 		end
 
-		plateStrata = HelpPlateTooltip:GetFrameStrata();
-		HelpPlateTooltip.HookedByBFA = true;
+		plateStrata = HelpPlateXTooltip:GetFrameStrata();
+		HelpPlateXTooltip.HookedByBFA = true;
 
 		if arrow then
-			HelpPlateTooltip[arrow]:Show();
+			HelpPlateXTooltip[arrow]:Show();
 		end
 
 		if glow then
-			HelpPlateTooltip[glow]:Show();
+			HelpPlateXTooltip[glow]:Show();
 		end
 
-		HelpPlateTooltip:SetPoint(anchor1, customAnchor or owner, anchor2, x, y);
-		HelpPlateTooltip:SetParent(owner);
-		HelpPlateTooltip:SetFrameStrata('TOOLTIP');
-		Clicker:SetParent(HelpPlateTooltip);
+		HelpPlateXTooltip:SetPoint(anchor1, customAnchor or owner, anchor2, x, y);
+		HelpPlateXTooltip:SetParent(owner);
+		HelpPlateXTooltip:SetFrameStrata('TOOLTIP');
+		Clicker:SetParent(HelpPlateXTooltip);
 		Clicker:Show();
 
 		if tutorial.noglow then
@@ -141,8 +153,8 @@ local function plate(self, tutorial)
 		text = tutorial;
 	end
 
-	HelpPlateTooltip.Text:SetText(text .. '\n\n');
-	HelpPlateTooltip:Show();
+	HelpPlateXTooltip.Text:SetText(text .. '\n\n');
+	HelpPlateXTooltip:Show();
 
 	return rc;
 end
@@ -153,7 +165,7 @@ function Tutorial:SetTutorials(tutorials)
 end
 
 function Tutorial:Refresh()
-	if HelpPlateTooltip.HookedByBFA then
+	if HelpPlateXTooltip.HookedByBFA then
 		local tutorial = self.tutorials[currentTutorialIndex];
 
 		if tutorial then
@@ -165,10 +177,10 @@ function Tutorial:Refresh()
 end
 
 function Tutorial:Hide(this)
-	HelpPlateTooltip.HookedByBFA = nil;
-	HelpPlateTooltip:SetFrameStrata(plateStrata);
-	HelpPlate_TooltipHide();
-	HelpPlateTooltip:SetParent(UIParent);
+	HelpPlateXTooltip.HookedByBFA = nil;
+	HelpPlateXTooltip:SetFrameStrata(plateStrata);
+	HelpPlateX_TooltipHide();
+	HelpPlateXTooltip:SetParent(UIParent);
 
 	Clicker:SetParent(nil);
 	Clicker:Hide();
@@ -195,7 +207,7 @@ end
 function Tutorial:Show(opening, callback)
 	self.callback = callback;
 
-	HelpPlateTooltip.HookedByBFA = nil;
+	HelpPlateXTooltip.HookedByBFA = nil;
 	if not currentTutorialIndex then
 		currentTutorialIndex = 1;
 	end
@@ -237,7 +249,7 @@ end
 
 function Tutorial:Enable()
 	if not Clicker then
-		Clicker = CreateFrame('Frame', nil, HelpPlateTooltip);
+		Clicker = CreateFrame('Frame', nil, HelpPlateXTooltip);
 
 		Clicker.Close = CreateFrame('Button', nil, Clicker, 'UIPanelCloseButton');
 		Clicker.Close:SetSize(32, 32);

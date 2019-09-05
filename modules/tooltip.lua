@@ -5,21 +5,27 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 --- @var StdUi StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 function Tooltip:Enable()
 	if not self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:HookScript(GameTooltip, 'OnTooltipSetItem', 'UpdateTooltip');
-		self:SecureHook('BattlePetTooltipTemplate_SetBattlePet', 'UpdateBattlePetTooltip');
+		if BattlePetTooltipTemplate_SetBattlePet then
+			self:SecureHook('BattlePetTooltipTemplate_SetBattlePet', 'UpdateBattlePetTooltip');
+		end
 
-		AuctionFaster:Echo(2, 'Tooltips enabled');
+		AuctionFaster:Echo(2, L['Tooltips enabled']);
 	end
 end
 
 function Tooltip:Disable()
 	if self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:Unhook(GameTooltip, 'OnTooltipSetItem');
-		self:Unhook('BattlePetTooltipTemplate_SetBattlePet');
-		AuctionFaster:Echo(2, 'Tooltips disabled');
+		if BattlePetTooltipTemplate_SetBattlePet then
+			self:Unhook('BattlePetTooltipTemplate_SetBattlePet');
+		end
+
+		AuctionFaster:Echo(2, L['Tooltips disabled']);
 	end
 end
 
@@ -34,9 +40,9 @@ function Tooltip:UpdateTooltip(tooltip, ...)
 	local cacheItem = ItemCache:GetItemFromCache(itemId, name, true);
 	if cacheItem then
 		tooltip:AddLine('---');
-		tooltip:AddLine('AuctionFaster:');
-		tooltip:AddDoubleLine('Lowest Bid: ', StdUi.Util.formatMoney(cacheItem.bid));
-		tooltip:AddDoubleLine('Lowest Buy: ', StdUi.Util.formatMoney(cacheItem.buy));
+		tooltip:AddLine(L['AuctionFaster:']);
+		tooltip:AddDoubleLine(L['Lowest Bid: '], StdUi.Util.formatMoney(cacheItem.bid));
+		tooltip:AddDoubleLine(L['Lowest Buy: '], StdUi.Util.formatMoney(cacheItem.buy));
 
 		-- @TODO: looks like its not needed
 		--tooltip:Show();
@@ -46,12 +52,12 @@ end
 function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	if not tooltip.afPane then
 		tooltip.afPane = StdUi:Panel(tooltip, 150, 70);
-		tooltip.afPane.header = StdUi:Label(tooltip.afPane, 'AuctionFaster:');
+		tooltip.afPane.header = StdUi:Label(tooltip.afPane, L['AuctionFaster:']);
 
-		tooltip.afPane.bidLabel = StdUi:Label(tooltip.afPane, 'Lowest Bid: ');
+		tooltip.afPane.bidLabel = StdUi:Label(tooltip.afPane, L['Lowest Bid: ']);
 		tooltip.afPane.bid = StdUi:Label(tooltip.afPane, '');
 
-		tooltip.afPane.buyLabel = StdUi:Label(tooltip.afPane, 'Lowest Buy: ');
+		tooltip.afPane.buyLabel = StdUi:Label(tooltip.afPane, L['Lowest Buy: ']);
 		tooltip.afPane.buy = StdUi:Label(tooltip.afPane, '');
 
 		StdUi:GlueTop(tooltip.afPane.header, tooltip.afPane, 10, -5, 'LEFT');

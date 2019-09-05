@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type ItemCache
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 --- @type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');
 --- @type AuctionCache
@@ -214,7 +215,7 @@ function Sell:SelectItem(index)
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
 	sellTab.itemName:SetText(self.selectedItem.link);
 
-	sellTab.stackSize.label:SetText('Stack Size (Max: ' .. self.selectedItem.maxStackSize .. ')');
+	sellTab.stackSize.label:SetText(L['Stack Size (Max: '] .. self.selectedItem.maxStackSize .. ')');
 
 	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
@@ -270,9 +271,9 @@ function Sell:UpdateItemQtyText()
 	local sellTab = self.sellTab;
 	local maxStacks, remainingQty = self:CalcMaxStacks();
 	sellTab.itemQty:SetText(
-		'Qty: ' .. self.selectedItem.count ..
-		', Max Stacks: ' .. maxStacks ..
-		', Remaining: ' .. remainingQty
+		L['Qty: '] .. self.selectedItem.count ..
+		L[', Max Stacks: '] .. maxStacks ..
+		L[', Remaining: '] .. remainingQty
 	);
 end
 
@@ -373,7 +374,7 @@ function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 	self.sellTab.currentAuctions:SetData(auctionRecord.auctions, true);
 	if auctionRecord.lastScanTime then
 		self.sellTab.lastScan:SetText(
-			'Last Scan: ' .. AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime)
+			L['Last Scan: '] .. AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime)
 		);
 	end
 
@@ -397,7 +398,7 @@ end
 
 function Sell:InstantBuy(rowData, rowIndex)
 	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		AuctionFaster:Echo(3, L['Please refresh auctions first']);
 		return;
 	end
 
@@ -413,7 +414,7 @@ end
 
 function Sell:ChainBuyStart(index)
 	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		AuctionFaster:Echo(3, L['Please refresh auctions first']);
 		return;
 	end
 
@@ -440,7 +441,7 @@ end
 
 function Sell:AddToQueue(rowData, rowIndex)
 	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, 'Please refresh auctions first');
+		AuctionFaster:Echo(3, L['Please refresh auctions first']);
 		return;
 	end
 
@@ -465,7 +466,7 @@ end
 --	end
 --
 --	if #queue == 0 then
---		AuctionFaster:Echo(3, 'No auctions found with requested stack count: ' .. amount);
+--		AuctionFaster:Echo(3, L['No auctions found with requested stack count: '] .. amount);
 --	end
 --
 --	ChainBuy:Start(queue);
@@ -539,7 +540,7 @@ function Sell:CheckEverythingSold()
 
 	local buttons = {
 		yes = {
-			text    = 'Yes',
+			text    = L['Yes'],
 			onClick = function(self)
 				self:GetParent():Hide();
 
@@ -553,13 +554,13 @@ function Sell:CheckEverythingSold()
 			end,
 		},
 		no  = {
-			text    = 'No',
+			text    = L['No'],
 			onClick = function(self)
 				self:GetParent():Hide();
 			end,
 		}
 	}
 
-	StdUi:Confirm('Incomplete sell', 'You still have ' .. qtyLeft .. ' of ' .. itemLink ..
-		' Do you wish to sell rest?', buttons, 'incomplete_sell');
+	StdUi:Confirm(L['Incomplete sell'], L['You still have '] .. qtyLeft .. L[' of '] .. itemLink ..
+		L[' Do you wish to sell rest?'], buttons, 'incomplete_sell');
 end
