@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @class ItemCache
 local ItemCache = AuctionFaster:NewModule('ItemCache');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 function ItemCache:Enable()
 	if AuctionFaster.db.auctionDb then
@@ -121,7 +122,7 @@ end
 
 function ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue)
 	if not AuctionFaster.db.auctionDb[cacheKey] then
-		AuctionFaster:Echo(3, 'Invalid cache key');
+		AuctionFaster:Echo(3, L['Invalid cache key']);
 		return ;
 	end
 

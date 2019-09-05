@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 --- @type Buy
 local Buy = AuctionFaster:GetModule('Buy');
 
@@ -15,25 +16,25 @@ function Buy:DrawSniperFrame()
 
 	local buyTab = self.buyTab;
 
-	local sniperPane = StdUi:Window(buyTab, 'Sniper', 200, 100);
+	local sniperPane = StdUi:Window(buyTab, L['Sniper'], 200, 100);
 	sniperPane:Hide();
 
 	StdUi:GlueAfter(sniperPane, buyTab, 0, 0, 0, 0);
 
-	local autoRefresh = StdUi:Checkbox(sniperPane, 'Auto Refresh');
+	local autoRefresh = StdUi:Checkbox(sniperPane, L['Auto Refresh']);
 
 	local refreshInterval = StdUi:NumericBox(sniperPane, 180, 20);
 	refreshInterval:SetValue(AuctionFaster.db.sniper.refreshInterval);
 	refreshInterval:SetMinMaxValue(5, 2000);
 
-	StdUi:AddLabel(sniperPane, refreshInterval, 'Refresh Interval', 'TOP');
+	StdUi:AddLabel(sniperPane, refreshInterval, L['Refresh Interval'], 'TOP');
 
 	local refreshProgressBar = StdUi:ProgressBar(sniperPane, 200, 10);
 	refreshProgressBar.TextUpdate = function(self, min, max, value) -- custom text
 		return value .. 's / ' .. max .. 's';
 	end;
 
-	local more = StdUi:Header(sniperPane, 'More features\ncoming soon');
+	local more = StdUi:Header(sniperPane, L['More features\ncoming soon']);
 
 	StdUi:GlueTop(autoRefresh, sniperPane, 10, -40, 'LEFT');
 	StdUi:GlueBelow(refreshInterval, autoRefresh, 0, -30, 'LEFT');

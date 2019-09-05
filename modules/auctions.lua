@@ -2,6 +2,7 @@
 local AuctionFaster = unpack(select(2, ...));
 
 local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
@@ -67,12 +68,12 @@ function Auctions:QueryAuctions(query, callback)
 		self.currentlyQuerying = false;
 		if Auctions.retries < 5 then
 			Auctions.retries = Auctions.retries + 1;
-			AuctionFaster:Echo(2, 'Query failed, retrying: ' .. Auctions.retries);
+			AuctionFaster:Echo(2, L['Query failed, retrying: '] .. Auctions.retries);
 
 			self:ScheduleTimer('QueryAuctions', 1);
 			return;
 		else
-			AuctionFaster:Echo(3, 'Cannot query AH. Please wait a bit longer or reload UI');
+			AuctionFaster:Echo(3, L['Cannot query AH. Please wait a bit longer or reload UI']);
 		end
 	end
 
@@ -170,7 +171,7 @@ function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
 
 	PickupContainerItem(bag, slot);
 	if not CursorHasItem() then
-		AuctionFaster:Echo(3, 'Could not pick up item from inventory');
+		AuctionFaster:Echo(3, L['Could not pick up item from inventory']);
 		return false;
 	end
 
@@ -298,10 +299,10 @@ function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
 
 	AuctionFaster:Echo(
 		1,
-		'Posting: ' .. self.lastSoldItem .. ' for:\n'..
-		'per auction: ' ..  StdUi.Util.formatMoney(buy) .. '\n' ..
-		'per item: ' ..  StdUi.Util.formatMoney(buy / stackSize) .. '\n' ..
-		'# stacks: ' .. numStacks .. ' stack size: ' .. stackSize
+		L['Posting: '] .. self.lastSoldItem .. L[' for:\n']..
+		L['per auction: '] ..  StdUi.Util.formatMoney(buy) .. '\n' ..
+		L['per item: '] ..  StdUi.Util.formatMoney(buy / stackSize) .. '\n' ..
+		L['# stacks: '] .. numStacks .. L[' stack size: '] .. stackSize
 	);
 	return true, isMultisell;
 end
