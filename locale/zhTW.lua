@@ -265,6 +265,6 @@ L['Post One'] = '上架一個'
 --L['Please select item first'] = true;
 --L['Seller'] = true;
 --L['Qty'] = true;
-L['Lvl'] = '等級'
+L['Lvl'] = '等級'	-- qty and lvl are invisible in asia client after translate because not enough space for them.
 --L['Bid / Item'] = true;
 --L['Buy / Item'] = true;
