@@ -20,9 +20,9 @@ Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 Libs\StdUi\StdUi.xml
 Libs\LibGraph-2.0\LibGraph-2.0.lua
 
+locale/enUS.lua
 locale/zhTW.lua
 locale/zhCN.lua
-locale/enUS.lua
 
 main.lua
 options.lua

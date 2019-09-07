@@ -54,6 +54,11 @@ function Sell:AFTER_INVENTORY_SCAN()
 		return;
 	end
 
+	-- ignore if last sold item was over 2 seconds ago, prevents from opening when closing and opening AH again
+	if GetTime() - Auctions.lastSoldTimestamp > 2 or not Auctions.soldFlag then
+		return;
+	end
+
 	self:CheckEverythingSold();
 	Auctions.lastSoldItem = nil;
 end
@@ -378,7 +383,7 @@ function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 	self.sellTab.currentAuctions:SetData(auctionRecord.auctions, true);
 	if auctionRecord.lastScanTime then
 		self.sellTab.lastScan:SetText(
-			format(L['Last Scan: %s'], AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime))
+			format(L['Last scan: %s'], AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime))
 		);
 	end
 
@@ -571,4 +576,6 @@ function Sell:CheckEverythingSold()
 		buttons,
 		'incomplete_sell'
 	);
+
+	Auctions.soldFlag = false;
 end

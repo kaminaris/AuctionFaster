@@ -54,6 +54,10 @@ end
 Auctions.currentQuery = nil;
 Auctions.currentCallback = nil;
 Auctions.retries = 0;
+-- this is used to prevent checking if everything has been sold
+Auctions.lastSoldTimestamp = 0;
+-- this is used for checking if everything has been sold
+Auctions.soldFlag = false;
 
 function Auctions:QueryAuctions(query, callback)
 	query = query or Auctions.currentQuery;
@@ -291,6 +295,8 @@ function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
 	self.lastUIError = nil;
 	self.lastSoldItem = GetAuctionSellItemInfo();
 	PostAuction(bid, buy, duration, stackSize, numStacks);
+	self.lastSoldTimestamp = GetTime();
+	self.soldFlag = true;
 
 	local isMultisell = numStacks > 1;
 

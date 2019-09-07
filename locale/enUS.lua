@@ -45,7 +45,7 @@ L['Chain Buy'] = true;
 L['Qty: %d'] = true;
 L['Per Item: %s'] = true;
 L['Total: %s'] = true;
-L['Bought so far:  %d'] = true;
+L['Bought so far: %d'] = true;
 L['Queue'] = true;
 L['Fast Mode - AuctionFaster will NOT wait until you actually buy an item.\n\n'..
 	'This may result in inaccurate amount of bought items and some missed auctions.\n' ..
@@ -140,7 +140,8 @@ L['Chose your search criteria nad press "Search"'] = true;
 
 -- sell functions
 L['Qty: %d, Max Stacks: %d, Remaining: %d'] = true;
-L['Last Scan: %s'] = true;
+L['Last scan: %s'] = true;
+L['Stack Size (Max: %d)'] = true;
 L['Please refresh auctions first'] = true;
 L['Yes'] = true;
 L['No'] = true;

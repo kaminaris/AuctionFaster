@@ -1,4 +1,5 @@
 local L = LibStub('AceLocale-3.0'):NewLocale('AuctionFaster', 'zhTW');
+if not L then return end
 
 L['Auction Faster - Historical Options'] = 'Auction Faster - 歷史選項'	-- possible need a unified format for addon name, Auction Faster or AuctionFaster?
 L['Enable Historical Data Collection'] = '啟用歷史紀錄'

@@ -84,7 +84,7 @@ function Sell:UpdateInfoPaneText()
 
 	infoPane.totalLabel:SetText(format(L['Per auction: %s'], StdUi.Util.formatMoney(total)));
 	infoPane.auctionNo:SetText(format(L['# Auctions: %d'], sellSettings.maxStacks));
-	infoPane.deposit:SetText(L['Deposit: '] .. StdUi.Util.formatMoney(deposit));
+	infoPane.deposit:SetText(format(L['Deposit: %s'], StdUi.Util.formatMoney(deposit)));
 	infoPane.duration:SetText(format(L['Duration: %s'], AuctionFaster:FormatAuctionDuration(sellSettings.duration)));
 end
 
