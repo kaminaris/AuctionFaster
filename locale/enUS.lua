@@ -4,6 +4,8 @@ L['AuctionFaster - Historical Options'] = true;
 L['Enable Historical Data Collection'] = true;
 L['Days to keep data (5-50)'] = true;
 L['AuctionFaster - Pricing Options'] = true;
+L['Historical Options'] = true;
+L['Pricing Options'] = true;
 L['Maximum difference bid to buy (1-100%)'] = true;
 L['AuctionFaster Options'] = true;
 L['AuctionFaster'] = true;
@@ -113,7 +115,10 @@ L['Opens this tutorial again.\nHope you liked it\n\n:)\n\n'] = true;
 L['Buy Items'] = true;
 L['AuctionFaster - Buy'] = true;
 L['Search'] = true;
-L['Filters'] = true;
+
+L['Buy'] = true;
+L['Skip'] = true;
+L['Close'] = true;
 
 -- sniper
 L['Sniper'] = true;
@@ -163,8 +168,8 @@ L['Trend Average Buy'] = true;
 L['Highest Buy'] = true;
 L['Test Line'] = true;
 L['Historical Data: '] = true;
--- sell item settings
 
+-- sell item settings
 L['Item Settings'] = true;
 L['No Item selected'] = true;
 L['Remember Stack Settings'] = true;
@@ -174,7 +179,9 @@ L['Use Custom Duration'] = true;
 L['12h'] = true;
 L['24h'] = true;
 L['48h'] = true;
-L['Auction Duration'] = true;
+L['days ago'] = true;
+L['hours ago'] = true;
+L['minutes ago'] = true;
 L['Pricing Model'] = true;
 L['If there is no auctions of this item,'] = true;
 L['remember last price.'] = true;
@@ -186,8 +193,6 @@ L['By default, AuctionFaster always undercuts price,\neven if you toggle "Rememb
 	'If you uncheck this option AuctionFaster\nwill never undercut items for you'] = true;
 
 -- sell tutorial
-L['Addon Tutorial'] = true;
-L['Addon settings'] = true;
 L['Welcome to AuctionFaster.\n\nI recommend checking out sell tutorial at least once before you accidentally sell your precious goods.\n\n:)'] = true;
 L['Here is the list of all inventory items you can sell, no need to drag anything.\n\n'] = true;
 L['After you select item, AuctionFaster will automatically make a scan of first page and undercut set bid/buy according to price model selected.'] = true;
@@ -197,6 +202,7 @@ L['You can click Refresh Auctions to scan again'] = true;
 L['Your bid price '] = true;
 L['per one item.'] = true;
 L['AuctionFaster understands a lot of money formats'] = true;
+L[', for example:\n\n' .. '5g 6s 19c\n5g6s86c\n999s 50c\n3000s\n9000000c'] = true;
 L['Your buyout price '] = true;
 L[' Same money formats as bid per item.'] = true;
 L['Maximum number of stacks you wish to sell.\n\n'] = true;
@@ -208,7 +214,7 @@ L['This opens auction informations:\n\n' ..
 	'- Total auction buy price.\n' ..
 	'- Deposit cost.\n' ..
 	'- Number of auctions\n' ..
-	'- Auction duration\n\n'] = true;
+	'- Auction duration\n\n'] = true;	
 L['This will change dynamically when you change stack size or max stacks.'] = true;
 L['Here is a list of auctions of currently selected item.\n'] = true;
 L['You can be sure your item will be cheapest.\n'] = true;
@@ -218,7 +224,7 @@ L['Posts %s of selected item regardless of your\n"# Stacks" settings'] = true;
 L['Posts %s of selected item according to your\n"# Stacks" settings'] = true;
 L['one auction'] = true;
 L['all auctions'] = true;
-L['Opens this tutorial again.\nHope you liked it\n\n:)\n\n'] = true;
+L['Once you close this tutorial it won\'t show again unless you click it'] = true;
 
 -- sell ui
 L['Sell Items'] = true;
@@ -233,19 +239,11 @@ L['Direction'] = true;
 L['Ascending'] = true;
 L['Descending'] = true;
 L['Filter items'] = true;
-L['No item selected'] = true;
 L['Bid Per Item'] = true;
 L['Buy Per Item'] = true;
 L['Stack Size'] = true;
 L['# Stacks'] = true;
-L['Item Settings'] = true;
-L['Auction Info'] = true;
 L['Refresh Auctions'] = true;
 L['Post All'] = true;
 L['Post One'] = true;
-L['Please select item first'] = true;
-L['Seller'] = true;
-L['Qty'] = true;
 L['Lvl'] = true;
-L['Bid / Item'] = true;
-L['Buy / Item'] = true;
