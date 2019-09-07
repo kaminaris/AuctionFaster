@@ -9,13 +9,15 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @class ChainBuy
 local ChainBuy = AuctionFaster:NewModule('ChainBuy', 'AceEvent-3.0', 'AceTimer-3.0');
 
+local format = string.format;
+
 ChainBuy.requests = {};
 ChainBuy.currentIndex = 0;
 ChainBuy.currentRequest = nil;
 ChainBuy.isPaused = true;
 ChainBuy.fastMode = false;
 
-local fastModeExplanation = L['Fast Mode - Auction Faster will NOT wait until you actually buy an item.\n\n'..
+local fastModeExplanation = L['Fast Mode - AuctionFaster will NOT wait until you actually buy an item.\n\n'..
 'This may result in inaccurate amount of bought items and some missed auctions.\n' ..
 '|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r'];
 
@@ -220,10 +222,10 @@ function ChainBuy:UpdateWindow()
 
 	window.itemIcon:SetTexture(req.texture);
 	window.itemName:SetText(req.itemLink);
-	window.qty:SetText(L['Qty: '] .. req.count);
-	window.pricePerItem:SetText(L['Per Item: '] .. StdUi.Util.formatMoney(req.buy));
-	window.priceTotal:SetText(L['Total: '] .. StdUi.Util.formatMoney(req.buy * req.count));
-	window.boughtSoFar:SetText(L['Bought so far: '] .. self.boughtSoFar);
+	window.qty:SetText(format(L['Qty: %d'], req.count));
+	window.pricePerItem:SetText(format(L['Per Item: %s'], StdUi.Util.formatMoney(req.buy)));
+	window.priceTotal:SetText(format(L['Total: %s'], StdUi.Util.formatMoney(req.buy * req.count)));
+	window.boughtSoFar:SetText(format(L['Bought so far: %d'], self.boughtSoFar));
 
 	window.progressBar:SetMinMaxValues(0, #self.requests);
 	window.progressBar:SetValue(self.currentIndex);

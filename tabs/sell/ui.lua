@@ -8,12 +8,14 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Sell
 local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
 
+local format = string.format;
+
 function Sell:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
 	end
 
-	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['Auction Faster - Sell'], self);
+	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['AuctionFaster - Sell'], self);
 
 	self.sellTab:SetScript('OnShow', function()
 		Sell:OnShow();
@@ -228,11 +230,12 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	sellTab.itemName = StdUi:Label(sellTab, L['No item selected'], nil, 'GameFontNormalLarge', 250, 20);
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
-	sellTab.itemQty = StdUi:Label(sellTab, L['Qty: O, Max Stacks: 0'], nil, nil, 250, 20);
+	sellTab.itemQty = StdUi:Label(sellTab, format(L['Qty: %d, Max Stacks: %d, Remaining: %d'], 0, 0, 0), nil, nil, 250,
+		20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
-	sellTab.lastScan = StdUi:Label(sellTab, L['Last scan: ---']);
+	sellTab.lastScan = StdUi:Label(sellTab, format(L['Last scan: %s'], '---'));
 	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 

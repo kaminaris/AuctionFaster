@@ -15,6 +15,9 @@ local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 --- @type AuctionCache
 local AuctionCache = AuctionFaster:GetModule('AuctionCache');
 
+local format = string.format;
+local TableInsert = tinsert;
+
 function Buy:Enable()
 	self:AddBuyAuctionHouseTab();
 	self:InterceptLinkClick();
@@ -118,14 +121,14 @@ function Buy:UpdatePager()
 	local pager = self.buyTab.pager;
 	self.updatingPagerLock = true;
 
-	pager.pageText:SetText(L['Pages: '] .. lp);
+	pager.pageText:SetText(format(L['Pages: %d'], lp));
 
 	pager.leftButton:Enable();
 	pager.rightButton:Enable();
 
 	local opts = {};
 	for i = 0, self.currentQuery.lastPage do
-		tinsert(opts, {text = tostring(i + 1), value = i});
+		TableInsert(opts, {text = tostring(i + 1), value = i});
 	end
 
 	pager.pageJump:SetOptions(opts);
@@ -143,7 +146,7 @@ end
 
 function Buy:UpdateQueue()
 	local buyTab = Buy.buyTab;
-	buyTab.queueLabel:SetText(L['Queue Qty: '] .. ChainBuy:CalcRemainingQty());
+	buyTab.queueLabel:SetText(format(L['Queue Qty: %d'], ChainBuy:CalcRemainingQty()));
 
 	buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
 	buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
@@ -166,7 +169,7 @@ function Buy:AddToFavorites()
 		end
 	end
 
-	tinsert(favorites, { text = text });
+	TableInsert(favorites, { text = text });
 	self:DrawFavorites();
 end
 
@@ -260,7 +263,7 @@ function Buy:ChainBuyStart(index)
 
 	for i = filteredIndex, #self.buyTab.auctions do
 		local rowIndex = filtered[i];
-		tinsert(queue, self.buyTab.auctions[rowIndex]);
+		TableInsert(queue, self.buyTab.auctions[rowIndex]);
 	end
 
 	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
@@ -288,12 +291,12 @@ function Buy:AddToQueueWithXStacks(amount)
 	for i = 1, #self.buyTab.auctions do
 		local auction = self.buyTab.auctions[i];
 		if auction.count >= amount then
-			tinsert(queue, auction);
+			TableInsert(queue, auction);
 		end
 	end
 
 	if #queue == 0 then
-		AuctionFaster:Echo(3, L['No auctions found with requested stack count: '] .. amount);
+		AuctionFaster:Echo(3, format(L['No auctions found with requested stack count: %d'], amount));
 	end
 
 	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
@@ -341,7 +344,7 @@ function Buy:FindFirstWithXStacks(minStacks, page)
 	end;
 
 	if page > self.currentQuery.lastPage then
-		AuctionFaster:Echo(3, L['No auction found for minimum stacks: '] .. minStacks);
+		AuctionFaster:Echo(3, format(L['No auction found for minimum stacks: %d'], minStacks));
 		return;
 	end
 
@@ -375,13 +378,13 @@ function Buy:GetSearchCategories()
 	for i = 1, #AuctionCategories do
 		local children = AuctionCategories[i].subCategories;
 
-		tinsert(categories, { value = i, text = AuctionCategories[i].name});
+		TableInsert(categories, { value = i, text = AuctionCategories[i].name});
 
 		subCategories[i] = {};
 		if children then
-			tinsert(subCategories[i], {value = 0, text = 'All'});
+			TableInsert(subCategories[i], {value = 0, text = 'All'});
 			for x = 1, #children do
-				tinsert(subCategories[i], {value = x, text = children[x].name});
+				TableInsert(subCategories[i], {value = x, text = children[x].name});
 			end
 		end
 	end

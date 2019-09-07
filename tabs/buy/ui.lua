@@ -6,12 +6,14 @@ local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 --- @class Buy
 local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0', 'AceTimer-3.0');
 
+local format = string.format;
+
 function Buy:AddBuyAuctionHouseTab()
 	if self.buyTabAdded then
 		return ;
 	end
 
-	self.buyTab = AuctionFaster:AddAuctionHouseTab(L['Buy Items'], L['Auction Faster - Buy'], self);
+	self.buyTab = AuctionFaster:AddAuctionHouseTab(L['Buy Items'], L['AuctionFaster - Buy'], self);
 
 	self.buyTab:SetScript('OnShow', function()
 		Buy:OnShow();
@@ -77,7 +79,7 @@ function Buy:DrawSearchButtons()
 	local addWithXButton = StdUi:Button(buyTab, 120, 20, L['Add With Min Stacks']);
 	local findXButton = StdUi:Button(buyTab, 120, 20, L['Find X Stacks']);
 
-	local minStacksLabel = StdUi:Label(buyTab, L['Min Stacks: '], nil, nil, 100);
+	local minStacksLabel = StdUi:Label(buyTab, L['Min Stacks'], nil, nil, 100);
 	local minStacks = StdUi:NumericBox(buyTab, 100, 20, 1);
 	minStacks:SetMinMaxValue(1, 200);
 
@@ -129,12 +131,12 @@ end
 function Buy:DrawQueue()
 	local buyTab = self.buyTab;
 
-	local queueLabel = StdUi:Label(buyTab, L['Queue Qty: 0'], nil, nil, 100);
+	local queueLabel = StdUi:Label(buyTab, format(L['Queue Qty: %d'], 0), nil, nil, 100);
 	StdUi:GlueRight(queueLabel, buyTab.addToQueueButton, 10, 0);
 
 	local queueProgress = StdUi:ProgressBar(buyTab, 100, 20);
 	queueProgress.TextUpdate = function(self, min, max, value)
-		return L['Auctions: '] .. value .. ' / ' .. max;
+		return format(L['Auctions: %d / %d'], value, max);
 	end;
 	queueProgress:SetMinMaxValues(0, 0);
 	queueProgress:SetValue(0);
@@ -151,7 +153,7 @@ function Buy:DrawPager()
 	local leftButton = StdUi:SquareButton(buyTab, 20, 20, 'LEFT');
 	local rightButton = StdUi:SquareButton(buyTab, 20, 20, 'RIGHT');
 	local pageJump = StdUi:Dropdown(buyTab, 80, 20, {});
-	local pageText = StdUi:Label(buyTab, L['Page 1 of 0']);
+	local pageText = StdUi:Label(buyTab, format(L['Pages: %d'], 0));
 
 	StdUi:GlueBottom(leftButton, buyTab, 10, 50, 'LEFT');
 	StdUi:GlueRight(pageJump, leftButton, 10, 0);
