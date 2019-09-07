@@ -106,7 +106,7 @@ function AuctionFaster:RegisterHistoricalOptionWindow()
 
 	optionsFrame.historicalOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['AuctionFaster - Historical Options']);
 	local historicalOptions = optionsFrame.historicalOptions;
-	historicalOptions.name = 'Historical Options';
+	historicalOptions.name = L['Historical Options'];
 	historicalOptions.parent = optionsFrame.name;
 	historicalOptions:Hide();
 
@@ -133,7 +133,7 @@ function AuctionFaster:RegisterPricingOptionWindow()
 
 	optionsFrame.pricingOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['AuctionFaster - Pricing Options']);
 	local pricingOptions = optionsFrame.pricingOptions;
-	pricingOptions.name = 'Pricing Options';
+	pricingOptions.name = L['Pricing Options'];
 	pricingOptions.parent = optionsFrame.name;
 	pricingOptions:Hide();
 

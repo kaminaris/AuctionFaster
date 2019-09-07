@@ -366,12 +366,12 @@ function Buy:GetSearchCategories()
 	end
 
 	local categories = {
-		{value = 0, text = 'All'}
+		{value = 0, text = ALL}
 	};
 
 	local subCategories = {
 		[0] = {
-			{value = 0, text = 'All'}
+			{value = 0, text = ALL}
 		}
 	};
 
