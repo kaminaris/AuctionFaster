@@ -10,6 +10,8 @@ local Sell = AuctionFaster:GetModule('Sell');
 
 local Graph = LibStub('LibGraph-2.0');
 
+local format = string.format;
+
 function Sell:DrawInfoPane()
 	if self.sellTab.infoPane then
 		return ;
@@ -29,10 +31,10 @@ function Sell:DrawInfoPane()
 	infoPane:SetScript('OnShow', function() AuctionFaster.db.infoPaneOpened = true; end);
 	infoPane:SetScript('OnHide', function() AuctionFaster.db.infoPaneOpened = false; end);
 
-	local totalLabel = StdUi:Label(infoPane, L['Total: '] .. StdUi.Util.formatMoney(0));
-	local deposit = StdUi:Label(infoPane, L['Deposit: '] .. StdUi.Util.formatMoney(0));
-	local auctionNo = StdUi:Label(infoPane, L['# Auctions: 0']);
-	local duration = StdUi:Label(infoPane, L['Duration: 24h']);
+	local totalLabel = StdUi:Label(infoPane, format(L['Total: %s'], StdUi.Util.formatMoney(0)));
+	local deposit = StdUi:Label(infoPane, format(L['Deposit: %s'], StdUi.Util.formatMoney(0)));
+	local auctionNo = StdUi:Label(infoPane, format(L['# Auctions: %d'], 0));
+	local duration = StdUi:Label(infoPane, format(L['Duration: %s'], '24h'));
 	local historicalBtn = StdUi:Button(infoPane, 180, 20, L['Historical Data'])
 
 	StdUi:GlueAfter(infoPane, sellTab, 0, 0, 0, sellTab:GetHeight() - 150);
@@ -80,10 +82,10 @@ function Sell:UpdateInfoPaneText()
 		sellSettings
 	);
 
-	infoPane.totalLabel:SetText(L['Per auction: '] .. StdUi.Util.formatMoney(total));
-	infoPane.auctionNo:SetText(L['# Auctions: '] .. sellSettings.maxStacks);
+	infoPane.totalLabel:SetText(format(L['Per auction: %s'], StdUi.Util.formatMoney(total)));
+	infoPane.auctionNo:SetText(format(L['# Auctions: %d'], sellSettings.maxStacks));
 	infoPane.deposit:SetText(L['Deposit: '] .. StdUi.Util.formatMoney(deposit));
-	infoPane.duration:SetText(L['Duration: '] .. AuctionFaster:FormatAuctionDuration(sellSettings.duration));
+	infoPane.duration:SetText(format(L['Duration: %s'], AuctionFaster:FormatAuctionDuration(sellSettings.duration)));
 end
 
 function Sell:ToggleInfoPane()
@@ -96,7 +98,7 @@ end
 
 function Sell:PrepareHistoricalData(itemRecord)
 	if #itemRecord.prices < 2 then
-		AuctionFaster:Echo(3, L['No historical data available for: '] .. itemRecord.itemName);
+		AuctionFaster:Echo(3, format(L['No historical data available for: %s'], itemRecord.itemName));
 		return false;
 	end
 

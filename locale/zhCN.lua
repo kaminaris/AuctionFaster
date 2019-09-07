@@ -1,4 +1,4 @@
-local L = LibStub('AceLocale-3.0'):NewLocale('AuctionFaster', 'zhCN', true);
+local L = LibStub('AceLocale-3.0'):NewLocale('AuctionFaster', 'zhCN');
 
 L['Auction Faster - Historical Options'] = 'Auction Faster - 历史选项'	-- possible need a unified format for addon name, Auction Faster or AuctionFaster?
 L['Enable Historical Data Collection'] = '启用历史纪录'

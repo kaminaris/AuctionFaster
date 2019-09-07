@@ -4,6 +4,8 @@ local AuctionFaster = unpack(select(2, ...));
 local StdUi = LibStub('StdUi');
 local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
+local format = string.format;
+
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Auctions
@@ -68,7 +70,7 @@ function Auctions:QueryAuctions(query, callback)
 		self.currentlyQuerying = false;
 		if Auctions.retries < 5 then
 			Auctions.retries = Auctions.retries + 1;
-			AuctionFaster:Echo(2, L['Query failed, retrying: '] .. Auctions.retries);
+			AuctionFaster:Echo(2, format(L['Query failed, retrying: %d'], Auctions.retries));
 
 			self:ScheduleTimer('QueryAuctions', 1);
 			return;
@@ -299,10 +301,14 @@ function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
 
 	AuctionFaster:Echo(
 		1,
-		L['Posting: '] .. self.lastSoldItem .. L[' for:\n']..
-		L['per auction: '] ..  StdUi.Util.formatMoney(buy) .. '\n' ..
-		L['per item: '] ..  StdUi.Util.formatMoney(buy / stackSize) .. '\n' ..
-		L['# stacks: '] .. numStacks .. L[' stack size: '] .. stackSize
+		format(
+			L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'],
+			self.lastSoldItem,
+			StdUi.Util.formatMoney(buy),
+			StdUi.Util.formatMoney(buy / stackSize),
+			numStacks,
+			stackSize
+		)
 	);
 	return true, isMultisell;
 end

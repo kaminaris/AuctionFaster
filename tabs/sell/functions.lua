@@ -19,6 +19,7 @@ local Pricing = AuctionFaster:GetModule('Pricing');
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
 
+local format = string.format;
 
 function Sell:Enable()
 	self:AddSellAuctionHouseTab();
@@ -215,7 +216,7 @@ function Sell:SelectItem(index)
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
 	sellTab.itemName:SetText(self.selectedItem.link);
 
-	sellTab.stackSize.label:SetText(L['Stack Size (Max: '] .. self.selectedItem.maxStackSize .. ')');
+	sellTab.stackSize.label:SetText(format(L['Stack Size (Max: %d)'], self.selectedItem.maxStackSize));
 
 	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
 
@@ -271,9 +272,12 @@ function Sell:UpdateItemQtyText()
 	local sellTab = self.sellTab;
 	local maxStacks, remainingQty = self:CalcMaxStacks();
 	sellTab.itemQty:SetText(
-		L['Qty: '] .. self.selectedItem.count ..
-		L[', Max Stacks: '] .. maxStacks ..
-		L[', Remaining: '] .. remainingQty
+		format(
+			L['Qty: %d, Max Stacks: %d, Remaining: %d'],
+			self.selectedItem.count,
+			maxStacks,
+			remainingQty
+		)
 	);
 end
 
@@ -374,7 +378,7 @@ function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 	self.sellTab.currentAuctions:SetData(auctionRecord.auctions, true);
 	if auctionRecord.lastScanTime then
 		self.sellTab.lastScan:SetText(
-			L['Last Scan: '] .. AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime)
+			format(L['Last Scan: %s'], AuctionFaster:FormatDuration(GetServerTime() - auctionRecord.lastScanTime))
 		);
 	end
 
@@ -466,7 +470,7 @@ end
 --	end
 --
 --	if #queue == 0 then
---		AuctionFaster:Echo(3, L['No auctions found with requested stack count: '] .. amount);
+--		AuctionFaster:Echo(3, format(L['No auctions found with requested stack count: %d'], amount));
 --	end
 --
 --	ChainBuy:Start(queue);
@@ -561,6 +565,10 @@ function Sell:CheckEverythingSold()
 		}
 	}
 
-	StdUi:Confirm(L['Incomplete sell'], L['You still have '] .. qtyLeft .. L[' of '] .. itemLink ..
-		L[' Do you wish to sell rest?'], buttons, 'incomplete_sell');
+	StdUi:Confirm(
+		L['Incomplete sell'],
+		format(L['You still have %d of %s Do you wish to sell rest?'], qtyLeft, itemLink),
+		buttons,
+		'incomplete_sell'
+	);
 end
