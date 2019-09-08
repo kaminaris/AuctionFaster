@@ -373,7 +373,7 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	local cols = {
 		{
 			name         = L['Seller'],
-			width        = 120,
+			width        = 116,
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
@@ -400,14 +400,14 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 		},
 		{
 			name         = L['Qty'],
-			width        = 35,
+			width        = 38,
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
 		},
 		{
 			name         = L['Lvl'],
-			width        = 35,
+			width        = 38,
 			align        = 'LEFT',
 			index        = 'level',
 			format       = 'number',
