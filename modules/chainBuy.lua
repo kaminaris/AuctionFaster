@@ -148,9 +148,9 @@ function ChainBuy:ShowWindow()
 	window.priceTotal = StdUi:Label(window, '', 14);
 	window.boughtSoFar = StdUi:Label(window, '', 20);
 
-	window.buyButton = StdUi:Button(window, 70, 24, 'Buy');
-	window.skipButton = StdUi:Button(window, 70, 24, 'Skip');
-	window.closeButton = StdUi:Button(window, 150, 24, 'Close');
+	window.buyButton = StdUi:Button(window, 70, 24, L['Buy']);
+	window.skipButton = StdUi:Button(window, 70, 24, L['Skip']);
+	window.closeButton = StdUi:Button(window, 150, 24, L['Close']);
 	window.fastMode = StdUi:Checkbox(window, 'Fast Mode', 100, 24);
 
 	window.buyButton:SetScript('OnClick', function()

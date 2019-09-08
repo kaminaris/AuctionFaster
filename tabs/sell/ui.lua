@@ -227,7 +227,7 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	sellTab.itemIcon = StdUi:Texture(sellTab.iconBackdrop, iconSize, iconSize, '');
 	StdUi:GlueAcross(sellTab.itemIcon, sellTab.iconBackdrop, 1, -1, -1, 1);
 
-	sellTab.itemName = StdUi:Label(sellTab, L['No item selected'], nil, 'GameFontNormalLarge', 250, 20);
+	sellTab.itemName = StdUi:Label(sellTab, L['No Item selected'], nil, 'GameFontNormalLarge', 250, 20);
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
 	sellTab.itemQty = StdUi:Label(sellTab, format(L['Qty: %d, Max Stacks: %d, Remaining: %d'], 0, 0, 0), nil, nil, 250,
