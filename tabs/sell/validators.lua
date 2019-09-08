@@ -10,6 +10,10 @@ function Sell:CalcMaxStacks()
 	end
 
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
+	if stackSize == 0 then
+		stackSize = 1;
+	end
+
 	local maxStacks = floor(self.selectedItem.count / stackSize);
 
 	if maxStacks == 0 then

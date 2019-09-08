@@ -282,7 +282,7 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 	sellTab.stackSize = StdUi:NumericBox(sellTab, 150, 20, '1');
 	StdUi:AddLabel(sellTab, sellTab.stackSize, L['Stack Size'], 'TOP');
 
-	sellTab.stackSize:SetValue(0);
+	sellTab.stackSize:SetValue(1);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
 	sellTab.maxStacks = StdUi:NumericBox(sellTab, 150, 20, '0');
