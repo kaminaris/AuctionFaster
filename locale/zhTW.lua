@@ -41,7 +41,7 @@ L['Buy Tab Settings'] = '購買分頁設定'
 L['Query failed, retrying: %d'] = '查詢失敗，重試 %d 次'
 L['Cannot query AH. Please wait a bit longer or reload UI'] = '無法掃瞄拍賣行。請等一下或重載介面'
 L['Could not pick up item from inventory'] = '無法從背包中選定物品'
-L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'] = '上架%1$s：\n每組售價：%2$s\n單價：%3$s\n每組堆疊%5$d個，共出售%4$d組。'
+L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'] = '上架%s：\n每組售價：%s\n單價：%3$s\n共出售%d組，每組堆疊%d個。'
 
 -- chain buy
 L['Chain Buy'] = '批量購買'
@@ -152,8 +152,8 @@ L['Stack Size (Max: %d)'] = '堆疊（最大%d）'
 L['Please refresh auctions first'] = '請先按更新，重整拍賣'
 L['Yes'] = '是'
 L['No'] = '否'
-L['Incomplete sell'] = true;
-L['You still have %d of %s Do you wish to sell rest?'] = true;
+L['Incomplete sell'] = '散裝零售'
+L['You still have %d of %s Do you wish to sell rest?'] = '你還有%d組%s，要把剩下的也賣掉嗎？'
 
 -- sell info pane
 L['Auction Info'] = '拍賣資訊'

@@ -152,11 +152,11 @@ L['Stack Size (Max: %d)'] = '堆叠（最大%d）'
 L['Please refresh auctions first'] = '请先按刷新，重整拍卖'
 L['Yes'] = '是'
 L['No'] = '否'
-L['Incomplete sell'] = true;
-L['You still have %d of %s Do you wish to sell rest?'] = true;
+L['Incomplete sell'] = '散装零售'
+L['You still have %d of %s Do you wish to sell rest?'] = '你还有%d个%s，要把剩下的也卖掉吗？'
 
 -- sell info pane
-L['Auction Info'] = '拍卖资讯'
+L['Auction Info'] = '拍卖信息'
 L['Deposit: %s'] = '保证金：%s'
 L['# Auctions: %d'] = '上架：%d组'
 L['Duration: %s'] = '持续时间：%s'
@@ -216,7 +216,7 @@ L['This opens auction informations:\n\n' ..
 	'- Total auction buy price.\n' ..
 	'- Deposit cost.\n' ..
 	'- Number of auctions\n' ..
-	'- Auction duration\n\n'] = '点击这里打开拍卖资讯：\n\n' ..
+	'- Auction duration\n\n'] = '点击这里打开拍卖信息：\n\n' ..
 	'每一组的售价\n' ..
 	'花费的保证金\n' ..
 	'将要上架几组\n' ..
