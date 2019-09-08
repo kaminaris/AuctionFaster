@@ -1,7 +1,7 @@
 local L = LibStub('AceLocale-3.0'):NewLocale('AuctionFaster', 'zhCN');
 if not L then return end
 
-L['AuctionFaster - Historical Options'] = 'AuctionFaster - 历史选项'	-- possible need a unified format for addon name, Auction Faster or AuctionFaster?
+L['AuctionFaster - Historical Options'] = 'AuctionFaster - 历史选项'
 L['Enable Historical Data Collection'] = '启用历史纪录'
 L['Days to keep data (5-50)'] = '纪录的天数，5至50天'
 L['AuctionFaster - Pricing Options'] = 'AuctionFaster - 价格选项'
@@ -9,7 +9,7 @@ L['Historical Options'] = '历史选项'
 L['Pricing Options'] = '价格选项'
 L['Maximum difference bid to buy (1-100%)'] = true;
 L['AuctionFaster Options'] = 'AuctionFaster - 选项'
-L['AuctionFaster'] = true;	-- maybe dont need to translate
+L['AuctionFaster'] = true;
 L['Enable AuctionFaster'] = '启用AuctionFaster'
 L['Fast Mode'] = '快速模式'
 L['Enable ToolTips'] = '启用鼠标提示'
@@ -38,7 +38,7 @@ L['Enable ToolTips for Items'] = '启用物品的鼠标提示'
 L['Tooltip Anchor'] = '鼠标提示锚点'
 L['Item Tooltip Anchor'] = '物品提示锚点'
 L['Buy Tab Settings'] = '购买分页设置'
-L['Query failed, retrying: '] = '查询失败，重试%d次'
+L['Query failed, retrying: %d'] = '查询失败，重试%d次'
 L['Cannot query AH. Please wait a bit longer or reload UI'] = '无法扫瞄拍卖行。请等一下或重载界面'
 L['Could not pick up item from inventory'] = '无法从背包中选定物品'
 L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'] = '上架%1$s：\n每组售价：%2$s\n单价：%3$s\n每组堆叠%5$d个，共出售%4$d组。'
