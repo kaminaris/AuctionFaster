@@ -397,6 +397,7 @@ function Buy:ApplyFilters(query)
 	local filters = self.filtersPane;
 
 	query.exact = filters.exactMatch:GetChecked();
+	query.isUsable = filters.usableItems:GetChecked();
 	local minLevel = filters.minLevel:GetValue();
 	local maxLevel = filters.maxLevel:GetValue();
 
@@ -408,6 +409,7 @@ function Buy:ApplyFilters(query)
 		query.maxLevel = maxLevel;
 	end
 
+	query.qualityIndex = filters.rarity:GetValue();
 	local categoryIndex = filters.category:GetValue();
 	local subCategoryIndex = filters.subCategory:GetValue();
 
