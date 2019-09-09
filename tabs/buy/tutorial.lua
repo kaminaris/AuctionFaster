@@ -47,8 +47,8 @@ function Buy:InitTutorial(force)
 		local buyTab = self.buyTab;
 		self.tutorials = {
 			{
-				text   = L['Welcome to AuctionFaster.\n\nI recommend checking out\ntutorial at least once\nbefore you '] ..
-					L['accidentially\nbuy half of the auction house.\n\n:)'],
+				text   = L['Welcome to AuctionFaster.\n\nI recommend checking out\ntutorial at least once\nbefore you ' ..
+					'accidentially\nbuy half of the auction house.\n\n:)'],
 				anchor = 'CENTER',
 				parent = buyTab,
 				noglow = true

@@ -104,9 +104,9 @@ end
 function AuctionFaster:RegisterHistoricalOptionWindow()
 	local optionsFrame = self.optionsFrame
 
-	optionsFrame.historicalOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['Auction Faster - Historical Options']);
+	optionsFrame.historicalOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['AuctionFaster - Historical Options']);
 	local historicalOptions = optionsFrame.historicalOptions;
-	historicalOptions.name = 'Historical Options';
+	historicalOptions.name = L['Historical Options'];
 	historicalOptions.parent = optionsFrame.name;
 	historicalOptions:Hide();
 
@@ -115,7 +115,7 @@ function AuctionFaster:RegisterHistoricalOptionWindow()
 	keepDays:SetMinMaxValue(5, 50);
 	keepDays:SetValue(self.db.historical.keepDays);
 
-	StdUi:AddLabel(historicalOptions, keepDays, L['Days to keep data (5-50):'], 'TOP');
+	StdUi:AddLabel(historicalOptions, keepDays, L['Days to keep data (5-50)'], 'TOP');
 
 	StdUi:GlueTop(enabled, historicalOptions, 10, -40, 'LEFT');
 	StdUi:GlueBelow(keepDays, enabled, 0, -30, 'LEFT');
@@ -131,9 +131,9 @@ end
 function AuctionFaster:RegisterPricingOptionWindow()
 	local optionsFrame = self.optionsFrame
 
-	optionsFrame.pricingOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['Auction Faster - Pricing Options']);
+	optionsFrame.pricingOptions = StdUi:PanelWithTitle(UIParent, 100, 100, L['AuctionFaster - Pricing Options']);
 	local pricingOptions = optionsFrame.pricingOptions;
-	pricingOptions.name = 'Pricing Options';
+	pricingOptions.name = L['Pricing Options'];
 	pricingOptions.parent = optionsFrame.name;
 	pricingOptions:Hide();
 
@@ -155,11 +155,11 @@ function AuctionFaster:RegisterOptionWindow()
 		return;
 	end
 
-	self.optionsFrame = StdUi:PanelWithTitle(UIParent, 100, 100, L['Auction Faster Options']);
-	self.optionsFrame.name = L['Auction Faster'];
+	self.optionsFrame = StdUi:PanelWithTitle(UIParent, 100, 100, L['AuctionFaster Options']);
+	self.optionsFrame.name = L['AuctionFaster'];
 	self.optionsFrame:Hide();
 
-	local enabled = StdUi:Checkbox(self.optionsFrame, L['Enable Auction Faster']);
+	local enabled = StdUi:Checkbox(self.optionsFrame, L['Enable AuctionFaster']);
 	local fastMode = StdUi:Checkbox(self.optionsFrame, L['Fast Mode']);
 	local enableToolTips = StdUi:Checkbox(self.optionsFrame, L['Enable ToolTips']);
 

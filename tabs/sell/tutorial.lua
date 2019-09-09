@@ -9,6 +9,7 @@ local Tutorial = AuctionFaster:GetModule('Tutorial');
 local Sell = AuctionFaster:GetModule('Sell');
 
 local C = WrapTextInColorCode;
+local format = string.format;
 local red = 'FFFF0000';
 local green = 'FF00FF00';
 local orange = 'FFFFFF00';
@@ -100,11 +101,11 @@ function Sell:InitTutorial(force)
 				parent = sellTab.buttons.itemSettings,
 			},
 			{
-				text   = L['This opens auction informations:\n\n'] ..
-					L['- Total auction buy price.\n'] ..
-					L['- Deposit cost.\n'] ..
-					L['- Number of auctions\n'] ..
-					L['- Auction duration\n\n'] ..
+				text   = L['This opens auction informations:\n\n' ..
+					'- Total auction buy price.\n' ..
+					'- Deposit cost.\n' ..
+					'- Number of auctions\n' ..
+					'- Auction duration\n\n'] ..
 					C(L['This will change dynamically when you change stack size or max stacks.'], green),
 				anchor = 'RIGHT',
 				action = function()
@@ -125,14 +126,18 @@ function Sell:InitTutorial(force)
 				parent = sellTab.buttons.buyItemButton,
 			},
 			{
-				text   = L['Posts '] .. C(L['one auction'], red) ..
-					L[' of selected item regardless of your\n"# Stacks" settings'],
+				text   = format(
+					L['Posts %s of selected item regardless of your\n"# Stacks" settings'],
+					C(L['one auction'], red)
+				),
 				anchor = 'RIGHT',
 				parent = sellTab.buttons.postOneButton,
 			},
 			{
-				text   = L['Posts '] .. C(L['all auctions'], red) ..
-					L[' of selected item according to your\n"# Stacks" settings'],
+				text   = format(
+					L['Posts %s of selected item according to your\n"# Stacks" settings'],
+					C(L['all auctions'], red)
+				),
 				anchor = 'RIGHT',
 				parent = sellTab.buttons.postButton,
 			},

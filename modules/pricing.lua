@@ -10,6 +10,7 @@ local TableInsert = tinsert;
 local floor = math.floor;
 local pow = math.pow;
 local sqrt = math.sqrt;
+local format = string.format;
 
 Pricing.models = {};
 
@@ -216,5 +217,5 @@ function Pricing:Stack(auctionInfo)
 	end
 
 	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
-	return lowestBid, lowestBuy, true, L['No auction found with minimum quantity: '] .. minQty;
+	return lowestBid, lowestBuy, true, format(L['No auction found with minimum quantity: %d'], minQty);
 end

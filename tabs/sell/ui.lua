@@ -8,12 +8,14 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Sell
 local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
 
+local format = string.format;
+
 function Sell:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
 	end
 
-	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['Auction Faster - Sell'], self);
+	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['AuctionFaster - Sell'], self);
 
 	self.sellTab:SetScript('OnShow', function()
 		Sell:OnShow();
@@ -225,14 +227,15 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	sellTab.itemIcon = StdUi:Texture(sellTab.iconBackdrop, iconSize, iconSize, '');
 	StdUi:GlueAcross(sellTab.itemIcon, sellTab.iconBackdrop, 1, -1, -1, 1);
 
-	sellTab.itemName = StdUi:Label(sellTab, L['No item selected'], nil, 'GameFontNormalLarge', 250, 20);
+	sellTab.itemName = StdUi:Label(sellTab, L['No Item selected'], nil, 'GameFontNormalLarge', 250, 20);
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
-	sellTab.itemQty = StdUi:Label(sellTab, L['Qty: O, Max Stacks: 0'], nil, nil, 250, 20);
+	sellTab.itemQty = StdUi:Label(sellTab, format(L['Qty: %d, Max Stacks: %d, Remaining: %d'], 0, 0, 0), nil, nil, 250,
+		20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
-	sellTab.lastScan = StdUi:Label(sellTab, L['Last scan: ---']);
+	sellTab.lastScan = StdUi:Label(sellTab, format(L['Last scan: %s'], '---'));
 	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 
@@ -279,7 +282,7 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 	sellTab.stackSize = StdUi:NumericBox(sellTab, 150, 20, '1');
 	StdUi:AddLabel(sellTab, sellTab.stackSize, L['Stack Size'], 'TOP');
 
-	sellTab.stackSize:SetValue(0);
+	sellTab.stackSize:SetValue(1);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
 	sellTab.maxStacks = StdUi:NumericBox(sellTab, 150, 20, '0');
@@ -370,7 +373,7 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	local cols = {
 		{
 			name         = L['Seller'],
-			width        = 120,
+			width        = 116,
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
@@ -397,14 +400,14 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 		},
 		{
 			name         = L['Qty'],
-			width        = 35,
+			width        = 38,
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
 		},
 		{
 			name         = L['Lvl'],
-			width        = 35,
+			width        = 38,
 			align        = 'LEFT',
 			index        = 'level',
 			format       = 'number',

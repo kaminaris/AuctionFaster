@@ -40,7 +40,7 @@ function Tooltip:UpdateTooltip(tooltip, ...)
 	local cacheItem = ItemCache:GetItemFromCache(itemId, name, true);
 	if cacheItem then
 		tooltip:AddLine('---');
-		tooltip:AddLine(L['AuctionFaster:']);
+		tooltip:AddLine(L['AuctionFaster']);
 		tooltip:AddDoubleLine(L['Lowest Bid: '], StdUi.Util.formatMoney(cacheItem.bid));
 		tooltip:AddDoubleLine(L['Lowest Buy: '], StdUi.Util.formatMoney(cacheItem.buy));
 
@@ -52,7 +52,7 @@ end
 function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	if not tooltip.afPane then
 		tooltip.afPane = StdUi:Panel(tooltip, 150, 70);
-		tooltip.afPane.header = StdUi:Label(tooltip.afPane, L['AuctionFaster:']);
+		tooltip.afPane.header = StdUi:Label(tooltip.afPane, L['AuctionFaster']);
 
 		tooltip.afPane.bidLabel = StdUi:Label(tooltip.afPane, L['Lowest Bid: ']);
 		tooltip.afPane.bid = StdUi:Label(tooltip.afPane, '');
