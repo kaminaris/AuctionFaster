@@ -153,7 +153,7 @@ L['Please refresh auctions first'] = '請先按更新，重整拍賣'
 L['Yes'] = '是'
 L['No'] = '否'
 L['Incomplete sell'] = '散裝零售'
-L['You still have %d of %s Do you wish to sell rest?'] = '你還有%d組%s，要把剩下的也賣掉嗎？'
+L['You still have %d of %s Do you wish to sell rest?'] = '你還有%d個%s，要把剩下的也賣掉嗎？'
 
 -- sell info pane
 L['Auction Info'] = '拍賣資訊'
