@@ -265,6 +265,7 @@ function Buy:DrawSearchResultsTable()
 			events		 = {
 				OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
 					if AuctionFaster.db.buy.tooltips.enabled then
+						AuctionFaster.hoverRowData = rowData
 						AuctionFaster:ShowTooltip(
 							cellFrame,
 							rowData.itemLink,
@@ -277,6 +278,7 @@ function Buy:DrawSearchResultsTable()
 				end,
 				OnLeave = function(table, cellFrame)
 					if AuctionFaster.db.buy.tooltips.enabled then
+						AuctionFaster.hoverRowData = nil
 						AuctionFaster:ShowTooltip(cellFrame, nil, false);
 					end
 					return false;
