@@ -58,10 +58,29 @@ function Buy:SearchAuctions(name, exact, page)
 
 	self:ClearSearchAuctions();
 	self:UpdateStateText(true);
+	self:SaveRecentSearches(name);
 
 	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
 		Buy:SearchAuctionsCallback(shown, total, items)
 	end);
+end
+
+function Buy:SaveRecentSearches(searchQuery)
+	local rs = AuctionFaster.db.buy.recentSearches;
+	local historyLimit = 100;
+
+	for _, v in pairs(rs) do
+		if v.text:lower() == searchQuery:lower() then
+			return;
+		end
+	end
+
+	TableInsert(rs, 1, {value = searchQuery, text = searchQuery});
+	if #rs > historyLimit then
+		for i = historyLimit + 1, #rs do
+			rs[i] = nil;
+		end
+	end
 end
 
 function Buy:RefreshSearchAuctions()

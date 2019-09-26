@@ -41,7 +41,8 @@ end
 function Buy:DrawSearchPane()
 	local buyTab = self.buyTab;
 
-	local searchBox = StdUi:SearchEditBox(buyTab, 400, 30, L['Search']);
+	local searchBox = StdUi:Autocomplete(buyTab, 400, 30, '', nil, nil, AuctionFaster.db.buy.recentSearches);
+	StdUi:ApplyPlaceholder(searchBox, L['Search'], [[Interface\Common\UI-Searchbox-Icon]]);
 	searchBox:SetFontSize(16);
 
 	local searchButton = StdUi:Button(buyTab, 80, 30, L['Search']);

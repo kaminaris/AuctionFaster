@@ -29,7 +29,8 @@ AuctionFaster.defaults = {
 		tooltips = {
 			enabled = true,
 			anchor  = 'BOTTOMRIGHT'
-		}
+		},
+		recentSearches = {}
 	},
 	pricing = {
 		maxBidDeviation = 20
@@ -94,6 +95,10 @@ function AuctionFaster:InitDatabase()
 
 	if not self.db.defaultTab then
 		self.db.defaultTab = 'NONE';
+	end
+
+	if not self.db.buy.recentSearches then
+		self.db.buy.recentSearches = {};
 	end
 end
 
