@@ -3,6 +3,7 @@
 ## Version: 8.2.5
 ## Author: Kaminaris
 ## Interface: 80205
+## OptionalDeps: BattlePetBreedID
 ## SavedVariables: AuctionFasterDb
 ## X-Curse-Project-ID: 292892
 ## X-WoWI-ID: 24771

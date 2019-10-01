@@ -135,7 +135,15 @@ function Auctions:CollectAuctionsFromList()
 			itemInfo.owner = '---';
 		end
 
-		items[i] = itemInfo;
+		--local speciesId = C_PetJournal.FindPetIDByName(itemInfo.name);
+		--if speciesId then
+		--	local numCollected = C_PetJournal.GetNumCollectedInfo(speciesId)
+		--	if numCollected == 0 then
+		--		items[i] = itemInfo;
+		--	end
+		--else
+			items[i] = itemInfo;
+		--end
 	end
 
 	return items, hasAllInfo, shown, total;
