@@ -84,8 +84,6 @@ function Tooltip:HookBattlePetBreedId()
 		local origWidth = afPane:GetWidth();
 		afPane:AddLine('');
 
-
-
 		local rarity = rareness or 4;
 
 		-- Arrays are now initialized if they weren't before
@@ -341,7 +339,7 @@ end
 
 function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	if not tooltip.afPane then
-		tooltip.afPane = StdUi:FrameTooltip(tooltip, '', 'AFBattlePetTooltip', 'BOTTOM', false, true);
+		tooltip.afPane = StdUi:FrameTooltip(tooltip, '', 'AFBattlePetTooltip', 'BOTTOM', false, false);
 	end
 
 	tooltip.afPane:SetText('');
