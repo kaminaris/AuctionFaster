@@ -36,7 +36,7 @@ end
 function Sell:DrawItemsFrame()
 	local marginTop = -35;
 	local sellTab = self.sellTab;
-	local panel, scrollFrame, scrollChild = StdUi:FauxScrollFrame(sellTab, 300, 300, 11, 32);
+	local panel = StdUi:FauxScrollFrame(sellTab, 300, 300, 11, 32);
 	panel:SetPoint('TOPLEFT', 25, marginTop);
 	panel:SetPoint('BOTTOMLEFT', 300, 55);
 
@@ -111,8 +111,8 @@ function Sell:DrawItemsFrame()
 	end;
 
 	sellTab.itemsList = panel;
-	sellTab.scrollFrame = scrollFrame;
-	sellTab.scrollChild = scrollChild;
+	sellTab.scrollFrame = panel.scrollFrame;
+	sellTab.scrollChild = panel.scrollChild;
 
 	self.sortInventoryBy = AuctionFaster.db.sell.sortInventoryBy or 'itemName'; -- quality, price
 	self.sortInventoryOrder = AuctionFaster.db.sell.sortInventoryOrder or 'asc';

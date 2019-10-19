@@ -19,7 +19,7 @@ function Sell:DrawInfoPane()
 
 	local sellTab = self.sellTab;
 
-	local infoPane = StdUi:Window(sellTab, L['Auction Info'], 200, 100);
+	local infoPane = StdUi:Window(sellTab, 200, 100, L['Auction Info']);
 	sellTab.infoPane = infoPane;
 
 	if AuctionFaster.db.infoPaneOpened then
@@ -244,7 +244,7 @@ end
 function Sell:ShowHistoricalWindow(historicalData)
 	local historicalWindow, g;
 	if not self.historicalWindow then
-		historicalWindow = StdUi:Window(UIParent, L['Test Line'], 600, 500);
+		historicalWindow = StdUi:Window(UIParent, 600, 500, L['Test Line']);
 		historicalWindow:SetPoint('CENTER');
 		historicalWindow:Show();
 
