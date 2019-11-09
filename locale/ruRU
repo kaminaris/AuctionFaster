@@ -111,7 +111,6 @@ L['across all the pages'] = 'на всех страницах'
 L[' that meets the minimum quantity\n\n'] = ' который соответствует минимальному количеству\n\n'
 L['You need to enter a search query first'] = 'Необходимо сначала ввести запрос'
 L['Opens this tutorial again.\nHope you liked it\n\n:)\n\n'] = 'Эта кнопка откроет руководство снова.\nНадеюсь, вам понравилось\n\n:)\n\n'
-'
 
 -- buy UI
 L['Buy Items'] = 'Купить'
@@ -130,8 +129,8 @@ L['More features\ncoming soon'] = true;
 
 -- buy ui
 L['Add to Queue'] = 'Добавить в очередь'
-L['Add With Min Stacks'] = 'Добавить с мин. кол-вом';
-L['Find X Stacks'] = 'Найти Х шт.';
+L['Add With Min Stacks'] = 'Добавить с мин. кол-вом'
+L['Find X Stacks'] = 'Найти Х шт.'
 L['Min Stacks'] = 'Мин. кол-во'
 L['Please select auction first'] = true;
 L['Enter a correct stack amount 1-200'] = 'Введите корректное значение в интервале 1-200'
@@ -196,7 +195,7 @@ L['By default, AuctionFaster always undercuts price,\neven if you toggle "Rememb
 
 -- sell tutorial
 L['Welcome to AuctionFaster.\n\nI recommend checking out sell tutorial at least once before you accidentally sell your precious goods.\n\n:)'] = 'Добро пожаловать в AuctionFaster (продажа).\nРекомендуется хотя бы один раз прочитать руководство,\nиначе можно случайно скупить половину аукциона.\n\n:)'
-L['Here is the list of all inventory items you can sell, no need to drag anything.\n\n'] = 'Это список всех предметов из инвентаря, не нужно ничего перетаскивать. \n\n';
+L['Here is the list of all inventory items you can sell, no need to drag anything.\n\n'] = 'Это список всех предметов из инвентаря, не нужно ничего перетаскивать. \n\n'
 L['After you select item, AuctionFaster will automatically make a scan of first page and undercut set bid/buy according to price model selected.'] = 'После того, как вы выберете предмет, AuctionFaster автоматически выполнит сканирование первой страницы и установит ставку в соответствии с выбранной ценовой моделью.'
 L['Here you will see selected item. Max stacks means how much of stacks can you sell according to your setting. Remaining means how much quantity will still stay in bag after selling item.'] = 'Здесь вы увидите выбранный предмет. Максимум паков означает, сколько паков вы можете продать в соответствии с вашими настройками. Оставшееся означает - сколько количества останется в сумке после продажи предмета.'
 L['AuctionFaster keeps auctions cache for about 10 minutes, you can see when last real scan was performed.\n\n'] = 'AuctionFaster хранит кеш аукционов около 10 минут, вы можете увидеть, когда было выполнено последнее реальное сканирование\n\n'
