@@ -11,7 +11,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 function Sell:DrawItemSettingsPane()
 	local sellTab = self.sellTab;
 
-	local pane = StdUi:Window(sellTab, L['Item Settings'], 200, 100);
+	local pane = StdUi:Window(sellTab, 200, 100,  L['Item Settings']);
 	StdUi:GlueAfter(pane, sellTab, 0, -150, 0, 0);
 
 	if AuctionFaster.db.itemSettingsOpened then

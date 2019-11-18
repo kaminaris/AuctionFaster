@@ -124,7 +124,7 @@ function ChainBuy:ShowWindow()
 		return;
 	end
 
-	local window = StdUi:Window(UIParent, L['Chain Buy'], 400, 300);
+	local window = StdUi:Window(UIParent, 400, 300, L['Chain Buy']);
 	if AuctionFaster.db.chainBuy.moved then
 		local settings = AuctionFaster.db.chainBuy;
 		window:SetPoint(settings.point, nil, settings.relativePoint, settings.xOfs, settings.yOfs);

@@ -16,7 +16,7 @@ function Buy:DrawSniperFrame()
 
 	local buyTab = self.buyTab;
 
-	local sniperPane = StdUi:Window(buyTab, L['Sniper'], 200, 100);
+	local sniperPane = StdUi:Window(buyTab, 200, 100, L['Sniper']);
 	sniperPane:Hide();
 
 	StdUi:GlueAfter(sniperPane, buyTab, 0, 0, 0, 0);

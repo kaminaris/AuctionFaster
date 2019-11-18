@@ -11,7 +11,7 @@ local TableInsert = tinsert;
 function Buy:DrawFilterFrame()
 	local buyTab = self.buyTab;
 
-	local filtersPane = StdUi:Window(buyTab, L['Filters'], 200, 100);
+	local filtersPane = StdUi:Window(buyTab, 200, 100, L['Filters']);
 	filtersPane:Hide();
 	StdUi:GlueAfter(filtersPane, buyTab, 0, 0, 0, 0);
 
