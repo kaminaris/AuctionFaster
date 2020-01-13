@@ -10,12 +10,22 @@ local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
 
 local format = string.format;
 
+local AFSellMode = {
+	'AFSellModeFrame'
+}
+
 function Sell:AddSellAuctionHouseTab()
 	if self.sellTabAdded then
 		return ;
 	end
 
-	self.sellTab = AuctionFaster:AddAuctionHouseTab(L['Sell Items'], L['AuctionFaster - Sell'], self);
+	AuctionHouseFrameDisplayMode.AFSellMode = AFSellMode;
+	self.sellTab = AuctionFaster:AddAuctionHouseTab(
+		L['Sell Items'],
+		L['AuctionFaster - Sell'],
+		self,
+		AFSellMode
+	);
 
 	self.sellTab:SetScript('OnShow', function()
 		Sell:OnShow();

@@ -39,11 +39,9 @@ function Inventory:ScanInventory()
 
 		if numSlots ~= 0 then
 			for slot = 1, numSlots do
-				local itemId = GetContainerItemID(bag, slot);
-				local link = GetContainerItemLink(bag, slot);
-				local _, count = GetContainerItemInfo(bag, slot);
+				local itemLocation = ItemLocation:CreateFromBagAndSlot(bag, slot);
 
-				self:AddItemToInventory(itemId, count, link, bag, slot);
+				self:AddItemToInventory(itemLocation, bag, slot);
 			end
 		end
 	end
@@ -71,8 +69,15 @@ function Inventory:UpdateItemInventory(itemId, itemName)
 	return totalQty;
 end
 
-function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
-	local canSell = false;
+function Inventory:AddItemToInventory(itemLocation, bag, slot)
+	if not itemLocation:IsValid() then
+		return false;
+	end
+
+	local canSell = C_AuctionHouse.IsSellItemValid(itemLocation);
+	local itemId = C_Item.GetItemID(itemLocation);
+	local link = C_Item.GetItemLink(itemLocation);
+	local count = C_Item.GetItemQuality(itemLocation);
 
 	if itemId == battlePetId then
 		canSell = true;
@@ -90,9 +95,14 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 			local line = Gratuity:GetLine(i);
 
 			if line then
-				canSell = not (strfind(line, ITEM_BIND_ON_PICKUP) or strfind(line, ITEM_BIND_TO_BNETACCOUNT)
-						or strfind(line, ITEM_BNETACCOUNTBOUND) or strfind(line, ITEM_SOULBOUND)
-						or strfind(line, ITEM_BIND_QUEST) or strfind(line, ITEM_CONJURED));
+				canSell = not (
+					strfind(line, ITEM_BIND_ON_PICKUP) or
+					strfind(line, ITEM_BIND_TO_BNETACCOUNT) or
+					strfind(line, ITEM_BNETACCOUNTBOUND) or
+					strfind(line, ITEM_SOULBOUND) or
+					strfind(line, ITEM_BIND_QUEST) or
+					strfind(line, ITEM_CONJURED)
+				);
 
 				if strfind(line, USE_COLON) then
 					break ;

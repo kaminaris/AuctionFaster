@@ -324,7 +324,7 @@ function Sell:CurrentAuctionsCallback(shown, total, items)
 	if not itemRecord then return; end
 
 	-- we skip any auctions that are not the same as selected item so no problem
-	AuctionCache:ParseScanResults(items, total);
+	AuctionCache:ParseScanResults(items);
 
 	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemId, itemRecord.itemName);
 

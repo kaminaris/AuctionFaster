@@ -26,7 +26,7 @@ local function isSameDate(date1, date2)
 end
 
 
-function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions, total)
+function ItemCache:RefreshHistoricalData(itemRecord, serverTime)
 	---@type Pricing
 	local Pricing = AuctionFaster:GetModule('Pricing');
 
@@ -39,7 +39,7 @@ function ItemCache:RefreshHistoricalData(itemRecord, serverTime, auctions, total
 		return itemRecord.itemName == auction.name and itemRecord.itemId == auction.itemId;
 	end
 
-	local auctionInfo = Pricing:CalculateStatData(itemRecord, auctions, 1, total, filter);
+	local auctionInfo = Pricing:CalculateStatData(itemRecord, {}, 1, 2, filter);
 	auctionInfo.itemRecord = nil;
 	auctionInfo.auctions = nil;
 	auctionInfo.stackSize = nil;
@@ -100,8 +100,7 @@ function ItemCache:GetItemFromCache(itemId, itemName)
 end
 
 --- Puts a blank item in cache as template
-function ItemCache:FindOrCreateCacheItem(itemId, itemName)
-	local cacheKey = itemId .. itemName;
+function ItemCache:FindOrCreateCacheItem(cacheKey, itemId, itemName)
 
 	if AuctionFaster.db.auctionDb[cacheKey] then
 		return AuctionFaster.db.auctionDb[cacheKey];

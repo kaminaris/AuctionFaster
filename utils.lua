@@ -121,31 +121,98 @@ function AuctionFaster:ParseBattlePetLink(link)
 	return itemName, icon, speciesId, petLevel, breedQuality;
 end
 
-function AuctionFaster:ShowTooltip(frame, link, show, itemId, anchor)
+local AuctionHouseTooltipType = {
+	PetLink = 1;
+	ItemLink = 2;
+	ItemKey = 3;
+};
+
+local function GetAuctionHouseTooltipType(rowData)
+	if rowData.itemLinkProper then
+		local linkType = LinkUtil.ExtractLink(rowData.itemLink);
+		if linkType == 'battlepet' then
+			return AuctionHouseTooltipType.PetLink, rowData.itemLink;
+		elseif linkType == "item" then
+			return AuctionHouseTooltipType.ItemLink, rowData.itemLink;
+		end
+	elseif rowData.itemKey then
+		local restrictQualityToFilter = true;
+		local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey, restrictQualityToFilter);
+		if itemKeyInfo and itemKeyInfo.battlePetLink then
+			return AuctionHouseTooltipType.PetLink, itemKeyInfo.battlePetLink;
+		end
+
+		return AuctionHouseTooltipType.ItemKey, rowData.itemKey;
+	end
+
+	return nil;
+end
+
+function AuctionFaster:ShowTooltip(frame, rowData, show, anchor)
+	GameTooltip_Hide();
+
 	if show then
+		local tooltip;
 
-		GameTooltip:SetOwner(frame);
+		local tooltipType, data = GetAuctionHouseTooltipType(rowData);
+		if not tooltipType then
+			return;
+		end
 
-		if itemId == 82800 then
-			local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(':', link);
+		GameTooltip:SetOwner(frame, 'ANCHOR_RIGHT');
 
-			BattlePetToolTip_Show(
-				tonumber(speciesID),
-				tonumber(level),
-				tonumber(breedQuality),
-				tonumber(maxHealth),
-				tonumber(power),
-				tonumber(speed),
-				string.gsub(string.gsub(link, '^(.*)%[', ''), '%](.*)$', '')
-			);
-			BattlePetTooltip:ClearAllPoints();
-			StdUi:GlueOpposite(BattlePetTooltip, frame, 0, 0, anchor);
+		if tooltipType == AuctionHouseTooltipType.PetLink then
+			BattlePetToolTip_ShowLink(data);
+			tooltip = BattlePetTooltip;
 		else
-			GameTooltip:SetHyperlink(link);
+			tooltip = GameTooltip;
+			if tooltipType == AuctionHouseTooltipType.ItemLink then
+				local hideVendorPrice = true;
+				GameTooltip:SetHyperlink(rowData.itemLink, nil, nil, nil, hideVendorPrice);
+			elseif tooltipType == AuctionHouseTooltipType.ItemKey then
+				GameTooltip:SetItemKey(data.itemID, data.itemLevel, data.itemSuffix);
+			end
+		end
+
+		if rowData.owners then
+			--local methodFound, auctionHouseFrame = CallMethodOnNearestAncestor(owner, "GetAuctionHouseFrame");
+			--local bidStatus = auctionHouseFrame and auctionHouseFrame:GetBidStatus(rowData) or nil;
+			--AuctionHouseUtil.AddAuctionHouseTooltipInfo(tooltip, rowData, bidStatus);
+		end
+
+		if tooltip == GameTooltip then
 			GameTooltip:Show();
 			GameTooltip:ClearAllPoints();
 			StdUi:GlueOpposite(GameTooltip, frame, 0, 0, anchor);
+		else
+			BattlePetTooltip:ClearAllPoints();
+			StdUi:GlueOpposite(BattlePetTooltip, frame, 0, 0, anchor);
 		end
+
+		--GameTooltip:SetOwner(frame);
+		--
+		----if itemId == 82800 then
+		----	local _, speciesID, level, breedQuality, maxHealth, power, speed, battlePetID = strsplit(':', link);
+		----
+		----	BattlePetToolTip_Show(
+		----		tonumber(speciesID),
+		----		tonumber(level),
+		----		tonumber(breedQuality),
+		----		tonumber(maxHealth),
+		----		tonumber(power),
+		----		tonumber(speed),
+		----		string.gsub(string.gsub(link, '^(.*)%[', ''), '%](.*)$', '')
+		----	);
+		----	BattlePetTooltip:ClearAllPoints();
+		----	StdUi:GlueOpposite(BattlePetTooltip, frame, 0, 0, anchor);
+		----else
+		--	GameTooltip:SetItemKey(itemKey);
+		--print('setting item key');
+		--DevTools_Dump(itemKey)
+		--	GameTooltip:Show();
+		--	GameTooltip:ClearAllPoints();
+		--	StdUi:GlueOpposite(GameTooltip, frame, 0, 0, anchor);
+		----end
 	else
 		GameTooltip:Hide();
 		if BattlePetTooltip then

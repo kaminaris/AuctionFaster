@@ -14,6 +14,8 @@ local Buy = AuctionFaster:GetModule('Buy');
 local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 --- @type AuctionCache
 local AuctionCache = AuctionFaster:GetModule('AuctionCache');
+--- @type CommodityBuy
+local CommodityBuy = AuctionFaster:GetModule('CommodityBuy');
 
 local format = string.format;
 local TableInsert = tinsert;
@@ -24,33 +26,31 @@ function Buy:Enable()
 end
 
 function Buy:OnShow()
-	self:RegisterEvent('AUCTION_ITEM_LIST_UPDATE');
 
 	self.buyTab.auctions = {};
+	self.buyTab.items = {};
 
 	self:UpdateSearchAuctions();
 	self:UpdateStateText();
-	self:UpdatePager();
+	--self:UpdatePager();
 
 	self:InitTutorial();
 end
 
 function Buy:OnHide()
-	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
+
 end
 
 function Buy:Disable()
-	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
 ----------------------------------------------------------------------------
 --- Searching functions
 ----------------------------------------------------------------------------
 
-function Buy:SearchAuctions(name, exact, page)
+function Buy:SearchAuctions(name, exact)
 	self.currentQuery = {
 		name = name,
-		page = page or 0,
 		exact = exact or false,
 	};
 
@@ -60,8 +60,36 @@ function Buy:SearchAuctions(name, exact, page)
 	self:UpdateStateText(true);
 	self:SaveRecentSearches(name);
 
-	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
-		Buy:SearchAuctionsCallback(shown, total, items)
+	Auctions:QueryAuctions(self.currentQuery, function(items)
+		Buy:SearchAuctionsCallback(items)
+	end);
+end
+
+function Buy:SearchItem(itemKey)
+	self.currentQuery = {
+		itemKey = itemKey,
+	};
+
+	self:ApplyFilters(self.currentQuery);
+
+	self:ClearSearchAuctions();
+	self:UpdateStateText(true);
+
+	Auctions:QueryItem(self.currentQuery, function(items)
+		Buy:SearchItemCallback(items)
+	end);
+end
+
+function Buy:SearchFavoriteItems()
+	self.currentQuery = {
+		favorites = true,
+	};
+
+	self:ClearSearchAuctions();
+	self:UpdateStateText(true);
+
+	Auctions:SearchFavoriteItems(self.currentQuery, function(items)
+		Buy:SearchItemCallback(items)
 	end);
 end
 
@@ -89,78 +117,49 @@ function Buy:RefreshSearchAuctions()
 		return;
 	end
 
-	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page);
-end
-
-function Buy:SearchNextPage()
-	-- if last page is not yet defined or it would be over last page, just abandon
-	if not self.currentQuery.lastPage or self.currentQuery.page + 1 > self.currentQuery.lastPage then
-		return;
+	if self.currentQuery.itemKey then
+		-- sending another query
+		self:SearchItem(self.currentQuery.itemKey);
+	else
+		self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact);
 	end
-
-	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page + 1);
-end
-
-function Buy:SearchPreviousPage()
-	-- just in case there are no search results abort
-	if not self.currentQuery.lastPage or self.currentQuery.page - 1 < 0 then
-		return;
-	end
-
-	self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, self.currentQuery.page - 1);
 end
 
 ----------------------------------------------------------------------------
 --- Searching callback function
 ----------------------------------------------------------------------------
 
-function Buy:SearchAuctionsCallback(shown, total, items)
-	if self.currentQuery.page == 0 then
-		AuctionCache:ParseScanResults(items, total);
-	end
+function Buy:SearchAuctionsCallback(items)
+	print(#items)
+	-- TODO: this needs to be done twice
+	-- AuctionCache:ParseScanResults(items);
+	self.buyTab.items = items;
+	self.mode = 'items';
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
+end
+
+function Buy:SearchItemCallback(items)
+	print(#items)
+	AuctionCache:ParseScanResults(items);
+	self.buyTab.auctions = items;
+	self.mode = 'auctions';
+
+	self:UpdateSearchAuctions();
+	self:UpdateStateText();
 end
 
 function Buy:UpdateStateText(inProgress)
 	if inProgress then
 		self.buyTab.stateLabel:SetText(L['Search in progress...']);
 		self.buyTab.stateLabel:Show();
-	elseif #self.buyTab.auctions == 0 then
+	elseif #self.buyTab.auctions == 0 and #self.buyTab.items == 0 then
 		self.buyTab.stateLabel:SetText(L['Nothing was found for this query.']);
 		self.buyTab.stateLabel:Show();
 	else
 		self.buyTab.stateLabel:Hide();
 	end
-end
-
-function Buy:UpdatePager()
-	if not self.currentQuery then return; end
-
-	local p = self.currentQuery.page + 1;
-	local lp = self.currentQuery.lastPage + 1;
-	local pager = self.buyTab.pager;
-	self.updatingPagerLock = true;
-
-	pager.pageText:SetText(format(L['Pages: %d'], lp));
-
-	pager.leftButton:Enable();
-	pager.rightButton:Enable();
-
-	local opts = {};
-	for i = 0, self.currentQuery.lastPage do
-		TableInsert(opts, {text = tostring(i + 1), value = i});
-	end
-
-	pager.pageJump:SetOptions(opts);
-	pager.pageJump:SetValue(self.currentQuery.page);
-
-	if p <= 1 then
-		pager.leftButton:Disable();
-	end
-
-	if p >= lp then
-		pager.rightButton:Disable();
-	end
-	self.updatingPagerLock = false;
 end
 
 function Buy:UpdateQueue()
@@ -230,7 +229,11 @@ function Buy:RemoveCurrentSearchAuction()
 end
 
 function Buy:UpdateSearchAuctions()
-	self.buyTab.searchResults:SetData(self.buyTab.auctions, true);
+	if self.mode == 'auctions' then
+		self.buyTab.searchResults:SetData(self.buyTab.auctions, true);
+	else
+		self.buyTab.searchResults:SetData(self.buyTab.items, true);
+	end
 end
 
 function Buy:ClearSearchAuctions()
@@ -247,45 +250,37 @@ function Buy:LockBuyButton(lock)
 	end
 end
 
-function Buy:AUCTION_ITEM_LIST_UPDATE()
-	local items, hasAllInfo, shown, total = Auctions:CollectAuctionsFromList();
-
-	self.currentQuery.lastPage = ceil(total / 50) - 1;
-
-	self.buyTab.auctions = items;
-
-	self:UpdateSearchAuctions();
-	self:UpdateStateText();
-	self:UpdatePager();
-end
-
 function Buy.CloseCallback()
 	Buy:UpdateQueue();
 	Buy:RefreshSearchAuctions();
 end
 
 function Buy:InstantBuy(rowData, rowIndex)
-	Auctions:BuyItem(rowData);
+	if rowData.isCommodity then
+		CommodityBuy:ConfirmPurchase(rowData.itemId);
+		--Auctions:BuyItem({isCommodity = true, itemId = rowData.itemId}, 1);
 
-	tremove(Buy.buyTab.auctions, rowIndex);
-	self:UpdateSearchAuctions();
+		--self:RefreshSearchAuctions();
+		return;
+	end
+
+	if self.mode == 'items' then
+		-- TODO: ask for quantity if commodity
+		Auctions:BuyItem(rowData, 1);
+
+		self:RefreshSearchAuctions();
+	else
+		self:SearchItem(rowData.itemKey);
+	end
+
+	--tremove(Buy.buyTab.auctions, rowIndex);
+	--self:UpdateSearchAuctions();
 end
 
-function Buy:ChainBuyStart(index)
-	local queue = {};
-	local filtered = self.buyTab.searchResults.filtered;
-	local filteredIndex = 0;
-
-	for i = 1, #filtered do
-		if filtered[i] == index then filteredIndex = i; break; end
-	end
-
-	for i = filteredIndex, #self.buyTab.auctions do
-		local rowIndex = filtered[i];
-		TableInsert(queue, self.buyTab.auctions[rowIndex]);
-	end
-
-	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
+function Buy:ChainBuyStart(auctionData)
+	Auctions:QueryItem(auctionData.itemKey, function(items)
+		ChainBuy:Start(items, Buy.UpdateQueue, Buy.CloseCallback);
+	end)
 end
 
 function Buy:AddToQueue(rowData, rowIndex)
@@ -303,76 +298,6 @@ function Buy:AddToQueue(rowData, rowIndex)
 
 	tremove(Buy.buyTab.auctions, rowIndex);
 	Buy:UpdateSearchAuctions();
-end
-
-function Buy:AddToQueueWithXStacks(amount)
-	local queue = {};
-	for i = 1, #self.buyTab.auctions do
-		local auction = self.buyTab.auctions[i];
-		if auction.count >= amount then
-			TableInsert(queue, auction);
-		end
-	end
-
-	if #queue == 0 then
-		AuctionFaster:Echo(3, format(L['No auctions found with requested stack count: %d'], amount));
-	end
-
-	ChainBuy:Start(queue, self.UpdateQueue, self.CloseCallback);
-end
-
-function Buy:SearchStacksCallback(items, minStacks, page)
-	local found = false;
-	for x = 1, #items do
-		if items[x].count >= minStacks then
-			found = true;
-			break;
-		end
-	end
-
-	local foundIndex = 0;
-	if found then
-		for i = 1, #self.buyTab.auctions do
-			local auction = self.buyTab.auctions[i];
-			if auction.count >= minStacks then
-				foundIndex = i;
-				break;
-			end
-		end
-	else
-		Buy:FindFirstWithXStacks(minStacks, page);
-		return;
-	end
-
-	C_Timer.After(0.7, function ()
-		self.buyTab.searchResults:SetSelection(foundIndex);
-		self.buyTab.searchResults:ScrollToLine(foundIndex);
-	end);
-end
-
-function Buy:FindFirstWithXStacks(minStacks, page)
-	if not self.currentQuery or not self.currentQuery.name or not self.currentQuery.lastPage then
-		AuctionFaster:Echo(3, L['Enter query and hit search button first']);
-		return;
-	end
-
-	if page == nil then
-		page = 0;
-	else
-		page = page + 1;
-	end;
-
-	if page > self.currentQuery.lastPage then
-		AuctionFaster:Echo(3, format(L['No auction found for minimum stacks: %d'], minStacks));
-		return;
-	end
-
-	self.currentQuery.page = page;
-	Auctions:QueryAuctions(self.currentQuery, function(shown, total, items)
-		C_Timer.After(0.7, function()
-			self:SearchStacksCallback(items, minStacks, page);
-		end);
-	end);
 end
 
 ----------------------------------------------------------------------------

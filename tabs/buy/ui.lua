@@ -8,12 +8,18 @@ local Buy = AuctionFaster:NewModule('Buy', 'AceHook-3.0', 'AceEvent-3.0', 'AceTi
 
 local format = string.format;
 
+
+local AFBuyMode = {
+	'AFBuyModeFrame'
+}
+
 function Buy:AddBuyAuctionHouseTab()
 	if self.buyTabAdded then
 		return ;
 	end
 
-	self.buyTab = AuctionFaster:AddAuctionHouseTab(L['Buy Items'], L['AuctionFaster - Buy'], self);
+	AuctionHouseFrameDisplayMode.AFBuyMode = AFBuyMode;
+	self.buyTab = AuctionFaster:AddAuctionHouseTab(L['Buy Items'], L['AuctionFaster - Buy'], self, AFBuyMode);
 
 	self.buyTab:SetScript('OnShow', function()
 		Buy:OnShow();
@@ -51,6 +57,10 @@ function Buy:DrawSearchPane()
 	addFavoritesButton:SetIcon([[Interface\Common\ReputationStar]], 16, 16, true);
 	addFavoritesButton.icon:SetTexCoord(0, 0.5, 0, 0.5);
 	addFavoritesButton.iconDisabled:SetTexCoord(0, 0.5, 0, 0.5);
+	StdUi:FrameTooltip(addFavoritesButton, 'Add to favorites searches', 'af_fav_search', 'TOPRIGHT', true);
+
+	local searchFavorites = StdUi:Button(buyTab, 60, 30, 'Search Favs');
+	StdUi:FrameTooltip(searchFavorites, 'Search favorite items', 'af_fav_search_items', 'TOPRIGHT', true);
 
 	local filtersButton = StdUi:Button(buyTab, 80, 30, L['Filters']);
 	local sniperButton = StdUi:Button(buyTab, 80, 30, L['Sniper']);
@@ -58,7 +68,8 @@ function Buy:DrawSearchPane()
 	StdUi:GlueTop(searchBox, buyTab, 10, -30, 'LEFT');
 	StdUi:GlueRight(searchButton, searchBox, 5, 0);
 	StdUi:GlueRight(addFavoritesButton, searchButton, 5, 0);
-	StdUi:GlueRight(filtersButton, addFavoritesButton, 5, 0);
+	StdUi:GlueRight(searchFavorites, addFavoritesButton, 5, 0);
+	StdUi:GlueRight(filtersButton, searchFavorites, 5, 0);
 	StdUi:GlueRight(sniperButton, filtersButton, 5, 0);
 
 	addFavoritesButton:SetScript('OnClick', function() Buy:AddToFavorites(); end);
@@ -66,6 +77,7 @@ function Buy:DrawSearchPane()
 	searchButton:SetScript('OnClick', function() Buy:SearchAuctions(searchBox:GetText(), false, 0); end);
 	filtersButton:SetScript('OnClick', function() Buy:ToggleFilterFrame(); end);
 	sniperButton:SetScript('OnClick', function() Buy:ToggleSniperFrame(); end);
+	searchFavorites:SetScript('OnClick', function() Buy:SearchFavoriteItems(); end);
 
 	buyTab.searchBox = searchBox;
 	buyTab.addFavoritesButton = addFavoritesButton;
@@ -76,20 +88,13 @@ function Buy:DrawSearchButtons()
 	local buyTab = self.buyTab;
 
 	local chainBuyButton = StdUi:Button(buyTab, 120, 20, L['Chain Buy']);
-	local addToQueueButton = StdUi:Button(buyTab, 120, 20, L['Add to Queue']);
-	local addWithXButton = StdUi:Button(buyTab, 120, 20, L['Add With Min Stacks']);
-	local findXButton = StdUi:Button(buyTab, 120, 20, L['Find X Stacks']);
 
 	local minStacksLabel = StdUi:Label(buyTab, L['Min Stacks'], nil, nil, 100);
 	local minStacks = StdUi:NumericBox(buyTab, 100, 20, 1);
 	minStacks:SetMinMaxValue(1, 200);
 
 	StdUi:GlueBottom(chainBuyButton, buyTab, 300, 50, 'LEFT');
-	StdUi:GlueRight(addToQueueButton, chainBuyButton, 10, 0);
-	StdUi:GlueBelow(findXButton, chainBuyButton, 0, -10, 'LEFT');
-	StdUi:GlueBelow(addWithXButton, addToQueueButton, 0, -10, 'LEFT');
 
-	StdUi:GlueRight(minStacksLabel, addWithXButton, 10, 0);
 	StdUi:GlueRight(minStacks, minStacksLabel, 10, 0);
 
 	chainBuyButton:SetScript('OnClick', function()
@@ -100,32 +105,7 @@ function Buy:DrawSearchButtons()
 		Buy:ChainBuyStart(index);
 	end);
 
-	addToQueueButton:SetScript('OnClick', function()
-		Buy:AddToQueue();
-	end);
-
-	findXButton:SetScript('OnClick', function()
-		if not minStacks.isValid then
-			AuctionFaster:Echo(3, L['Enter a correct stack amount 1-200']);
-			return;
-		end
-
-		Buy:FindFirstWithXStacks(minStacks:GetValue());
-	end);
-
-	addWithXButton:SetScript('OnClick', function()
-		if not minStacks.isValid then
-			AuctionFaster:Echo(3, L['Enter a correct stack amount 1-200']);
-			return;
-		end
-
-		Buy:AddToQueueWithXStacks(minStacks:GetValue());
-	end);
-
-	buyTab.addToQueueButton = addToQueueButton;
 	buyTab.chainBuyButton = chainBuyButton;
-	buyTab.addWithXButton = addWithXButton;
-	buyTab.findXButton = findXButton;
 	buyTab.minStacks = minStacks;
 end
 
@@ -268,9 +248,8 @@ function Buy:DrawSearchResultsTable()
 					if AuctionFaster.db.buy.tooltips.enabled then
 						AuctionFaster:ShowTooltip(
 							cellFrame,
-							rowData.itemLink,
+							rowData,
 							true,
-							rowData.itemId,
 							AuctionFaster.db.buy.tooltips.anchor
 						);
 					end
@@ -286,16 +265,9 @@ function Buy:DrawSearchResultsTable()
 		},
 		{
 			name         = L['Name'],
-			width        = 150,
+			width        = 250,
 			align        = 'LEFT',
 			index        = 'itemLink',
-			format       = 'string',
-		},
-		{
-			name         = L['Seller'],
-			width        = 100,
-			align        = 'LEFT',
-			index        = 'owner',
 			format       = 'string',
 		},
 		{
@@ -306,22 +278,43 @@ function Buy:DrawSearchResultsTable()
 			format       = 'number',
 		},
 		{
-			name         = L['Bid / Item'],
-			width        = 120,
-			align        = 'RIGHT',
-			index        = 'bid',
-			format       = 'money',
-		},
-		{
-			name         = L['Buy / Item'],
+			name         = L['Buy'],
 			width        = 120,
 			align        = 'RIGHT',
 			index        = 'buy',
 			format       = 'money',
 		},
+		{
+			name         = 'Fav',
+			width        = 50,
+			align        = 'LEFT',
+			index        = 'buy',
+			format       = 'custom',
+			sortable	 = false,
+			renderer     = function(cellFrame, value, rowData, columnData)
+				local isFavorite = C_AuctionHouse.IsFavoriteItem(rowData.itemKey);
+
+				if not cellFrame.texture then
+					cellFrame.texture = StdUi:Texture(cellFrame, 32, 32, [[Interface\COMMON\FavoritesIcon]]);
+					cellFrame.texture:SetPoint('CENTER', 0, 0);
+				end
+
+				if isFavorite then
+					cellFrame.texture:SetAlpha(1);
+				else
+					cellFrame.texture:SetAlpha(0.1);
+				end
+			end,
+			events		 = {
+				OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
+					local isFavorite = C_AuctionHouse.IsFavoriteItem(rowData.itemKey);
+					C_AuctionHouse.SetFavoriteItem(rowData.itemKey, not isFavorite);
+				end
+			}
+		},
 	}
 
-	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 8, 32);
+	buyTab.searchResults = StdUi:ScrollTable(buyTab, cols, 11, 32);
 	buyTab.searchResults:EnableSelection(true);
 	buyTab.searchResults:RegisterEvents({
 		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
@@ -329,9 +322,9 @@ function Buy:DrawSearchResultsTable()
 				if IsShiftKeyDown() then
 					Buy:InstantBuy(rowData, rowIndex);
 				elseif IsAltKeyDown() then
-					Buy:AddToQueue(rowData, rowIndex);
+					--Buy:AddToQueue(rowData, rowIndex);
 				elseif IsControlKeyDown() then
-					Buy:ChainBuyStart(rowIndex);
+					Buy:ChainBuyStart(rowData);
 				else
 					if table:GetSelection() == rowIndex then
 						table:ClearSelection();

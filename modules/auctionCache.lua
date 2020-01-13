@@ -8,18 +8,23 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 AuctionCache.cache = {};
 
+function AuctionCache:MakeCacheKeyFromItemKey(itemKey)
+	return itemKey.itemID .. '-' .. itemKey.itemLevel .. '-' .. itemKey.itemSuffix .. '-' .. itemKey.battlePetSpeciesID;
+end
+
 -- Make sure to call this only on first page
-function AuctionCache:ParseScanResults(items, total)
+function AuctionCache:ParseScanResults(items)
 	local serverTime = GetServerTime();
 
 	-- Clean all found items first
 	for i = 1, #items do
 		local item = items[i];
-		local cacheKey = item.itemId .. item.name;
+		local cacheKey = self:MakeCacheKeyFromItemKey(item.itemKey);
+
 		self.cache[cacheKey] = {
 			lastScanTime = serverTime,
-			auctions     = {},
-			totalItems   = total --this will be a little over the real total items
+			auctions = {},
+			totalItems = total --this will be a little over the real total items
 		};
 	end
 
@@ -27,10 +32,11 @@ function AuctionCache:ParseScanResults(items, total)
 	local touchedRecords = {};
 	for i = 1, #items do
 		local item = items[i];
-		local cacheItem = self.cache[item.itemId .. item.name];
+		local cacheKey = self:MakeCacheKeyFromItemKey(item.itemKey);
+		local cacheItem = self.cache[cacheKey];
 		tinsert(cacheItem.auctions, item);
 
-		local itemRecord = ItemCache:FindOrCreateCacheItem(item.itemId, item.name);
+		local itemRecord = ItemCache:FindOrCreateCacheItem(cacheKey, item.itemKey.itemID, item.itemName);
 		itemRecord.lastScanTime = serverTime;
 		if not tContains(touchedRecords, itemRecord) then
 			tinsert(touchedRecords, itemRecord);
@@ -67,8 +73,8 @@ function AuctionCache:FindOrCreateAuctionCache(itemId, itemName)
 
 	self.cache[cacheKey] = {
 		lastScanTime = nil,
-		auctions     = {},
-		totalItems   = 0
+		auctions = {},
+		totalItems = 0
 	};
 
 	return self.cache[cacheKey];

@@ -300,7 +300,6 @@ function Sell:ShowHistoricalWindow(historicalData)
 		g:AddDataSeries(val.series, val.color, nil, 'line');
 	end
 
-	--UIParentLoadAddOn('Blizzard_DebugTools')
 	--DisplayTableInspectorWindow(g)
 
 	C_Timer.After(0.1, function()
