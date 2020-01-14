@@ -10,12 +10,10 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Buy
 local Buy = AuctionFaster:GetModule('Buy');
 
---- @type ChainBuy
-local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 --- @type AuctionCache
 local AuctionCache = AuctionFaster:GetModule('AuctionCache');
---- @type CommodityBuy
-local CommodityBuy = AuctionFaster:GetModule('CommodityBuy');
+--- @type ConfirmBuy
+local ConfirmBuy = AuctionFaster:GetModule('ConfirmBuy');
 
 local format = string.format;
 local TableInsert = tinsert;
@@ -162,14 +160,6 @@ function Buy:UpdateStateText(inProgress)
 	end
 end
 
-function Buy:UpdateQueue()
-	local buyTab = Buy.buyTab;
-	buyTab.queueLabel:SetText(format(L['Queue Qty: %d'], ChainBuy:CalcRemainingQty()));
-
-	buyTab.queueProgress:SetMinMaxValues(0, #ChainBuy.requests);
-	buyTab.queueProgress:SetValue(ChainBuy.currentIndex);
-end
-
 function Buy:AddToFavorites()
 	local searchBox = self.buyTab.searchBox;
 	local text = searchBox:GetText();
@@ -256,48 +246,7 @@ function Buy.CloseCallback()
 end
 
 function Buy:InstantBuy(rowData, rowIndex)
-	if rowData.isCommodity then
-		CommodityBuy:ConfirmPurchase(rowData.itemId);
-		--Auctions:BuyItem({isCommodity = true, itemId = rowData.itemId}, 1);
-
-		--self:RefreshSearchAuctions();
-		return;
-	end
-
-	if self.mode == 'items' then
-		-- TODO: ask for quantity if commodity
-		Auctions:BuyItem(rowData, 1);
-
-		self:RefreshSearchAuctions();
-	else
-		self:SearchItem(rowData.itemKey);
-	end
-
-	--tremove(Buy.buyTab.auctions, rowIndex);
-	--self:UpdateSearchAuctions();
-end
-
-function Buy:ChainBuyStart(auctionData)
-	Auctions:QueryItem(auctionData.itemKey, function(items)
-		ChainBuy:Start(items, Buy.UpdateQueue, Buy.CloseCallback);
-	end)
-end
-
-function Buy:AddToQueue(rowData, rowIndex)
-	if not rowData then
-		rowIndex = self.buyTab.searchResults:GetSelection();
-		rowData = self.buyTab.searchResults:GetSelectedItem();
-		if not rowData then
-			AuctionFaster:Echo(3, L['Please select item first']);
-			return;
-		end
-	end
-
-	ChainBuy:AddBuyRequest(rowData);
-	ChainBuy:Start(nil, self.UpdateQueue, self.CloseCallback);
-
-	tremove(Buy.buyTab.auctions, rowIndex);
-	Buy:UpdateSearchAuctions();
+	ConfirmBuy:ConfirmPurchase(rowData.itemKey, rowData.isCommodity);
 end
 
 ----------------------------------------------------------------------------

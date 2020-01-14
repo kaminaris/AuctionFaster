@@ -1,12 +1,12 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
-local Gratuity = LibStub('LibGratuity-3.0');
+local Gratuity      = LibStub('LibGratuity-3.0');
 ---@type ItemCache
-local ItemCache = AuctionFaster:GetModule('ItemCache');
+local ItemCache     = AuctionFaster:GetModule('ItemCache');
 ---@class Inventory
-local Inventory = AuctionFaster:NewModule('Inventory', 'AceEvent-3.0');
+local Inventory     = AuctionFaster:NewModule('Inventory', 'AceEvent-3.0');
 
-local battlePetId = 82800;
+local battlePetId   = 82800;
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
 function Inventory:Enable()
@@ -52,11 +52,11 @@ end
 function Inventory:UpdateItemInventory(itemId, itemName)
 	local totalQty = 0;
 
-	local index = false;
+	local index    = false;
 	for i = 1, #self.inventoryItems do
 		local ii = self.inventoryItems[i];
 		if ii.itemId == itemId and ii.itemName == itemName then
-			index = i;
+			index    = i;
 			totalQty = ii.count + totalQty;
 			break ;
 		end
@@ -70,21 +70,21 @@ function Inventory:UpdateItemInventory(itemId, itemName)
 end
 
 function Inventory:AddItemToInventory(itemLocation, bag, slot)
-	if not itemLocation:IsValid() then
+	if not itemLocation:IsValid() or C_Item.IsBound(itemLocation) then
 		return false;
 	end
 
 	local canSell = C_AuctionHouse.IsSellItemValid(itemLocation);
-	local itemId = C_Item.GetItemID(itemLocation);
-	local link = C_Item.GetItemLink(itemLocation);
-	local count = C_Item.GetItemQuality(itemLocation);
+	local itemId  = C_Item.GetItemID(itemLocation);
+	local link    = C_Item.GetItemLink(itemLocation);
+	local count   = GetItemCount(link);
 
 	if itemId == battlePetId then
 		canSell = true;
 	else
 		Gratuity:SetBagItem(bag, slot);
 
-		local n = Gratuity:NumLines();
+		local n         = Gratuity:NumLines();
 		local firstLine = Gratuity:GetLine(1);
 
 		if not firstLine or strfind(tostring(firstLine), RETRIEVING_ITEM_INFO) then
@@ -97,11 +97,11 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 			if line then
 				canSell = not (
 					strfind(line, ITEM_BIND_ON_PICKUP) or
-					strfind(line, ITEM_BIND_TO_BNETACCOUNT) or
-					strfind(line, ITEM_BNETACCOUNTBOUND) or
-					strfind(line, ITEM_SOULBOUND) or
-					strfind(line, ITEM_BIND_QUEST) or
-					strfind(line, ITEM_CONJURED)
+						strfind(line, ITEM_BIND_TO_BNETACCOUNT) or
+						strfind(line, ITEM_BNETACCOUNTBOUND) or
+						strfind(line, ITEM_SOULBOUND) or
+						strfind(line, ITEM_BIND_QUEST) or
+						strfind(line, ITEM_CONJURED)
 				);
 
 				if strfind(line, USE_COLON) then
@@ -117,24 +117,25 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 
 	local itemName, itemIcon, itemStackCount, additionalInfo, quality, level;
 
+	local itemKey = C_AuctionHouse.GetItemKeyFromItem(itemLocation);
+	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
+
 	if itemId == battlePetId then
 		local n, icon, speciesId, petLevel, breedQuality = AuctionFaster:ParseBattlePetLink(link);
-		itemName = n;
-		quality = breedQuality;
-		itemIcon = icon;
-		level = petLevel;
-		itemStackCount = 1;
+		itemName                                         = n;
+		quality                                          = breedQuality;
+		itemIcon                                         = icon;
+		level                                            = petLevel;
+		itemStackCount                                   = 1;
 	else
 		local n, _, q, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
-		level = GetDetailedItemLevelInfo(link);
 
-		itemName = n;
-		itemStackCount = c;
-		quality = q;
-		itemIcon = GetItemIcon(itemId);
+		level                                             = C_Item.GetCurrentItemLevel(itemLocation);
+		itemName                                          = C_Item.GetItemName(itemLocation);
+		itemStackCount                                    = c;
+		quality                                           = C_Item.GetItemQuality(itemLocation);
+		itemIcon                                          = C_Item.GetItemIcon(itemLocation);
 	end
-
-
 	local found = false;
 	-- don't stack battle pets
 	if itemId ~= battlePetId then
@@ -142,7 +143,6 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 			local ii = self.inventoryItems[i];
 			if ii.itemId == itemId and ii.itemName == itemName then
 				found = true;
-				self.inventoryItems[i].count = self.inventoryItems[i].count + count;
 				break ;
 			end
 		end
@@ -155,7 +155,10 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 		end
 
 		tinsert(self.inventoryItems, {
+			itemKey        = itemKey,
+			itemLocation   = itemLocation,
 			itemName       = itemName,
+			isCommodity    = isCommodity,
 			link           = link,
 			quality        = quality,
 			level          = level,
@@ -186,7 +189,7 @@ function Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel
 		for slot = 1, GetContainerNumSlots(bag) do
 			local id = GetContainerItemID(bag, slot);
 			if id then
-				local link = GetContainerItemLink(bag, slot);
+				local link     = GetContainerItemLink(bag, slot);
 				local _, count = GetContainerItemInfo(bag, slot);
 
 				if id == battlePetId then
@@ -200,7 +203,7 @@ function Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel
 					end
 				else
 					local name, _, quality, _, _, _, _, itemStackCount = GetItemInfo(link);
-					local level = GetDetailedItemLevelInfo(link);
+					local level                                        = GetDetailedItemLevelInfo(link);
 					if id == itemId and
 						name == itemName and
 						quality == itemQuality and
@@ -223,7 +226,7 @@ function Inventory:GetInventoryItemQuantity(itemId, itemName)
 		local ii = self.inventoryItems[i];
 		if ii.itemId == itemId and ii.name == itemName then
 			found = true;
-			qty = qty + self.inventoryItems[i].count;
+			qty   = qty + self.inventoryItems[i].count;
 			break ;
 		end
 	end

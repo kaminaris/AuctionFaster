@@ -9,7 +9,10 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 AuctionCache.cache = {};
 
 function AuctionCache:MakeCacheKeyFromItemKey(itemKey)
-	return itemKey.itemID .. '-' .. itemKey.itemLevel .. '-' .. itemKey.itemSuffix .. '-' .. itemKey.battlePetSpeciesID;
+	return itemKey.itemID or 0 .. '-' ..
+		itemKey.itemLevel or 0 .. '-' ..
+		itemKey.itemSuffix or 0 .. '-' ..
+		itemKey.battlePetSpeciesID or 0;
 end
 
 -- Make sure to call this only on first page
@@ -23,8 +26,7 @@ function AuctionCache:ParseScanResults(items)
 
 		self.cache[cacheKey] = {
 			lastScanTime = serverTime,
-			auctions = {},
-			totalItems = total --this will be a little over the real total items
+			auctions = {}
 		};
 	end
 
@@ -36,7 +38,7 @@ function AuctionCache:ParseScanResults(items)
 		local cacheItem = self.cache[cacheKey];
 		tinsert(cacheItem.auctions, item);
 
-		local itemRecord = ItemCache:FindOrCreateCacheItem(cacheKey, item.itemKey.itemID, item.itemName);
+		local itemRecord = ItemCache:FindOrCreateCacheItem(cacheKey, item.itemKey);
 		itemRecord.lastScanTime = serverTime;
 		if not tContains(touchedRecords, itemRecord) then
 			tinsert(touchedRecords, itemRecord);
@@ -44,10 +46,6 @@ function AuctionCache:ParseScanResults(items)
 
 		if not itemRecord.buy or itemRecord.buy > item.buy then
 			itemRecord.buy = item.buy;
-		end
-
-		if not itemRecord.bid or itemRecord.bid > item.bid then
-			itemRecord.bid = item.bid;
 		end
 	end
 
@@ -58,14 +56,14 @@ function AuctionCache:ParseScanResults(items)
 	end
 end
 
-function AuctionCache:GetItemFromCache(itemId, itemName)
-	local cacheKey = itemId .. itemName;
+function AuctionCache:GetItemFromCache(itemKey)
+	local cacheKey = self:MakeCacheKeyFromItemKey(itemKey);
 
 	return self.cache[cacheKey];
 end
 
-function AuctionCache:FindOrCreateAuctionCache(itemId, itemName)
-	local cacheKey = itemId .. itemName;
+function AuctionCache:FindOrCreateAuctionCache(itemKey)
+	local cacheKey = self:MakeCacheKeyFromItemKey(itemKey);
 
 	if self.cache[cacheKey] then
 		return self.cache[cacheKey];
@@ -74,7 +72,6 @@ function AuctionCache:FindOrCreateAuctionCache(itemId, itemName)
 	self.cache[cacheKey] = {
 		lastScanTime = nil,
 		auctions = {},
-		totalItems = 0
 	};
 
 	return self.cache[cacheKey];

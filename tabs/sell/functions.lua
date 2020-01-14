@@ -11,8 +11,6 @@ local AuctionCache = AuctionFaster:GetModule('AuctionCache');
 local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
---- @type ChainBuy
-local ChainBuy = AuctionFaster:GetModule('ChainBuy');
 --- @type Pricing
 local Pricing = AuctionFaster:GetModule('Pricing');
 
@@ -59,7 +57,7 @@ function Sell:AFTER_INVENTORY_SCAN()
 		return;
 	end
 
-	self:CheckEverythingSold();
+	--self:CheckEverythingSold();
 	Auctions.lastSoldItem = nil;
 end
 
@@ -68,7 +66,8 @@ function Sell:GetSelectedItemRecord()
 		return nil;
 	end
 
-	return ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	local cacheKey = AuctionCache:MakeCacheKeyFromItemKey(self.selectedItem.itemKey);
+	return ItemCache:FindOrCreateCacheItem(cacheKey, self.selectedItem.itemKey);
 end
 
 function Sell:GetSellSettings()
@@ -169,11 +168,11 @@ end
 
 function Sell:GetCurrentAuctions(force)
 	local selectedItem = self.selectedItem;
-	local itemId = selectedItem.itemId;
-	local itemName = selectedItem.itemName;
+	local itemKey = selectedItem.itemKey;
+	local cacheKey = AuctionCache:MakeCacheKeyFromItemKey(selectedItem.itemKey);
 
-	local itemRecord = ItemCache:FindOrCreateCacheItem(itemId, itemName);
-	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemId, itemName);
+	local itemRecord = ItemCache:FindOrCreateCacheItem(cacheKey, itemKey);
+	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemKey);
 
 	local cacheLifetime = 60 * 5; -- 5 minutes
 
@@ -187,13 +186,8 @@ function Sell:GetCurrentAuctions(force)
 		return ;
 	end
 
-	local query = {
-		name = itemName,
-		exact = true
-	};
-
-	Auctions:QueryAuctions(query, function(shown, total, items)
-		Sell:CurrentAuctionsCallback(shown, total, items);
+	Auctions:QueryItem(itemKey, function(items)
+		Sell:CurrentAuctionsCallback(items);
 	end);
 end
 
@@ -222,8 +216,9 @@ function Sell:SelectItem(index)
 	sellTab.itemName:SetText(self.selectedItem.link);
 
 	sellTab.stackSize.label:SetText(format(L['Stack Size (Max: %d)'], self.selectedItem.maxStackSize));
-
-	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+DevTools_Dump(self.selectedItem)
+	local cacheKey = AuctionCache:MakeCacheKeyFromItemKey(self.selectedItem.itemKey);
+	local cacheItem = ItemCache:FindOrCreateCacheItem(cacheKey, self.selectedItem.itemKey);
 
 	-- Clear prices
 	self:UpdateTabPrices(nil, nil);
@@ -318,7 +313,7 @@ function Sell:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	end
 end
 
-function Sell:CurrentAuctionsCallback(shown, total, items)
+function Sell:CurrentAuctionsCallback(items)
 	local itemRecord = self:GetSelectedItemRecord();
 	-- No item selected ? - should not happen
 	if not itemRecord then return; end
@@ -326,7 +321,7 @@ function Sell:CurrentAuctionsCallback(shown, total, items)
 	-- we skip any auctions that are not the same as selected item so no problem
 	AuctionCache:ParseScanResults(items);
 
-	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemId, itemRecord.itemName);
+	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemRecord.itemKey);
 
 	self:UpdateSellTabAuctions(itemRecord, auctionRecord);
 	self:UpdateInfoPaneText();
@@ -391,12 +386,14 @@ function Sell:UpdateSellTabAuctions(itemRecord, auctionRecord)
 end
 
 function Sell:RemoveSearchAuction(index)
-	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(self.selectedItem.itemId, self.selectedItem.itemName);
+	local itemKey = self.selectedItem.itemKey;
+	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(itemKey);
 	if not auctionRecord.auctions[index] then
 		return;
 	end
 
-	local itemRecord = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
+	local cacheKey = AuctionCache:MakeCacheKeyFromItemKey(itemKey);
+	local itemRecord = ItemCache:FindOrCreateCacheItem(cacheKey, itemKey);
 
 	tremove(auctionRecord.auctions, index);
 	self:UpdateSellTabAuctions(itemRecord, auctionRecord);
@@ -421,66 +418,6 @@ function Sell:CloseCallback()
 	Sell:GetCurrentAuctions(true);
 end
 
-function Sell:ChainBuyStart(index)
-	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, L['Please refresh auctions first']);
-		return;
-	end
-
-	local queue = {};
-	local filtered = self.sellTab.currentAuctions.filtered;
-	local filteredIndex = 0;
-
-	local auctionRecord = AuctionCache:FindOrCreateAuctionCache(self.selectedItem.itemId, self.selectedItem.itemName);
-	if not auctionRecord.auctions[index] then
-		return;
-	end
-
-	for i = 1, #filtered do
-		if filtered[i] == index then filteredIndex = i; break; end
-	end
-
-	for i = filteredIndex, #auctionRecord.auctions do
-		local rowIndex = filtered[i];
-		tinsert(queue, auctionRecord.auctions[rowIndex]);
-	end
-
-	ChainBuy:Start(queue, nil, Sell.CloseCallback);
-end
-
-function Sell:AddToQueue(rowData, rowIndex)
-	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, L['Please refresh auctions first']);
-		return;
-	end
-
-	ChainBuy:AddBuyRequest(rowData);
-	ChainBuy:Start();
-
-	Sell:RemoveSearchAuction(rowIndex);
-end
---
---function Sell:AddToQueueWithXStacks(amount)
---	local queue = {};
---	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemId, self.selectedItem.itemName);
---	if not cacheItem.auctions[index] then
---		return;
---	end
---
---	for i = 1, #cacheItem.auctions do
---		local auction = cacheItem.auctions[i];
---		if auction.count >= amount then
---			tinsert(queue, auction);
---		end
---	end
---
---	if #queue == 0 then
---		AuctionFaster:Echo(3, format(L['No auctions found with requested stack count: %d'], amount));
---	end
---
---	ChainBuy:Start(queue);
---end
-
 function Sell:SellCurrentItem(singleStack)
 	local selectedItem = self.selectedItem;
 	local itemId = selectedItem.itemId;
@@ -488,94 +425,29 @@ function Sell:SellCurrentItem(singleStack)
 	local itemQuality = selectedItem.quality;
 	local itemLevel = selectedItem.level;
 
-	if not Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
-		return false;
-	end
+	--if not Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
+	--	return false;
+	--end
 
 	local sellSettings = self:GetSellSettings();
 
-	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = sellSettings.duration;
-	end
+	--if not AuctionFrameAuctions.duration then
+	--	AuctionFrameAuctions.duration = sellSettings.duration;
+	--end
 
 	local maxStacks = sellSettings.maxStacks;
 	if singleStack then
 		maxStacks = 1;
 	end
 
-	local success, multisell = Auctions:SellItem(
-		sellSettings.bidPerItem * sellSettings.stackSize,
-		sellSettings.buyPerItem * sellSettings.stackSize,
-		sellSettings.duration,
+print('trying to sell');
+	local success = Auctions:SellItem(
+		selectedItem.itemLocation,
 		sellSettings.stackSize,
-		maxStacks
+		sellSettings.duration,
+		sellSettings.buyPerItem,
+		sellSettings.bidPerItem
 	);
 
 	return success;
-end
-
-
---- Check if all items has been sold, if not, propose to sell last incomplete stack
-function Sell:CheckEverythingSold()
-	local sellSettings = self:GetSellSettings();
-
-	if sellSettings.realMaxStacks ~= 0 then
-		return;
-	end
-
-	local selectedItem = self.selectedItem;
-	if not selectedItem then
-		return ;
-	end
-
-	local itemId, itemName, itemLink = selectedItem.itemId, selectedItem.itemName, selectedItem.link;
-
-	local currentItemName = GetAuctionSellItemInfo();
-	if not currentItemName or currentItemName ~= itemName then
-		Auctions:PutItemInSellBox(itemId, itemName, selectedItem.quality, selectedItem.level);
-	end
-
-	-- Check if item is still in inventory
-	local qtyLeft = Inventory:UpdateItemInventory(itemId, itemName);
-	if qtyLeft == 0 then
-		return ;
-	end
-
-	self:SelectItem(self.selectedItemIndex);
-
-	self:UpdateItemQtyText();
-	self:GetCurrentAuctions();
-	self:DoFilterSort();
-
-	local buttons = {
-		yes = {
-			text    = L['Yes'],
-			onClick = function(self)
-				self:GetParent():Hide();
-
-				-- Double check if item is still in inventory
-				--qtyLeft = AuctionFaster:UpdateItemInventory(itemId, itemName);
-				if qtyLeft == 0 then
-					return ;
-				end
-
-				Sell:SellCurrentItem(false);
-			end,
-		},
-		no  = {
-			text    = L['No'],
-			onClick = function(self)
-				self:GetParent():Hide();
-			end,
-		}
-	}
-
-	StdUi:Confirm(
-		L['Incomplete sell'],
-		format(L['You still have %d of %s Do you wish to sell rest?'], qtyLeft, itemLink),
-		buttons,
-		'incomplete_sell'
-	);
-
-	Auctions.soldFlag = false;
 end

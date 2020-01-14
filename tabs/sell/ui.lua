@@ -369,7 +369,8 @@ function Sell:DrawTabButtons(leftMargin)
 			AuctionFaster:Echo(3, L['Please select item first']);
 			return ;
 		end
-		Sell:ChainBuyStart(index);
+		-- TODO: fix this
+		--Sell:ChainBuyStart(index);
 	end);
 
 	sellTab.buttons.postButton = postButton;
@@ -443,12 +444,25 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	sellTab.currentAuctions:RegisterEvents({
 		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
 			if button == 'LeftButton' then
-				if IsShiftKeyDown() then
-					Sell:InstantBuy(rowData, rowIndex)
+				if IsModifiedClick('CHATLINK') then
+					-- link item
+					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+					if itemKeyInfo and itemKeyInfo.battlePetLink then
+						ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
+					else
+						local _, itemLink = GetItemInfo(rowData.itemId);
+						ChatEdit_InsertLink(itemLink);
+					end
 				elseif IsAltKeyDown() then
-					Sell:AddToQueue(rowData, rowIndex);
-				elseif IsControlKeyDown() then
-					Sell:ChainBuyStart(rowIndex);
+					Sell:InstantBuy(rowData, rowIndex)
+				elseif IsModifiedClick('DRESSUP') then
+					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+					if itemKeyInfo and itemKeyInfo.battlePetLink then
+						DressUpBattlePetLink(itemKeyInfo.battlePetLink);
+					else
+						local _, itemLink = GetItemInfo(rowData.itemId);
+						DressUpLink(itemLink);
+					end
 				else
 					if table:GetSelection() == rowIndex then
 						table:ClearSelection();
@@ -456,6 +470,10 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 						table:SetSelection(rowIndex);
 					end
 				end
+			end
+
+			if button == 'RightButton' then
+
 			end
 			return true;
 		end

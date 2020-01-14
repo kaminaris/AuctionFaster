@@ -84,7 +84,7 @@ function Buy:InitTutorial(force)
 				text   = L['Chain buy will add all auctions\nfrom the first one you select\nto the bottom '] ..
 					L['of the list\nto the Buy Queue.\n\n'] .. C(L['You will still need to confirm them.'], red),
 				anchor = 'LEFT',
-				parent = buyTab.chainBuyButton,
+				parent = buyTab.buyButton,
 			},
 			{
 				text   = L['Status of the current buy queue\n\nQty will show you actual quantity\n'] ..

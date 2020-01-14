@@ -31,8 +31,7 @@ function AuctionFaster:OnInitialize()
 	self:EnableModule('ItemCache');
 	self:EnableModule('Inventory');
 	self:EnableModule('Auctions');
-	self:EnableModule('ChainBuy');
-	self:EnableModule('CommodityBuy');
+	self:EnableModule('ConfirmBuy');
 	self:EnableModule('Tutorial');
 
 	-- TODO: COMMENT THIS OUT

@@ -44,7 +44,6 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 		auctions           = {},
 		stackSize          = stackSize,
 		maxBidDeviation    = maxBidDeviation,
-		totalItems         = total,
 		totalQty           = 0,
 		totalQtyWithBuy    = 0,
 		totalBuy           = 0,
@@ -83,12 +82,17 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 				auctionInfo.totalBuy = auctionInfo.totalBuy + 1;
 			end
 
-			auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * bid);
+			if bid and bid > 0 then
+				auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * bid);
+			end
 
 			if buy and buy > 0 then
 				auctionInfo.totalBuy = auctionInfo.totalBuy + buy;
 			end
-			auctionInfo.totalBid = auctionInfo.totalBid + bid;
+
+			if bid and bid > 0 then
+				auctionInfo.totalBid = auctionInfo.totalBid + bid;
+			end
 
 			if buy and buy > 0 and (not auctionInfo.lowestBuy or auctionInfo.lowestBuy > buy) then
 				auctionInfo.lowestBuy = buy;

@@ -152,6 +152,7 @@ function Auctions:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
 		if not itemKeyInfo then
 			waitingForKeyInfo = true;
 			self:RegisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
+			print('INCOMPLETE RESULTS')
 		end
 
 		local itemInfo = {
@@ -182,24 +183,24 @@ function Auctions:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
 		-- no longer our scan
 		self.currentCallback = nil;
 	else
+		print('waiting for key info')
 		self.keyInfoTimeout = self:ScheduleTimer('WaitingForKeyInfoTimeout', 5);
 	end
 end
 
 function Auctions:ITEM_KEY_ITEM_INFO_RECEIVED(_, itemId)
-	local itemKey = C_AuctionHouse.MakeItemKey(itemId);
-	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
-	if not itemKeyInfo then
-		return;
-	end
-
 	local infoComplete = true;
 	for _, itemResult in pairs(self.searchResults) do
+
 		if itemResult.itemId == itemId then
+			local itemKey = itemResult.itemKey;
+			local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
+
 			itemResult.name = itemKeyInfo.itemName;
 			itemResult.quality = itemKeyInfo.quality;
 			itemResult.texture = itemKeyInfo and itemKeyInfo.iconFileID;
 			itemResult.isCommodity = itemKeyInfo.isCommodity;
+			itemResult.itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(itemKey, itemKeyInfo, false);
 		end
 
 		if not itemResult.name then
@@ -271,9 +272,10 @@ function Auctions:FetchCommodityResults(itemId)
 	local itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(itemKey, itemKeyInfo, false);
 
 	local numSearchResults = C_AuctionHouse.GetNumCommoditySearchResults(itemId);
-	print('NUM RESULTS', numSearchResults);
+
 	for i = 1, numSearchResults do
 		local info = C_AuctionHouse.GetCommoditySearchResultInfo(itemId, i);
+
 		tinsert(items, {
 			itemId = info.itemID,
 			count = info.quantity,
@@ -303,7 +305,6 @@ function Auctions:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 		return ;
 	end
 
-	print('trying to get all commodity items', itemId);
 	local items, numSearchResults = self:FetchCommodityResults(itemId);
 
 	if numSearchResults > 0 then
@@ -317,33 +318,22 @@ function Auctions:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 	end
 end
 
-function Auctions:ITEM_SEARCH_RESULTS_UPDATED()
+function Auctions:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
 	if not self.subQueryCallback then
 		return ;
 	end
 
 	local items = {};
-	local itemId = self.currentItemInfo.itemKey.itemID;
-	print('trying to get all commodity items', itemId)
+	local itemId = itemKey.itemID;
+	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
+	--local itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(itemKey, itemKeyInfo, false);
+
+	print('trying to get all item items', itemId)
 	--DevTools_Dump(self.currentItemInfo)
-	local numSearchResults = C_AuctionHouse.GetNumItemSearchResults(self.currentItemInfo.itemKey);
+	local numSearchResults = C_AuctionHouse.GetNumItemSearchResults(itemKey);
 
 	for i = 1, numSearchResults do
-		local info = C_AuctionHouse.GetItemSearchResultInfo(self.currentItemInfo.itemKey, i);
-
-		--itemKey	structure ItemKey
-		--owners	string[]
-		--timeLeft	Enum.AuctionHouseTimeLeftBand
-		--auctionID	number
-		--quantity	number
-		--itemLink	string (nilable)
-		--containsOwnerItem	boolean
-		--containsSocketedItem	boolean
-		--bidder	string (nilable)
-		--minBid	number (nilable)
-		--bidAmount	number (nilable)
-		--buyoutAmount	number (nilable)
-		--timeLeftSeconds	number (nilable)
+		local info = C_AuctionHouse.GetItemSearchResultInfo(itemKey, i);
 
 		tinsert(items, {
 			itemId = info.itemID,
@@ -358,10 +348,10 @@ function Auctions:ITEM_SEARCH_RESULTS_UPDATED()
 			isCommodity = false,
 			containsOwnerItem = info.containsOwnerItem,
 			containsSocketedItem = info.containsSocketedItem,
-			texture = self.currentItemInfo.texture,
-			name = self.currentItemInfo.name,
-			quality = self.currentItemInfo.quality,
-			itemKey = self.currentItemInfo.itemKey,
+			texture = itemKeyInfo.texture,
+			name = itemKeyInfo.name,
+			quality = itemKeyInfo.quality,
+			itemKey = itemKey,
 			itemLink = info.itemLink,
 			itemLinkProper = info.itemLink,
 		});
@@ -380,57 +370,71 @@ function Auctions:ITEM_SEARCH_RESULTS_UPDATED()
 end
 
 --- TODO
-
-function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
-	-- Since there is no way to check level of sold item, clear item regardless
-	local currentItemName = GetAuctionSellItemInfo();
-	if currentItemName then
-		if CursorHasItem() then
-			ClearCursor();
-		end
-		ClickAuctionSellItemButton();
-		ClearCursor();
-	end
-
-	local bag, slot = Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel);
-	if not bag or not slot then
+function Auctions:SellItem(itemLocation, qty, duration, price, bid)
+	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
+	local listCount = C_AuctionHouse.GetAvailablePostCount(itemLocation);
+	local isValid = C_AuctionHouse.IsSellItemValid(itemLocation);
+print('IS COMMODITY', isCommodity)
+print('is valid', isValid)
+	if qty > listCount then
+		print('cant', qty, listCount);
 		return false;
 	end
 
-	PickupContainerItem(bag, slot);
-	if not CursorHasItem() then
-		AuctionFaster:Echo(3, L['Could not pick up item from inventory']);
-		return false;
-	end
+	if isCommodity then
+		print('posting commodity', itemLocation, duration, qty, price)
+		C_AuctionHouse.PostCommodity(itemLocation, duration, qty, price);
+	else
 
-	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = 2;
+		print('posting item', itemLocation, duration, qty, price, price)
+		C_AuctionHouse.PostItem(itemLocation, duration, qty, price, price);
 	end
-
-	-- This only puts item in sell slot despite name
-	ClickAuctionSellItemButton();
-	ClearCursor();
 
 	return true;
 end
+--
+--function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
+--	-- Since there is no way to check level of sold item, clear item regardless
+--	local currentItemName = GetAuctionSellItemInfo();
+--	if currentItemName then
+--		if CursorHasItem() then
+--			ClearCursor();
+--		end
+--		ClickAuctionSellItemButton();
+--		ClearCursor();
+--	end
+--
+--	local bag, slot = Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel);
+--	if not bag or not slot then
+--		return false;
+--	end
+--
+--	PickupContainerItem(bag, slot);
+--	if not CursorHasItem() then
+--		AuctionFaster:Echo(3, L['Could not pick up item from inventory']);
+--		return false;
+--	end
+--
+--	if not AuctionFrameAuctions.duration then
+--		AuctionFrameAuctions.duration = 2;
+--	end
+--
+--	-- This only puts item in sell slot despite name
+--	ClickAuctionSellItemButton();
+--	ClearCursor();
+--
+--	return true;
+--end
 
-function Auctions:CalculateDeposit(itemId, itemName, itemQuality, itemLevel, settings)
-	if not AuctionFrameAuctions.duration then
-		AuctionFrameAuctions.duration = settings.duration;
+function Auctions:CalculateDeposit(itemLocation, settings)
+	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
+	local itemKey = C_AuctionHouse.GetItemKeyFromItem(itemLocation);
+
+	if isCommodity then
+		return C_AuctionHouse.CalculateCommodityDeposit(itemKey.itemID, settings.duration, settings.stackSize)
+	else
+		return C_AuctionHouse.CalculateItemDeposit(itemLocation, settings.duration, settings.stackSize)
 	end
-
-	if not self:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
-		return 0;
-	end
-
-	--return GetAuctionDeposit(duration);
-	return GetAuctionDeposit(
-		settings.duration,
-		settings.bidPerItem * settings.stackSize, -- minBid
-		settings.buyPerItem * settings.stackSize, -- buyoutPrice
-		settings.stackSize, -- itemCount
-		settings.maxStacks -- numStacks
-	);
 end
 
 function Auctions:HasAuctionsList()
@@ -439,12 +443,13 @@ function Auctions:HasAuctionsList()
 end
 
 function Auctions:BuyItem(auctionData, qty)
-	print('BUYING ITEM ?COMMODITY', auctionData.isCommodity, auctionData.auctionId)
+	print('BUYING ITEM/COMMODITY', auctionData.isCommodity, auctionData.auctionId)
 	if auctionData.isCommodity then
 		print('buying commodity', auctionData.itemId, qty)
 		C_AuctionHouse.StartCommoditiesPurchase(auctionData.itemId, qty)
 		C_AuctionHouse.ConfirmCommoditiesPurchase(auctionData.itemId, qty);
 	else
+		print('buying item', auctionData.auctionId, auctionData.buy)
 		C_AuctionHouse.PlaceBid(auctionData.auctionId, auctionData.buy);
 	end
 
@@ -484,30 +489,30 @@ function Auctions:AUCTION_MULTISELL_UPDATE(_, current, max)
 	end
 end
 
-function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
-	self.lastUIError = nil;
-	self.lastSoldItem = GetAuctionSellItemInfo();
-	PostAuction(bid, buy, duration, stackSize, numStacks);
-	self.lastSoldTimestamp = GetTime();
-	self.soldFlag = true;
-
-	local isMultisell = numStacks > 1;
-
-	if self.lastUIError and failedAuctionErrors[self.lastUIError] then
-		self.lastSoldItem = nil;
-		return false, false;
-	end
-
-	AuctionFaster:Echo(
-		1,
-		format(
-			L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'],
-			self.lastSoldItem,
-			StdUi.Util.formatMoney(buy),
-			StdUi.Util.formatMoney(buy / stackSize),
-			numStacks,
-			stackSize
-		)
-	);
-	return true, isMultisell;
-end
+--function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
+--	self.lastUIError = nil;
+--	self.lastSoldItem = GetAuctionSellItemInfo();
+--	PostAuction(bid, buy, duration, stackSize, numStacks);
+--	self.lastSoldTimestamp = GetTime();
+--	self.soldFlag = true;
+--
+--	local isMultisell = numStacks > 1;
+--
+--	if self.lastUIError and failedAuctionErrors[self.lastUIError] then
+--		self.lastSoldItem = nil;
+--		return false, false;
+--	end
+--
+--	AuctionFaster:Echo(
+--		1,
+--		format(
+--			L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'],
+--			self.lastSoldItem,
+--			StdUi.Util.formatMoney(buy),
+--			StdUi.Util.formatMoney(buy / stackSize),
+--			numStacks,
+--			stackSize
+--		)
+--	);
+--	return true, isMultisell;
+--end

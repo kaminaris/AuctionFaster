@@ -87,26 +87,19 @@ end
 function Buy:DrawSearchButtons()
 	local buyTab = self.buyTab;
 
-	local chainBuyButton = StdUi:Button(buyTab, 120, 20, L['Chain Buy']);
+	local buyButton = StdUi:Button(buyTab, 120, 20, L['Buy']);
 
-	local minStacksLabel = StdUi:Label(buyTab, L['Min Stacks'], nil, nil, 100);
-	local minStacks = StdUi:NumericBox(buyTab, 100, 20, 1);
-	minStacks:SetMinMaxValue(1, 200);
+	StdUi:GlueBottom(buyButton, buyTab, 300, 50, 'LEFT');
 
-	StdUi:GlueBottom(chainBuyButton, buyTab, 300, 50, 'LEFT');
-
-	StdUi:GlueRight(minStacks, minStacksLabel, 10, 0);
-
-	chainBuyButton:SetScript('OnClick', function()
+	buyButton:SetScript('OnClick', function()
 		local index = self.buyTab.searchResults:GetSelection();
 		if not index then
 			AuctionFaster:Echo(3, L['Please select auction first']);
 		end
-		Buy:ChainBuyStart(index);
+		Buy:InstantBuy(index);
 	end);
 
-	buyTab.chainBuyButton = chainBuyButton;
-	buyTab.minStacks = minStacks;
+	buyTab.buyButton = buyButton;
 end
 
 function Buy:DrawQueue()
@@ -319,12 +312,25 @@ function Buy:DrawSearchResultsTable()
 	buyTab.searchResults:RegisterEvents({
 		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
 			if button == 'LeftButton' then
-				if IsShiftKeyDown() then
-					Buy:InstantBuy(rowData, rowIndex);
+				if IsModifiedClick('CHATLINK') then
+					-- link item
+					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+					if itemKeyInfo and itemKeyInfo.battlePetLink then
+						ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
+					else
+						local _, itemLink = GetItemInfo(rowData.itemId);
+						ChatEdit_InsertLink(itemLink);
+					end
 				elseif IsAltKeyDown() then
-					--Buy:AddToQueue(rowData, rowIndex);
-				elseif IsControlKeyDown() then
-					Buy:ChainBuyStart(rowData);
+					Buy:InstantBuy(rowData, rowIndex);
+				elseif IsModifiedClick('DRESSUP') then
+					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+					if itemKeyInfo and itemKeyInfo.battlePetLink then
+						DressUpBattlePetLink(itemKeyInfo.battlePetLink);
+					else
+						local _, itemLink = GetItemInfo(rowData.itemId);
+						DressUpLink(itemLink);
+					end
 				else
 					if table:GetSelection() == rowIndex then
 						table:ClearSelection();

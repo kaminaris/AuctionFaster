@@ -81,7 +81,7 @@ function AuctionFaster:InitDatabase()
 	end
 
 	if not self.db.chainBuy then
-		self.db.chainBuy = {};
+		self.db.chainBuy = nil;
 	end
 
 	if not self.db.sniper then
