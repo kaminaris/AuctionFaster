@@ -62,13 +62,22 @@ function AuctionFaster:AUCTION_HOUSE_CLOSED()
 	self:DisableModule('Buy');
 end
 
-local function stripFrameTextures(frame)
+local function stripFrameTextures(frame, strip)
 	for i = 1, frame:GetNumRegions() do
 		---@type Region
 		local region = select(i, frame:GetRegions());
 
 		if region and region:GetObjectType() == 'Texture' then
-			region:SetTexture(nil);
+			if strip then
+				-- region.origTex = region:GetTexture();
+				-- region:SetTexture(nil);
+				region:Hide();
+			else
+				-- if region.origTex and region:GetTexture() == nil then
+				--	region:SetTexture(region.origTex);
+				-- end
+				region:Show()
+			end
 		end
 	end
 end
@@ -76,49 +85,37 @@ end
 function AuctionFaster:StripAhTextures()
 	--if not IsAddOnLoaded('ElvUI') then
 	print('strippin textures')
-		stripFrameTextures(AuctionHouseFrame);
-		--for i = 1, AuctionHouseFrame:GetNumRegions() do
-		--	---@type Region
-		--	local region = select(i, AuctionHouseFrame:GetRegions());
-		--
-		--	if region and region:GetObjectType() == 'Texture' then
-		--		if region:GetName() ~= 'AuctionPortraitTexture' then
-		--			region:SetTexture(nil);
-		--		else
-		--			region:Hide();
-		--		end
-		--	end
-		--end
-
-	stripFrameTextures(AuctionHouseFrame.NineSlice)
+	stripFrameTextures(AuctionHouseFrame, true);
+	stripFrameTextures(AuctionHouseFrame.NineSlice, true);
 
 	--end
 end
 
+function AuctionFaster:RestoreAhTextures()
+	--if not IsAddOnLoaded('ElvUI') then
+	print('restorin textures')
+	stripFrameTextures(AuctionHouseFrame, false);
+	stripFrameTextures(AuctionHouseFrame.NineSlice, false);
 
+	--end
+end
 
 function AuctionFaster:SetDisplayModeHook(_, displayMode)
-	--AuctionPortraitTexture:Show();
-print('hook works', displayMode[1])
-
 	if displayMode and displayMode[1] and displayMode[1]:find('AF') == 1 then
 		self:StripAhTextures();
+	else
+		self:RestoreAhTextures();
 	end
-	--
-	--if tab.auctionFasterTab then
-	--	self:StripAhTextures();
-	--	tab.auctionFasterTab:Show();
-	--end
 end
 
 function AuctionFaster:GetDefaultItemSettings()
 	return {
-		rememberStack = true,
+		rememberStack     = true,
 		rememberLastPrice = false,
-		alwaysUndercut = true,
+		alwaysUndercut    = true,
 		useCustomDuration = false,
-		priceModel = 'Simple',
-		duration = self.db.auctionDuration,
+		priceModel        = 'Simple',
+		duration          = self.db.auctionDuration,
 	}
 end
 

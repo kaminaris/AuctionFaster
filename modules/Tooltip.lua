@@ -45,8 +45,8 @@ function Tooltip:UpdateTooltip(tooltip, ...)
 	if cacheItem then
 		tooltip:AddLine('---');
 		tooltip:AddLine(L['AuctionFaster']);
-		tooltip:AddDoubleLine(L['Lowest Bid: '], StdUi.Util.formatMoney(cacheItem.bid));
-		tooltip:AddDoubleLine(L['Lowest Buy: '], StdUi.Util.formatMoney(cacheItem.buy));
+		tooltip:AddDoubleLine(L['Lowest Bid: '], StdUi.Util.formatMoney(cacheItem.bid, true));
+		tooltip:AddDoubleLine(L['Lowest Buy: '], StdUi.Util.formatMoney(cacheItem.buy, true));
 
 		-- @TODO: looks like its not needed
 		--tooltip:Show();
@@ -349,8 +349,8 @@ function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	end
 
 	tooltip.afPane:AddLine(L['AuctionFaster']);
-	tooltip.afPane:AddLine(L['Lowest Bid: '] .. StdUi.Util.formatMoney(cacheItem.bid));
-	tooltip.afPane:AddLine(L['Lowest Buy: '] .. StdUi.Util.formatMoney(cacheItem.buy));
+	tooltip.afPane:AddLine(L['Lowest Bid: '] .. StdUi.Util.formatMoney(cacheItem.bid, true));
+	tooltip.afPane:AddLine(L['Lowest Buy: '] .. StdUi.Util.formatMoney(cacheItem.buy, true));
 
 	tooltip.afPane:Show();
 	tooltip.afPane:SetWidth(tooltip:GetWidth());

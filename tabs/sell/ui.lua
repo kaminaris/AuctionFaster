@@ -206,7 +206,7 @@ function Sell:UpdateItemFrame(holdingFrame, inventoryItem)
 	holdingFrame.itemIcon:SetTexture(inventoryItem.icon);
 	holdingFrame.itemName:SetText(inventoryItem.link);
 	holdingFrame.itemQty:SetText('#: |cff00f209' .. inventoryItem.count .. '|r');
-	holdingFrame.itemPrice:SetText(StdUi.Util.formatMoney(inventoryItem.price));
+	holdingFrame.itemPrice:SetText(StdUi.Util.formatMoney(inventoryItem.price, true));
 end
 
 function Sell:DrawRightPane()
@@ -253,14 +253,14 @@ function Sell:DrawRightPaneItemPrices(marginToIcon)
 	local sellTab = self.sellTab;
 
 	-- Bid per item edit box
-	sellTab.bidPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
+	sellTab.bidPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-', nil, true);
 	StdUi:AddLabel(sellTab, sellTab.bidPerItem,  L['Bid Per Item'], 'TOP');
 
 	sellTab.bidPerItem:Validate();
 	StdUi:GlueBelow(sellTab.bidPerItem, sellTab.itemIcon, 0, marginToIcon, 'LEFT');
 
 	-- Buy per item edit box
-	sellTab.buyPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-');
+	sellTab.buyPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-', nil, true);
 	StdUi:AddLabel(sellTab, sellTab.buyPerItem,  L['Buy Per Item'], 'TOP');
 
 	sellTab.buyPerItem:Validate();
@@ -290,25 +290,14 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 
 	-- Stack Size
 	sellTab.stackSize = StdUi:NumericBox(sellTab, 150, 20, '1');
-	StdUi:AddLabel(sellTab, sellTab.stackSize, L['Stack Size'], 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.stackSize, L['Qty'], 'TOP');
 
 	sellTab.stackSize:SetValue(1);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
 
-	sellTab.maxStacks = StdUi:NumericBox(sellTab, 150, 20, '0');
-	StdUi:AddLabel(sellTab, sellTab.maxStacks, L['# Stacks'], 'TOP');
-
-	sellTab.maxStacks:SetValue(0);
-	StdUi:GlueRight(sellTab.maxStacks, sellTab.buyPerItem, marginToPrices, 0);
-
 	sellTab.stackSize.OnValueChanged = function(self)
 		Sell:ValidateStackSize(self);
 		Sell:UpdateCacheItemVariable(self, 'stackSize');
-	end;
-
-	sellTab.maxStacks.OnValueChanged = function(self)
-		Sell:ValidateMaxStacks(self);
-		Sell:UpdateCacheItemVariable(self, 'maxStacks');
 	end;
 end
 
@@ -346,21 +335,14 @@ end
 function Sell:DrawTabButtons(leftMargin)
 	local sellTab = self.sellTab;
 
-	local postButton = StdUi:Button(sellTab, 120, 20, L['Post All']);
+	local postButton = StdUi:Button(sellTab, 120, 20, L['Post']);
 	StdUi:GlueBottom(postButton, sellTab, -20, 20, 'RIGHT');
 
-	local postOneButton = StdUi:Button(sellTab, 120, 20, L['Post One']);
-	StdUi:GlueLeft(postOneButton, postButton, -10, 0);
-
-	local buyItemButton = StdUi:Button(sellTab, 120, 20, L['Chain Buy']);
+	local buyItemButton = StdUi:Button(sellTab, 120, 20, L['Buy']);
 	StdUi:GlueBottom(buyItemButton, sellTab, leftMargin, 20, 'LEFT');
 
 	postButton:SetScript('OnClick', function()
 		Sell:SellCurrentItem();
-	end);
-
-	postOneButton:SetScript('OnClick', function()
-		Sell:SellCurrentItem(true);
 	end);
 
 	buyItemButton:SetScript('OnClick', function()
@@ -369,12 +351,12 @@ function Sell:DrawTabButtons(leftMargin)
 			AuctionFaster:Echo(3, L['Please select item first']);
 			return ;
 		end
-		-- TODO: fix this
-		--Sell:ChainBuyStart(index);
+		local auctionData = sellTab.currentAuctions:GetSelectedItem();
+
+		Sell:InstantBuy(auctionData);
 	end);
 
 	sellTab.buttons.postButton = postButton;
-	sellTab.buttons.postOneButton = postOneButton;
 	sellTab.buttons.buyItemButton = buyItemButton;
 end
 
@@ -384,7 +366,7 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 	local cols = {
 		{
 			name         = L['Seller'],
-			width        = 116,
+			width        = 100,
 			align        = 'LEFT',
 			index        = 'owner',
 			format       = 'string',
@@ -411,31 +393,31 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 		},
 		{
 			name         = L['Qty'],
-			width        = 38,
+			width        = 40,
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
 		},
 		{
 			name         = L['Lvl'],
-			width        = 38,
+			width        = 40,
 			align        = 'LEFT',
 			index        = 'level',
 			format       = 'number',
 		},
 		{
 			name         = L['Bid / Item'],
-			width        = 120,
+			width        = 110,
 			align        = 'RIGHT',
 			index        = 'bid',
-			format       = 'money',
+			format       = 'moneyShort',
 		},
 		{
 			name         = L['Buy / Item'],
-			width        = 120,
+			width        = 110,
 			align        = 'RIGHT',
 			index        = 'buy',
-			format       = 'money',
+			format       = 'moneyShort',
 		},
 	}
 

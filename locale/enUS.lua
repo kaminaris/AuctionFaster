@@ -247,3 +247,6 @@ L['Refresh Auctions'] = true;
 L['Post All'] = true;
 L['Post One'] = true;
 L['Lvl'] = true;
+
+-- new in 8.3
+L['Qty: %d, Remaining: %d'] = true;

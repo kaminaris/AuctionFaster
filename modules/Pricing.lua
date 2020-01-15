@@ -68,7 +68,7 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 	for i = 1, #auctions do
 		local auction = auctions[i];
 		if
-			auction.owner ~= playerName and
+		auction.owner ~= playerName and
 			(not filter or filter(auction))
 		then
 			local bid, buy = auction.bid, auction.buy;
@@ -128,16 +128,28 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 	return auctionInfo;
 end
 
+function Pricing:RoundPrice(p)
+	return Round(Round(p / 100) * 100);
+end
+
 function Pricing:CalculatePrice(priceModel, itemRecord, auctions, stackSize, total)
 	local auctionInfo = self:CalculateStatData(itemRecord, auctions, stackSize, total);
-
+	local bid, buy, success;
 	if self[priceModel] then
-		return self[priceModel](self, auctionInfo);
+		bid, buy, success = self[priceModel](self, auctionInfo);
+	elseif self.models[priceModel] then
+		bid, buy, success = self.models[priceModel](self, auctionInfo);
 	end
 
-	if self.models[priceModel] then
-		return self.models[priceModel](self, auctionInfo);
+	if bid then
+		bid = self:RoundPrice(bid);
 	end
+
+	if buy then
+		buy = self:RoundPrice(buy);
+	end
+
+	return bid, buy, success;
 end
 
 function Pricing:ClampBid(bid, buy, maxBidDeviation)
@@ -162,7 +174,7 @@ function Pricing:Simple(auctionInfo)
 		lowestBuy = lowestBid;
 	end
 
-	return self:ClampBid(lowestBid, lowestBuy - 1, auctionInfo.maxBidDeviation), lowestBuy - 1, false;
+	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy, false;
 end
 
 function Pricing:WeightedAverage(auctionInfo)
@@ -214,9 +226,9 @@ function Pricing:Stack(auctionInfo)
 		local auction = auctionInfo.auctions[i];
 		if auction.count >= minQty then
 			lowestBid, lowestBuy = auction.bid, auction.buy;
-			lowestBid = self:ClampBid(lowestBid, lowestBuy - 1, auctionInfo.maxBidDeviation);
+			lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
 
-			return lowestBid, lowestBuy - 1, false;
+			return lowestBid, lowestBuy, false;
 		end
 	end
 

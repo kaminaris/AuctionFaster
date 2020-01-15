@@ -13,6 +13,8 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @type Pricing
 local Pricing = AuctionFaster:GetModule('Pricing');
+--- @type ConfirmBuy
+local ConfirmBuy = AuctionFaster:GetModule('ConfirmBuy');
 
 --- @type Sell
 local Sell = AuctionFaster:GetModule('Sell');
@@ -47,11 +49,6 @@ function Sell:AFTER_INVENTORY_SCAN()
 	-- redraw items
 	self:DoFilterSort();
 
-	-- if it was in the selling process check if everything has been sold
-	if not self:CheckIfSelectedItemExists() or not Auctions.lastSoldItem then
-		return;
-	end
-
 	-- ignore if last sold item was over 2 seconds ago, prevents from opening when closing and opening AH again
 	if GetTime() - Auctions.lastSoldTimestamp > 2 or not Auctions.soldFlag then
 		return;
@@ -78,13 +75,6 @@ function Sell:GetSellSettings()
 	local bidPerItem = sellTab.bidPerItem:GetValue();
 	local buyPerItem = sellTab.buyPerItem:GetValue();
 
-	local maxStacks = tonumber(sellTab.maxStacks:GetValue());
-
-	local realMaxStacks = maxStacks;
-	if maxStacks == 0 then
-		maxStacks = self:CalcMaxStacks();
-	end
-
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
 
 	if stackSize > self.selectedItem.count then
@@ -100,8 +90,6 @@ function Sell:GetSellSettings()
 		bidPerItem    = bidPerItem,
 		buyPerItem    = buyPerItem,
 		stackSize     = stackSize,
-		maxStacks     = maxStacks,
-		realMaxStacks = realMaxStacks,
 		duration      = duration
 	};
 end
@@ -191,12 +179,8 @@ function Sell:GetCurrentAuctions(force)
 	end);
 end
 
-function Sell:UpdateStackSettings(maxStacks, stackSize)
+function Sell:UpdateStackSettings(stackSize)
 	local sellTab = self.sellTab;
-
-	if maxStacks then
-		sellTab.maxStacks:SetValue(maxStacks);
-	end
 
 	if stackSize then
 		sellTab.stackSize:SetValue(stackSize);
@@ -215,8 +199,6 @@ function Sell:SelectItem(index)
 	sellTab.itemIcon:SetTexture(self.selectedItem.icon);
 	sellTab.itemName:SetText(self.selectedItem.link);
 
-	sellTab.stackSize.label:SetText(format(L['Stack Size (Max: %d)'], self.selectedItem.maxStackSize));
-DevTools_Dump(self.selectedItem)
 	local cacheKey = AuctionCache:MakeCacheKeyFromItemKey(self.selectedItem.itemKey);
 	local cacheItem = ItemCache:FindOrCreateCacheItem(cacheKey, self.selectedItem.itemKey);
 
@@ -224,9 +206,9 @@ DevTools_Dump(self.selectedItem)
 	self:UpdateTabPrices(nil, nil);
 
 	if cacheItem.settings.rememberStack then
-		self:UpdateStackSettings(cacheItem.maxStacks, cacheItem.stackSize or self.selectedItem.maxStackSize)
+		self:UpdateStackSettings(cacheItem.stackSize or self.selectedItem.maxStackSize)
 	else
-		self:UpdateStackSettings(0, self.selectedItem.maxStackSize);
+		self:UpdateStackSettings(self.selectedItem.maxStackSize);
 	end
 
 	self:UpdateItemQtyText();
@@ -270,12 +252,11 @@ function Sell:UpdateItemQtyText()
 	end
 
 	local sellTab = self.sellTab;
-	local maxStacks, remainingQty = self:CalcMaxStacks();
+	local remainingQty = self:CalcMaxStacks();
 	sellTab.itemQty:SetText(
 		format(
-			L['Qty: %d, Max Stacks: %d, Remaining: %d'],
+			L['Qty: %d, Remaining: %d'],
 			self.selectedItem.count,
-			maxStacks,
 			remainingQty
 		)
 	);
@@ -287,7 +268,6 @@ function Sell:EnableAuctionTabControls(enable)
 	if enable then
 		sellTab.bidPerItem:Enable();
 		sellTab.buyPerItem:Enable();
-		sellTab.maxStacks:Enable();
 		sellTab.stackSize:Enable();
 		for k, button in pairs(sellTab.buttons) do
 			button:Enable();
@@ -295,7 +275,6 @@ function Sell:EnableAuctionTabControls(enable)
 	else
 		sellTab.bidPerItem:Disable();
 		sellTab.buyPerItem:Disable();
-		sellTab.maxStacks:Disable();
 		sellTab.stackSize:Disable();
 		for k, button in pairs(sellTab.buttons) do
 			button:Disable();
@@ -308,7 +287,7 @@ function Sell:UpdateItemsTabPrice(itemId, itemName, newPrice)
 	for i = 1, #itemFrames do
 		local f = itemFrames[i];
 		if f.item.itemId == itemId and f.item.itemName == itemName then
-			f.itemPrice:SetText(StdUi.Util.formatMoney(newPrice));
+			f.itemPrice:SetText(StdUi.Util.formatMoney(newPrice, true));
 		end
 	end
 end
@@ -359,7 +338,7 @@ function Sell:RecalculatePrice(itemRecord, auctionRecord)
 		minBuy = itemRecord.buy;
 	end
 
-	Inventory:UpdateInventoryItemPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
+	Inventory:UpdateInventoryItemPrice(itemRecord.itemKey, minBuy);
 	-- update the UI
 	self:UpdateItemsTabPrice(itemRecord.itemId, itemRecord.itemName, minBuy);
 end
@@ -402,15 +381,9 @@ function Sell:RemoveSearchAuction(index)
 end
 
 
-function Sell:InstantBuy(rowData, rowIndex)
-	if not Auctions:HasAuctionsList() then
-		AuctionFaster:Echo(3, L['Please refresh auctions first']);
-		return;
-	end
+function Sell:InstantBuy(rowData)
+	ConfirmBuy:ConfirmPurchase(rowData.itemKey, rowData.isCommodity);
 
-	Auctions:BuyItem(rowData);
-
-	Sell:RemoveSearchAuction(rowIndex);
 	Sell:GetCurrentAuctions(true);
 end
 
@@ -418,27 +391,10 @@ function Sell:CloseCallback()
 	Sell:GetCurrentAuctions(true);
 end
 
-function Sell:SellCurrentItem(singleStack)
+function Sell:SellCurrentItem()
 	local selectedItem = self.selectedItem;
-	local itemId = selectedItem.itemId;
-	local itemName = selectedItem.itemName;
-	local itemQuality = selectedItem.quality;
-	local itemLevel = selectedItem.level;
-
-	--if not Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel) then
-	--	return false;
-	--end
 
 	local sellSettings = self:GetSellSettings();
-
-	--if not AuctionFrameAuctions.duration then
-	--	AuctionFrameAuctions.duration = sellSettings.duration;
-	--end
-
-	local maxStacks = sellSettings.maxStacks;
-	if singleStack then
-		maxStacks = 1;
-	end
 
 print('trying to sell');
 	local success = Auctions:SellItem(

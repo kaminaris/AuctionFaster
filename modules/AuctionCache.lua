@@ -51,7 +51,7 @@ function AuctionCache:ParseScanResults(items)
 
 	if AuctionFaster.db.historical.enabled then
 		for i = 1, #touchedRecords do
-			ItemCache:RefreshHistoricalData(touchedRecords[i], serverTime, items, total);
+			ItemCache:RefreshHistoricalData(touchedRecords[i], serverTime);
 		end
 	end
 end

@@ -85,12 +85,6 @@ function Sell:InitTutorial(force)
 				parent = sellTab.buyPerItem,
 			},
 			{
-				text   = L['Maximum number of stacks you wish to sell.\n\n'] ..
-					C(L['Set this to 0 to sell everything'], orange),
-				anchor = 'LEFT',
-				parent = sellTab.maxStacks,
-			},
-			{
 				text   = L['This opens up item settings.\nClick again to close.\n\n'] ..
 					C(L['Hover over checkboxes to see what the options are.\n\n'], green) ..
 					C(L['Those settings are per specific item'], orange),
@@ -124,14 +118,6 @@ function Sell:InitTutorial(force)
 				text   = L['This button allows you to buy selected item. Useful for restocking.'],
 				anchor = 'LEFT',
 				parent = sellTab.buttons.buyItemButton,
-			},
-			{
-				text   = format(
-					L['Posts %s of selected item regardless of your\n"# Stacks" settings'],
-					C(L['one auction'], red)
-				),
-				anchor = 'RIGHT',
-				parent = sellTab.buttons.postOneButton,
 			},
 			{
 				text   = format(

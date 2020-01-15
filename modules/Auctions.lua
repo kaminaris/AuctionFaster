@@ -19,10 +19,20 @@ function Auctions:Enable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	self:Hook(C_AuctionHouse, 'SendBrowseQuery', 'SendBrowseQueryHook', true);
+	self:Hook(C_AuctionHouse, 'PostItem', 'PostItemHook', true);
 end
 
 function Auctions:SendBrowseQueryHook(q)
-	--DevTools_Dump(q);
+	DevTools_Dump(q);
+end
+
+function Auctions:PostItemHook(...)
+	local x = {...};
+	for i, v in pairs(x) do
+		if i > 1 then
+			DevTools_Dump(v);
+		end
+	end
 end
 
 function Auctions:AUCTION_HOUSE_SHOW()
@@ -78,16 +88,16 @@ function Auctions:QueryAuctions(query, callback)
 	cq.searchString = query.name or '';
 	cq.minLevel = query.minLevel or 0;
 	cq.maxLevel = query.maxLevel or 0;
-	cq.filters = {
+	cq.filters = query.filters or {
 		4,
 		5,
 		6,
 		7,
 		8,
-		10,
-		9
+		9,
+		10
 	}
-	cq.itemClassFilters = nil --filterData;
+	cq.itemClassFilters = query.itemClassFilters or nil;
 	cq.sorts = {
 		{
 			sortOrder = Enum.AuctionHouseSortOrder.Price,
@@ -374,10 +384,8 @@ function Auctions:SellItem(itemLocation, qty, duration, price, bid)
 	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
 	local listCount = C_AuctionHouse.GetAvailablePostCount(itemLocation);
 	local isValid = C_AuctionHouse.IsSellItemValid(itemLocation);
-print('IS COMMODITY', isCommodity)
-print('is valid', isValid)
-	if qty > listCount then
-		print('cant', qty, listCount);
+
+	if qty > listCount or not isValid then
 		return false;
 	end
 
@@ -385,46 +393,16 @@ print('is valid', isValid)
 		print('posting commodity', itemLocation, duration, qty, price)
 		C_AuctionHouse.PostCommodity(itemLocation, duration, qty, price);
 	else
-
-		print('posting item', itemLocation, duration, qty, price, price)
-		C_AuctionHouse.PostItem(itemLocation, duration, qty, price, price);
+		print('posting item', itemLocation, duration, qty, bid, price)
+		if bid and bid > 0 and bid ~= price then
+			C_AuctionHouse.PostItem(itemLocation, duration, qty, bid, price);
+		else
+			C_AuctionHouse.PostItem(itemLocation, duration, qty, nil, price);
+		end
 	end
 
 	return true;
 end
---
---function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
---	-- Since there is no way to check level of sold item, clear item regardless
---	local currentItemName = GetAuctionSellItemInfo();
---	if currentItemName then
---		if CursorHasItem() then
---			ClearCursor();
---		end
---		ClickAuctionSellItemButton();
---		ClearCursor();
---	end
---
---	local bag, slot = Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel);
---	if not bag or not slot then
---		return false;
---	end
---
---	PickupContainerItem(bag, slot);
---	if not CursorHasItem() then
---		AuctionFaster:Echo(3, L['Could not pick up item from inventory']);
---		return false;
---	end
---
---	if not AuctionFrameAuctions.duration then
---		AuctionFrameAuctions.duration = 2;
---	end
---
---	-- This only puts item in sell slot despite name
---	ClickAuctionSellItemButton();
---	ClearCursor();
---
---	return true;
---end
 
 function Auctions:CalculateDeposit(itemLocation, settings)
 	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
@@ -435,11 +413,6 @@ function Auctions:CalculateDeposit(itemLocation, settings)
 	else
 		return C_AuctionHouse.CalculateItemDeposit(itemLocation, settings.duration, settings.stackSize)
 	end
-end
-
-function Auctions:HasAuctionsList()
-	local auctionName = GetAuctionItemInfo('list', 1);
-	return auctionName and true or false;
 end
 
 function Auctions:BuyItem(auctionData, qty)
@@ -488,31 +461,3 @@ function Auctions:AUCTION_MULTISELL_UPDATE(_, current, max)
 		self.isInMultisellProcess = false;
 	end
 end
-
---function Auctions:SellItem(bid, buy, duration, stackSize, numStacks)
---	self.lastUIError = nil;
---	self.lastSoldItem = GetAuctionSellItemInfo();
---	PostAuction(bid, buy, duration, stackSize, numStacks);
---	self.lastSoldTimestamp = GetTime();
---	self.soldFlag = true;
---
---	local isMultisell = numStacks > 1;
---
---	if self.lastUIError and failedAuctionErrors[self.lastUIError] then
---		self.lastSoldItem = nil;
---		return false, false;
---	end
---
---	AuctionFaster:Echo(
---		1,
---		format(
---			L['Posting: %s for:\nper auction: %s\nper item: %s\n# stacks: %d stack size: %d'],
---			self.lastSoldItem,
---			StdUi.Util.formatMoney(buy),
---			StdUi.Util.formatMoney(buy / stackSize),
---			numStacks,
---			stackSize
---		)
---	);
---	return true, isMultisell;
---end

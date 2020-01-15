@@ -31,8 +31,8 @@ function Sell:DrawInfoPane()
 	infoPane:SetScript('OnShow', function() AuctionFaster.db.infoPaneOpened = true; end);
 	infoPane:SetScript('OnHide', function() AuctionFaster.db.infoPaneOpened = false; end);
 
-	local totalLabel = StdUi:Label(infoPane, format(L['Total: %s'], StdUi.Util.formatMoney(0)));
-	local deposit = StdUi:Label(infoPane, format(L['Deposit: %s'], StdUi.Util.formatMoney(0)));
+	local totalLabel = StdUi:Label(infoPane, format(L['Total: %s'], StdUi.Util.formatMoney(0, true)));
+	local deposit = StdUi:Label(infoPane, format(L['Deposit: %s'], StdUi.Util.formatMoney(0, true)));
 	local auctionNo = StdUi:Label(infoPane, format(L['# Auctions: %d'], 0));
 	local duration = StdUi:Label(infoPane, format(L['Duration: %s'], '24h'));
 	local historicalBtn = StdUi:Button(infoPane, 180, 20, L['Historical Data'])
@@ -69,15 +69,14 @@ function Sell:UpdateInfoPaneText()
 	local infoPane = self.sellTab.infoPane;
 	local sellSettings = self:GetSellSettings();
 
-	if not sellSettings.buyPerItem or not sellSettings.stackSize or not sellSettings.maxStacks then
+	if not sellSettings.buyPerItem or not sellSettings.stackSize then
 		return ;
 	end
 
 	local total = sellSettings.buyPerItem * sellSettings.stackSize;
 	local deposit = Auctions:CalculateDeposit(self.selectedItem.itemLocation, sellSettings);
 
-	infoPane.totalLabel:SetText(format(L['Per auction: %s'], StdUi.Util.formatMoney(total)));
-	infoPane.auctionNo:SetText(format(L['# Auctions: %d'], sellSettings.maxStacks));
+	infoPane.totalLabel:SetText(format(L['Per auction: %s'], StdUi.Util.formatMoney(total, true)));
 	infoPane.deposit:SetText(format(L['Deposit: %s'], StdUi.Util.formatMoney(deposit)));
 	infoPane.duration:SetText(format(L['Duration: %s'], AuctionFaster:FormatAuctionDuration(sellSettings.duration)));
 end
@@ -156,7 +155,7 @@ function Sell:RescaleLines(historicalData)
 	for i = 1, #verticalDivs do
 		local moneyValue = math.floor((g.YMax - ((i - 1) * yStep)) * 10000);
 
-		verticalDivs[i]:SetText(StdUi.Util.formatMoney(moneyValue));
+		verticalDivs[i]:SetText(StdUi.Util.formatMoney(moneyValue, true));
 	end
 
 	local xTotal = g:GetWidth() / (g.XMax - g.XMin);

@@ -36,7 +36,6 @@ function Buy:AddBuyAuctionHouseTab()
 	self:DrawSearchResultsTable();
 	self:DrawSearchButtons();
 	self:DrawQueue();
-	self:DrawPager();
 
 	self:DrawFilterFrame();
 	self:DrawSniperFrame();
@@ -96,7 +95,9 @@ function Buy:DrawSearchButtons()
 		if not index then
 			AuctionFaster:Echo(3, L['Please select auction first']);
 		end
-		Buy:InstantBuy(index);
+
+		local rowData = self.buyTab.searchResults:GetSelectedItem();
+		Buy:InstantBuy(rowData);
 	end);
 
 	buyTab.buyButton = buyButton;
@@ -119,41 +120,6 @@ function Buy:DrawQueue()
 
 	buyTab.queueProgress = queueProgress;
 	buyTab.queueLabel = queueLabel;
-end
-
-function Buy:DrawPager()
-	local buyTab = self.buyTab;
-
-	local leftButton = StdUi:SquareButton(buyTab, 20, 20, 'LEFT');
-	local rightButton = StdUi:SquareButton(buyTab, 20, 20, 'RIGHT');
-	local pageJump = StdUi:Dropdown(buyTab, 80, 20, {});
-	local pageText = StdUi:Label(buyTab, format(L['Pages: %d'], 0));
-
-	StdUi:GlueBottom(leftButton, buyTab, 10, 50, 'LEFT');
-	StdUi:GlueRight(pageJump, leftButton, 10, 0);
-	StdUi:GlueRight(rightButton, pageJump, 10, 0);
-	StdUi:GlueRight(pageText, rightButton, 10, 0);
-
-	leftButton:SetScript('OnClick', function()
-		Buy:SearchPreviousPage();
-	end);
-
-	rightButton:SetScript('OnClick', function()
-		Buy:SearchNextPage();
-	end);
-
-	pageJump.OnValueChanged = function(pg, value)
-		if not self.updatingPagerLock then
-			self:SearchAuctions(self.currentQuery.name, self.currentQuery.exact, value);
-		end
-	end
-
-	buyTab.pager = {
-		leftButton = leftButton,
-		rightButton = rightButton,
-		pageText = pageText,
-		pageJump = pageJump,
-	};
 end
 
 function Buy:DrawFavoritesPane()
@@ -265,7 +231,7 @@ function Buy:DrawSearchResultsTable()
 		},
 		{
 			name         = L['Qty'],
-			width        = 40,
+			width        = 60,
 			align        = 'LEFT',
 			index        = 'count',
 			format       = 'number',
@@ -275,7 +241,7 @@ function Buy:DrawSearchResultsTable()
 			width        = 120,
 			align        = 'RIGHT',
 			index        = 'buy',
-			format       = 'money',
+			format       = 'moneyShort',
 		},
 		{
 			name         = 'Fav',

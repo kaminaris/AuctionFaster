@@ -248,3 +248,6 @@ L['Refresh Auctions'] = 'Обновить аукцион'
 L['Post All'] = 'Разместить всё'
 L['Post One'] = 'Разместить один'
 L['Lvl'] = 'Ур.'
+
+-- new in 8.3
+L['Qty: %d, Remaining: %d'] = true;

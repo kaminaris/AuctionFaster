@@ -264,7 +264,7 @@ function ConfirmBuy:UpdatePrices()
 
 	local perItem = qty > 0 and total / qty or 0;
 
-	self.window.pricePerItem:SetText(format(L['Per Item: %s'], StdUi.Util.formatMoney(perItem)));
-	self.window.priceTotal:SetText(format(L['Total: %s'], StdUi.Util.formatMoney(total)));
+	self.window.pricePerItem:SetText(format(L['Per Item: %s'], StdUi.Util.formatMoney(perItem, true)));
+	self.window.priceTotal:SetText(format(L['Total: %s'], StdUi.Util.formatMoney(total, true)));
 	self.window.boughtSoFar:SetText(format(L['Bought so far: %d'], self.boughtSoFar));
 end

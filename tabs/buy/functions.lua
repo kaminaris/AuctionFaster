@@ -30,7 +30,6 @@ function Buy:OnShow()
 
 	self:UpdateSearchAuctions();
 	self:UpdateStateText();
-	--self:UpdatePager();
 
 	self:InitTutorial();
 end
@@ -68,7 +67,8 @@ function Buy:SearchItem(itemKey)
 		itemKey = itemKey,
 	};
 
-	self:ApplyFilters(self.currentQuery);
+	-- no need for filter if we are searching for specific item
+	-- self:ApplyFilters(self.currentQuery);
 
 	self:ClearSearchAuctions();
 	self:UpdateStateText(true);
@@ -245,73 +245,10 @@ function Buy.CloseCallback()
 	Buy:RefreshSearchAuctions();
 end
 
-function Buy:InstantBuy(rowData, rowIndex)
+function Buy:InstantBuy(rowData)
 	ConfirmBuy:ConfirmPurchase(rowData.itemKey, rowData.isCommodity);
 end
 
-----------------------------------------------------------------------------
---- Filters functions
-----------------------------------------------------------------------------
-
-function Buy:GetSearchCategories()
-	if self.categories and self.subCategories then
-		return self.categories, self.subCategories;
-	end
-
-	local categories = {
-		{value = 0, text = ALL}
-	};
-
-	local subCategories = {
-		[0] = {
-			{value = 0, text = ALL}
-		}
-	};
-
-	for i = 1, #AuctionCategories do
-		local children = AuctionCategories[i].subCategories;
-
-		TableInsert(categories, { value = i, text = AuctionCategories[i].name});
-
-		subCategories[i] = {};
-		if children then
-			TableInsert(subCategories[i], {value = 0, text = 'All'});
-			for x = 1, #children do
-				TableInsert(subCategories[i], {value = x, text = children[x].name});
-			end
-		end
-	end
-
-	self.categories = categories;
-	self.subCategories = subCategories;
-end
-
-function Buy:ApplyFilters(query)
-	local filters = self.filtersPane;
-
-	query.exact = filters.exactMatch:GetChecked();
-	query.isUsable = filters.usableItems:GetChecked();
-	local minLevel = filters.minLevel:GetValue();
-	local maxLevel = filters.maxLevel:GetValue();
-
-	if minLevel then
-		query.minLevel = minLevel;
-	end
-
-	if maxLevel then
-		query.maxLevel = maxLevel;
-	end
-
-	query.qualityIndex = filters.rarity:GetValue();
-	local categoryIndex = filters.category:GetValue();
-	local subCategoryIndex = filters.subCategory:GetValue();
-
-	if categoryIndex > 0 and subCategoryIndex > 0 then
-		query.filterData = AuctionCategories[categoryIndex].subCategories[subCategoryIndex].filters;
-	elseif categoryIndex > 0 then
-		query.filterData = AuctionCategories[categoryIndex].filters;
-	end
-end
 
 function Buy:InterceptLinkClick()
 	if self.linksIntercepted then

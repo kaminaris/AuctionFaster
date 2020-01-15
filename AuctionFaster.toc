@@ -26,19 +26,19 @@ locale/ruRU.lua
 locale/zhTW.lua
 locale/zhCN.lua
 
-main.lua
-options.lua
-utils.lua
+Main.lua
+Options.lua
+Utils.lua
 
 modules\HelpPlateX.xml
-modules\itemCache.lua
-modules\auctionCache.lua
-modules\pricing.lua
-modules\tooltip.lua
-modules\inventory.lua
-modules\auctions.lua
-modules\chainBuy.lua
-modules\tutorial.lua
+modules\ItemCache.lua
+modules\AuctionCache.lua
+modules\Pricing.lua
+modules\Tooltip.lua
+modules\Inventory.lua
+modules\Auctions.lua
+modules\ConfirmBuy.lua
+modules\Tutorial.lua
 
 tabs\sell\ui.lua
 tabs\sell\functions.lua

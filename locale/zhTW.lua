@@ -253,3 +253,6 @@ L['Refresh Auctions'] = '更新拍賣'
 L['Post All'] = '上架全部'
 L['Post One'] = '上架一個'
 L['Lvl'] = '等級'	-- qty and lvl are invisible in asia client after translate because not enough space for them.
+
+-- new in 8.3
+L['Qty: %d, Remaining: %d'] = true;
