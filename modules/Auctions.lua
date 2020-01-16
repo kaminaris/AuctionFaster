@@ -18,22 +18,22 @@ local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceTimer-3
 function Auctions:Enable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
-	self:Hook(C_AuctionHouse, 'SendBrowseQuery', 'SendBrowseQueryHook', true);
-	self:Hook(C_AuctionHouse, 'PostItem', 'PostItemHook', true);
+	--self:Hook(C_AuctionHouse, 'SendBrowseQuery', 'SendBrowseQueryHook', true);
+	--self:Hook(C_AuctionHouse, 'PostItem', 'PostItemHook', true);
 end
 
-function Auctions:SendBrowseQueryHook(q)
-	DevTools_Dump(q);
-end
-
-function Auctions:PostItemHook(...)
-	local x = {...};
-	for i, v in pairs(x) do
-		if i > 1 then
-			DevTools_Dump(v);
-		end
-	end
-end
+--function Auctions:SendBrowseQueryHook(q)
+--	DevTools_Dump(q);
+--end
+--
+--function Auctions:PostItemHook(...)
+--	local x = {...};
+--	for i, v in pairs(x) do
+--		if i > 1 then
+--			DevTools_Dump(v);
+--		end
+--	end
+--end
 
 function Auctions:AUCTION_HOUSE_SHOW()
 	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');

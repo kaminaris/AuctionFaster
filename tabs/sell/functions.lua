@@ -45,7 +45,7 @@ function Sell:AFTER_INVENTORY_SCAN()
 		-- Do not update inventory while multiselling
 		return;
 	end
-
+print('AFTER INV scan');
 	-- redraw items
 	self:DoFilterSort();
 
@@ -393,10 +393,12 @@ end
 
 function Sell:SellCurrentItem()
 	local selectedItem = self.selectedItem;
+	if not selectedItem then
+		return false;
+	end
 
 	local sellSettings = self:GetSellSettings();
 
-print('trying to sell');
 	local success = Auctions:SellItem(
 		selectedItem.itemLocation,
 		sellSettings.stackSize,

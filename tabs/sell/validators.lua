@@ -10,7 +10,7 @@ function Sell:CalcMaxStacks()
 	end
 
 	local stackSize = tonumber(sellTab.stackSize:GetValue());
-	if stackSize == 0 then
+	if stackSize <= 0 then
 		stackSize = 1;
 	end
 
@@ -27,12 +27,17 @@ function Sell:ValidateStackSize(editBox)
 	if not self.selectedItem then
 		return ;
 	end
+	local maxQty = C_AuctionHouse.GetAvailablePostCount(self.selectedItem.itemLocation);
 
 	local stackSize = tonumber(editBox:GetText());
 	local origStackSize = stackSize;
 
 	if not stackSize or stackSize < 1 then
 		stackSize = 1;
+	end
+
+	if stackSize > maxQty then
+		stackSize = maxQty;
 	end
 
 	if stackSize ~= origStackSize then

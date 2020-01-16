@@ -46,9 +46,9 @@ end
 function Sell:DrawItemsFrame()
 	local marginTop = -35;
 	local sellTab = self.sellTab;
-	local panel = StdUi:FauxScrollFrame(sellTab, 300, 300, 11, 32);
+	local panel = StdUi:FauxScrollFrame(sellTab, 300, 300, 14, 32);
 	panel:SetPoint('TOPLEFT', 25, marginTop);
-	panel:SetPoint('BOTTOMLEFT', 300, 55);
+	panel:SetPoint('BOTTOMLEFT', 300, 51);
 
 	local refreshInventory = StdUi:Button(sellTab, 20, 20);
 	refreshInventory.icon = StdUi:Texture(refreshInventory, 12, 12, [[Interface\Buttons\UI-RefreshButton]]);
@@ -78,15 +78,15 @@ function Sell:DrawItemsFrame()
 	end
 
 	local settDrops = {
-		{title = L['Sort by'], color = {1, 0.9, 0}},
-		{radio = L['Name'],    value = 'itemName', radioGroup = 'dd-sortBy'},
-		{radio = L['Price'],   value = 'price',    radioGroup = 'dd-sortBy'},
-		{radio = L['Quality'], value = 'quality',  radioGroup = 'dd-sortBy'},
+		{ title = L['Sort by'], color = { 1, 0.9, 0 } },
+		{ radio = L['Name'], value = 'itemName', radioGroup = 'dd-sortBy' },
+		{ radio = L['Price'], value = 'price', radioGroup = 'dd-sortBy' },
+		{ radio = L['Quality'], value = 'quality', radioGroup = 'dd-sortBy' },
 
-		{isSeparator = true},
-		{title = L['Direction'], color = {1, 0.9, 0}},
-		{radio = L['Ascending'],  value = 'asc',  radioGroup = 'dd-sortOrder'},
-		{radio = L['Descending'], value = 'desc', radioGroup = 'dd-sortOrder'},
+		{ isSeparator = true },
+		{ title = L['Direction'], color = { 1, 0.9, 0 } },
+		{ radio = L['Ascending'], value = 'asc', radioGroup = 'dd-sortOrder' },
+		{ radio = L['Descending'], value = 'desc', radioGroup = 'dd-sortOrder' },
 	}
 
 	local sortContext = StdUi:ContextMenu(sortSettings, settDrops, true);
@@ -160,28 +160,43 @@ function Sell:DrawItems()
 end
 
 function Sell:CreateItemFrame(parent, lineHeight, margin)
-	local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
+	--local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
+	local holdingFrame = CreateFrame('Button', nil, parent);
+	StdUi:SetObjSize(holdingFrame, parent:GetWidth(), lineHeight);
+	holdingFrame.text = StdUi:ButtonLabel(holdingFrame, '');
+
+	local hTex = StdUi:HighlightButtonTexture(holdingFrame);
+	hTex:SetBlendMode('ADD');
+	holdingFrame.highlightTexture = hTex;
+	holdingFrame.highlightTexture:Hide();
 
 	holdingFrame:SetScript('OnEnter', function(self)
 		if AuctionFaster.db.sell.tooltips.itemEnabled then
 			AuctionFaster:ShowTooltip(
 				self,
-				self.itemLink,
+				{ itemLinkProper = self.itemLink, itemLink = self.itemLink },
 				true,
-				self.item.itemId,
 				AuctionFaster.db.sell.tooltips.itemAnchor or 'RIGHT'
 			);
 		end
+		self.highlightTexture:Show();
 	end);
 
 	holdingFrame:SetScript('OnLeave', function(self)
 		if AuctionFaster.db.sell.tooltips.itemEnabled then
 			AuctionFaster:ShowTooltip(self, nil, false);
 		end
+
+		if self.itemIndex ~= Sell.selectedItemIndex then
+			self.highlightTexture:Hide();
+		else
+			self.highlightTexture:Show();
+		end
 	end);
 
 	holdingFrame:SetScript('OnClick', function(self)
 		Sell:SelectItem(self.itemIndex);
+		self.highlightTexture:Show();
 	end);
 
 	holdingFrame.itemIcon = StdUi:Texture(holdingFrame, lineHeight - 2, lineHeight - 2);
@@ -241,7 +256,7 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	StdUi:GlueAfter(sellTab.itemName, sellTab.itemIcon, 5, 0);
 
 	sellTab.itemQty = StdUi:Label(sellTab, format(L['Qty: %d, Max Stacks: %d, Remaining: %d'], 0, 0, 0), nil, nil, 250,
-		20);
+								  20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
 
 	-- Last scan time
@@ -254,14 +269,14 @@ function Sell:DrawRightPaneItemPrices(marginToIcon)
 
 	-- Bid per item edit box
 	sellTab.bidPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-', nil, true);
-	StdUi:AddLabel(sellTab, sellTab.bidPerItem,  L['Bid Per Item'], 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.bidPerItem, L['Bid Per Item'], 'TOP');
 
 	sellTab.bidPerItem:Validate();
 	StdUi:GlueBelow(sellTab.bidPerItem, sellTab.itemIcon, 0, marginToIcon, 'LEFT');
 
 	-- Buy per item edit box
 	sellTab.buyPerItem = StdUi:MoneyBox(sellTab, 150, 20, '-', nil, true);
-	StdUi:AddLabel(sellTab, sellTab.buyPerItem,  L['Buy Per Item'], 'TOP');
+	StdUi:AddLabel(sellTab, sellTab.buyPerItem, L['Buy Per Item'], 'TOP');
 
 	sellTab.buyPerItem:Validate();
 	StdUi:GlueBelow(sellTab.buyPerItem, sellTab.bidPerItem, 0, -20);
@@ -326,8 +341,8 @@ function Sell:DrawRightPaneButtons()
 
 	sellTab.buttons = {
 		itemSettings = itemSettings,
-		infoPane = infoPane,
-		refresh = refresh,
+		infoPane     = infoPane,
+		refresh      = refresh,
 	};
 end
 
@@ -365,12 +380,12 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	local cols = {
 		{
-			name         = L['Seller'],
-			width        = 100,
-			align        = 'LEFT',
-			index        = 'owner',
-			format       = 'string',
-			events		 = {
+			name   = L['Seller'],
+			width  = 100,
+			align  = 'LEFT',
+			index  = 'owner',
+			format = 'string',
+			events = {
 				OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
 					if AuctionFaster.db.sell.tooltips.enabled then
 						AuctionFaster:ShowTooltip(
@@ -392,73 +407,73 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 			},
 		},
 		{
-			name         = L['Qty'],
-			width        = 40,
-			align        = 'LEFT',
-			index        = 'count',
-			format       = 'number',
+			name   = L['Qty'],
+			width  = 40,
+			align  = 'LEFT',
+			index  = 'count',
+			format = 'number',
 		},
 		{
-			name         = L['Lvl'],
-			width        = 40,
-			align        = 'LEFT',
-			index        = 'level',
-			format       = 'number',
+			name   = L['Lvl'],
+			width  = 40,
+			align  = 'LEFT',
+			index  = 'level',
+			format = 'number',
 		},
 		{
-			name         = L['Bid / Item'],
-			width        = 110,
-			align        = 'RIGHT',
-			index        = 'bid',
-			format       = 'moneyShort',
+			name   = L['Bid / Item'],
+			width  = 110,
+			align  = 'RIGHT',
+			index  = 'bid',
+			format = 'moneyShort',
 		},
 		{
-			name         = L['Buy / Item'],
-			width        = 110,
-			align        = 'RIGHT',
-			index        = 'buy',
-			format       = 'moneyShort',
+			name   = L['Buy / Item'],
+			width  = 110,
+			align  = 'RIGHT',
+			index  = 'buy',
+			format = 'moneyShort',
 		},
 	}
 
 	sellTab.currentAuctions = StdUi:ScrollTable(sellTab, cols, 10, 18);
 	sellTab.currentAuctions:EnableSelection(true);
 	sellTab.currentAuctions:RegisterEvents({
-		OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
-			if button == 'LeftButton' then
-				if IsModifiedClick('CHATLINK') then
-					-- link item
-					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
-					if itemKeyInfo and itemKeyInfo.battlePetLink then
-						ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
-					else
-						local _, itemLink = GetItemInfo(rowData.itemId);
-						ChatEdit_InsertLink(itemLink);
-					end
-				elseif IsAltKeyDown() then
-					Sell:InstantBuy(rowData, rowIndex)
-				elseif IsModifiedClick('DRESSUP') then
-					local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
-					if itemKeyInfo and itemKeyInfo.battlePetLink then
-						DressUpBattlePetLink(itemKeyInfo.battlePetLink);
-					else
-						local _, itemLink = GetItemInfo(rowData.itemId);
-						DressUpLink(itemLink);
-					end
-				else
-					if table:GetSelection() == rowIndex then
-						table:ClearSelection();
-					else
-						table:SetSelection(rowIndex);
-					end
-				end
-			end
+											   OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
+												   if button == 'LeftButton' then
+													   if IsModifiedClick('CHATLINK') then
+														   -- link item
+														   local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+														   if itemKeyInfo and itemKeyInfo.battlePetLink then
+															   ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
+														   else
+															   local _, itemLink = GetItemInfo(rowData.itemId);
+															   ChatEdit_InsertLink(itemLink);
+														   end
+													   elseif IsAltKeyDown() then
+														   Sell:InstantBuy(rowData, rowIndex)
+													   elseif IsModifiedClick('DRESSUP') then
+														   local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+														   if itemKeyInfo and itemKeyInfo.battlePetLink then
+															   DressUpBattlePetLink(itemKeyInfo.battlePetLink);
+														   else
+															   local _, itemLink = GetItemInfo(rowData.itemId);
+															   DressUpLink(itemLink);
+														   end
+													   else
+														   if table:GetSelection() == rowIndex then
+															   table:ClearSelection();
+														   else
+															   table:SetSelection(rowIndex);
+														   end
+													   end
+												   end
 
-			if button == 'RightButton' then
+												   if button == 'RightButton' then
 
-			end
-			return true;
-		end
-	});
+												   end
+												   return true;
+											   end
+										   });
 	StdUi:GlueAcross(sellTab.currentAuctions, sellTab, leftMargin, -200, -20, 55);
 end
