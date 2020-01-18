@@ -210,8 +210,7 @@ function Sell:UpdateItemSettings(settingName, settingValue)
 		return;
 	end
 
-	local cacheKey = self.selectedItem.itemId .. self.selectedItem.itemName;
-	ItemCache:UpdateItemSettingsInCache(cacheKey, settingName, settingValue);
+	ItemCache:UpdateItemSettingsInCache(self.selectedItem.itemKey, settingName, settingValue);
 end
 
 function Sell:ToggleItemSettingsPane()

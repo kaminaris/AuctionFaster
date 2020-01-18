@@ -6,13 +6,22 @@ local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 local format = string.format;
 local pairs = pairs;
---local C_AuctionHouse = C_AuctionHouse;
---local AuctionHouseUtil = AuctionHouseUtil;
 
 --- @type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Auctions
 local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceTimer-3.0', 'AceHook-3.0');
+
+local defaultSorts = {
+	{
+		sortOrder   = Enum.AuctionHouseSortOrder.Price,
+		reverseSort = false
+	},
+	{
+		sortOrder   = Enum.AuctionHouseSortOrder.Buyout,
+		reverseSort = false
+	},
+};
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
 function Auctions:Enable()
@@ -39,16 +48,21 @@ function Auctions:AUCTION_HOUSE_SHOW()
 	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
 	self:RegisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
 	self:RegisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+	self:RegisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
 
 	self:RegisterEvent('AUCTION_MULTISELL_UPDATE');
 	self:RegisterEvent('UI_ERROR_MESSAGE');
 end
 
 function Auctions:AUCTION_HOUSE_CLOSED()
+	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
+	self:UnregisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
+	self:UnregisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+	self:UnregisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
+
 	self:UnregisterEvent('AUCTION_MULTISELL_UPDATE');
 	self:UnregisterEvent('UI_ERROR_MESSAGE');
 end
-
 
 Auctions.currentQuery = nil;
 Auctions.currentCallback = nil;
@@ -98,16 +112,7 @@ function Auctions:QueryAuctions(query, callback)
 		10
 	}
 	cq.itemClassFilters = query.itemClassFilters or nil;
-	cq.sorts = {
-		{
-			sortOrder = Enum.AuctionHouseSortOrder.Price,
-			reverseSort = false
-		},
-		{
-			sortOrder = Enum.AuctionHouseSortOrder.Buyout,
-			reverseSort = false
-		},
-	};
+	cq.sorts = defaultSorts;
 
 	C_AuctionHouse.SendBrowseQuery(cq);
 
@@ -127,16 +132,7 @@ function Auctions:SearchFavoriteItems(query, callback)
 
 	self.currentlyQuerying = true;
 
-	local sorts = {
-		{
-			sortOrder = Enum.AuctionHouseSortOrder.Price,
-			reverseSort = false
-		},
-		{
-			sortOrder = Enum.AuctionHouseSortOrder.Buyout,
-			reverseSort = false
-		},
-	};
+	local sorts = defaultSorts;
 
 	C_AuctionHouse.SearchForFavorites(sorts)
 
@@ -146,55 +142,55 @@ end
 
 Auctions.searchResults = {};
 
---- Fetch auction house results
-function Auctions:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
-	if not self.currentCallback then
-		return ;
-	end
-
+function Auctions:ScanBrowseResults()
 	local browseResults = C_AuctionHouse.GetBrowseResults();
 
-	print('amount of items ', #browseResults)
 	local waitingForKeyInfo = false;
-	self.searchResults = {};
+	local searchResults = {};
 	for _, result in pairs(browseResults) do
 		local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(result.itemKey);
 		if not itemKeyInfo then
 			waitingForKeyInfo = true;
-			self:RegisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
-			print('INCOMPLETE RESULTS')
 		end
 
 		local itemInfo = {
-			name = itemKeyInfo and itemKeyInfo.itemName or nil,
-			quality = itemKeyInfo and itemKeyInfo.quality or nil,
-			texture = itemKeyInfo and itemKeyInfo.iconFileID or nil,
-			itemId = result.itemKey.itemID,
-			level = result.itemKey.itemLevel,
+			name               = itemKeyInfo and itemKeyInfo.itemName or nil,
+			quality            = itemKeyInfo and itemKeyInfo.quality or nil,
+			texture            = itemKeyInfo and itemKeyInfo.iconFileID or nil,
+			itemId             = result.itemKey.itemID,
+			level              = result.itemKey.itemLevel,
 			battlePetSpeciesID = result.battlePetSpeciesID,
-			isCommodity = itemKeyInfo and itemKeyInfo.isCommodity or nil,
-			count = result.totalQuantity,
-			itemKey = result.itemKey,
-			buy = result.minPrice
+			isCommodity        = itemKeyInfo and itemKeyInfo.isCommodity or nil,
+			count              = result.totalQuantity,
+			itemKey            = result.itemKey,
+			buy                = result.minPrice
 		};
 
 		if itemKeyInfo then
 			itemInfo.itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(result.itemKey, itemKeyInfo, false);
 		end
-		tinsert(self.searchResults, itemInfo);
+		tinsert(searchResults, itemInfo);
 	end
 
-	table.sort(self.searchResults, function(a,b)
+	table.sort(searchResults, function(a, b)
 		return a.buy < b.buy;
-	end)
+	end);
 
-	if not waitingForKeyInfo then
-		self.currentCallback(self.searchResults);
-		-- no longer our scan
-		self.currentCallback = nil;
-	else
-		print('waiting for key info')
-		self.keyInfoTimeout = self:ScheduleTimer('WaitingForKeyInfoTimeout', 5);
+	return searchResults;
+end
+
+--- Fetch auction house results
+function Auctions:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
+	self.searchResults = self:ScanBrowseResults();
+
+	if self.currentCallback then
+		if not waitingForKeyInfo then
+			self.currentCallback(self.searchResults);
+			-- no longer our scan
+			self.currentCallback = nil;
+		else
+			self.keyInfoTimeout = self:ScheduleTimer('WaitingForKeyInfoTimeout', 5);
+		end
 	end
 end
 
@@ -254,12 +250,7 @@ function Auctions:QueryItem(itemKey, callback)
 			C_AuctionHouse.RefreshItemSearchResults(itemKey);
 		end
 	else
-		print('sending query of item')
-		local sorts = {
-			sortOrder = Enum.AuctionHouseSortOrder.Price,
-			reverseSort = false
-		};
-		C_AuctionHouse.SendSearchQuery(itemKey, sorts, true);
+		C_AuctionHouse.SendSearchQuery(itemKey, defaultSorts, true);
 	end
 
 	self.itemQueryTimeout = self:ScheduleTimer('SendItemQueryTimeout', 1);
@@ -275,7 +266,7 @@ function Auctions:SendItemQueryTimeout()
 	self.subQueryCallback = nil;
 end
 
-function Auctions:FetchCommodityResults(itemId)
+function Auctions:ScanCommodityResults(itemId)
 	local items = {};
 	local itemKey = C_AuctionHouse.MakeItemKey(itemId);
 	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
@@ -287,23 +278,23 @@ function Auctions:FetchCommodityResults(itemId)
 		local info = C_AuctionHouse.GetCommoditySearchResultInfo(itemId, i);
 
 		tinsert(items, {
-			itemId = info.itemID,
-			count = info.quantity,
-			buy = info.unitPrice,
-			auctionId = info.auctionID,
-			owners = info.owners,
-			owner = table.concat(info.owners, ', '),
-			timeLeft = info.timeLeftSeconds,
-			numItems = info.numOwnerItems,
-			containsOwnerItem = info.containsOwnerItem,
+			itemId              = info.itemID,
+			count               = info.quantity,
+			buy                 = info.unitPrice,
+			auctionId           = info.auctionID,
+			owners              = info.owners,
+			owner               = table.concat(info.owners, ', '),
+			timeLeft            = info.timeLeftSeconds,
+			numItems            = info.numOwnerItems,
+			containsOwnerItem   = info.containsOwnerItem,
 			containsAccountItem = info.containsAccountItem,
-			texture = itemKeyInfo.iconFileID,
-			isCommodity = true,
-			name = itemKeyInfo.itemName,
-			quality = itemKeyInfo.quality,
-			level = 0,
-			itemKey = itemKey,
-			itemLink = itemLink,
+			texture             = itemKeyInfo.iconFileID,
+			isCommodity         = true,
+			name                = itemKeyInfo.itemName,
+			quality             = itemKeyInfo.quality,
+			level               = 0,
+			itemKey             = itemKey,
+			itemLink            = itemLink,
 		});
 	end
 
@@ -315,9 +306,9 @@ function Auctions:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 		return ;
 	end
 
-	local items, numSearchResults = self:FetchCommodityResults(itemId);
+	local items = self:ScanCommodityResults(itemId);
 
-	if numSearchResults > 0 then
+	if #items > 0 then
 		self.subQueryCallback(items);
 
 		-- no longer our scan
@@ -328,47 +319,48 @@ function Auctions:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 	end
 end
 
-function Auctions:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
-	if not self.subQueryCallback then
-		return ;
-	end
-
+function Auctions:ScanItemResults(itemKey)
 	local items = {};
-	local itemId = itemKey.itemID;
 	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
-	--local itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(itemKey, itemKeyInfo, false);
-
-	print('trying to get all item items', itemId)
-	--DevTools_Dump(self.currentItemInfo)
 	local numSearchResults = C_AuctionHouse.GetNumItemSearchResults(itemKey);
 
 	for i = 1, numSearchResults do
 		local info = C_AuctionHouse.GetItemSearchResultInfo(itemKey, i);
 
 		tinsert(items, {
-			itemId = info.itemID,
-			count = info.quantity,
-			bid = info.bidAmount,
-			buy = info.buyoutAmount,
-			auctionId = info.auctionID,
-			owners = info.owners,
-			owner = table.concat(info.owners, ', '),
-			timeLeft = info.timeLeftSeconds,
-			numItems = info.numOwnerItems,
-			isCommodity = false,
-			containsOwnerItem = info.containsOwnerItem,
+			itemId               = info.itemID,
+			count                = info.quantity,
+			bid                  = info.bidAmount,
+			buy                  = info.buyoutAmount,
+			auctionId            = info.auctionID,
+			owners               = info.owners,
+			owner                = table.concat(info.owners, ', '),
+			timeLeft             = info.timeLeftSeconds,
+			numItems             = info.numOwnerItems,
+			isCommodity          = false,
+			containsOwnerItem    = info.containsOwnerItem,
 			containsSocketedItem = info.containsSocketedItem,
-			texture = itemKeyInfo.texture,
-			name = itemKeyInfo.name,
-			quality = itemKeyInfo.quality,
-			itemKey = itemKey,
-			itemLink = info.itemLink,
-			itemLinkProper = info.itemLink,
+			texture              = itemKeyInfo.texture,
+			name                 = itemKeyInfo.name,
+			quality              = itemKeyInfo.quality,
+			itemKey              = itemKey,
+			itemLink             = info.itemLink,
+			itemLinkProper       = info.itemLink,
 		});
 	end
 
+	return items;
+end
+
+function Auctions:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
+	if not self.subQueryCallback then
+		return ;
+	end
+
+	local items = self:ScanItemResults(itemKey);
+
 	-- wait for next event
-	if numSearchResults > 0 then
+	if #items > 0 then
 		self.subQueryCallback(items);
 
 		-- no longer our scan
@@ -390,10 +382,8 @@ function Auctions:SellItem(itemLocation, qty, duration, price, bid)
 	end
 
 	if isCommodity then
-		print('posting commodity', itemLocation, duration, qty, price)
 		C_AuctionHouse.PostCommodity(itemLocation, duration, qty, price);
 	else
-		print('posting item', itemLocation, duration, qty, bid, price)
 		if bid and bid > 0 and bid ~= price then
 			C_AuctionHouse.PostItem(itemLocation, duration, qty, bid, price);
 		else
@@ -415,12 +405,11 @@ function Auctions:CalculateDeposit(itemLocation, settings)
 	end
 end
 
-function Auctions:BuyItem(auctionData, qty)
+function Auctions:BuyItem(auctionData, qty, callback)
 	print('BUYING ITEM/COMMODITY', auctionData.isCommodity, auctionData.auctionId)
 	if auctionData.isCommodity then
 		print('buying commodity', auctionData.itemId, qty)
-		C_AuctionHouse.StartCommoditiesPurchase(auctionData.itemId, qty)
-		C_AuctionHouse.ConfirmCommoditiesPurchase(auctionData.itemId, qty);
+		self:BuyCommodity(auctionData.itemId, qty, auctionData.buy, callback)
 	else
 		print('buying item', auctionData.auctionId, auctionData.buy)
 		C_AuctionHouse.PlaceBid(auctionData.auctionId, auctionData.buy);
@@ -429,26 +418,26 @@ function Auctions:BuyItem(auctionData, qty)
 	return true;
 end
 
-function Auctions:BuyCommodity(itemId, qty)
-	C_AuctionHouse.StartCommoditiesPurchase(itemId, qty)
+function Auctions:BuyCommodity(itemId, qty, unitPrice)
+	C_AuctionHouse.StartCommoditiesPurchase(itemId, qty, unitPrice);
 	C_AuctionHouse.ConfirmCommoditiesPurchase(itemId, qty);
 end
 
 local failedAuctionErrors = {
-	[ERR_NOT_ENOUGH_MONEY] = 'ERR_NOT_ENOUGH_MONEY',
-	[ERR_AUCTION_BAG] = 'ERR_AUCTION_BAG',
-	[ERR_AUCTION_BOUND_ITEM] = 'ERR_AUCTION_BOUND_ITEM',
-	[ERR_AUCTION_CONJURED_ITEM] = 'ERR_AUCTION_CONJURED_ITEM',
-	[ERR_AUCTION_DATABASE_ERROR] = 'ERR_AUCTION_DATABASE_ERROR',
-	[ERR_AUCTION_ENOUGH_ITEMS] = 'ERR_AUCTION_ENOUGH_ITEMS',
-	[ERR_AUCTION_HOUSE_DISABLED] = 'ERR_AUCTION_HOUSE_DISABLED',
+	[ERR_NOT_ENOUGH_MONEY]              = 'ERR_NOT_ENOUGH_MONEY',
+	[ERR_AUCTION_BAG]                   = 'ERR_AUCTION_BAG',
+	[ERR_AUCTION_BOUND_ITEM]            = 'ERR_AUCTION_BOUND_ITEM',
+	[ERR_AUCTION_CONJURED_ITEM]         = 'ERR_AUCTION_CONJURED_ITEM',
+	[ERR_AUCTION_DATABASE_ERROR]        = 'ERR_AUCTION_DATABASE_ERROR',
+	[ERR_AUCTION_ENOUGH_ITEMS]          = 'ERR_AUCTION_ENOUGH_ITEMS',
+	[ERR_AUCTION_HOUSE_DISABLED]        = 'ERR_AUCTION_HOUSE_DISABLED',
 	[ERR_AUCTION_LIMITED_DURATION_ITEM] = 'ERR_AUCTION_LIMITED_DURATION_ITEM',
-	[ERR_AUCTION_LOOT_ITEM] = 'ERR_AUCTION_LOOT_ITEM',
-	[ERR_AUCTION_QUEST_ITEM] = 'ERR_AUCTION_QUEST_ITEM',
-	[ERR_AUCTION_REPAIR_ITEM] = 'ERR_AUCTION_REPAIR_ITEM',
-	[ERR_AUCTION_USED_CHARGES] = 'ERR_AUCTION_USED_CHARGES',
-	[ERR_AUCTION_WRAPPED_ITEM] = 'ERR_AUCTION_WRAPPED_ITEM',
-	[ERR_AUCTION_REPAIR_ITEM] = 'ERR_AUCTION_REPAIR_ITEM',
+	[ERR_AUCTION_LOOT_ITEM]             = 'ERR_AUCTION_LOOT_ITEM',
+	[ERR_AUCTION_QUEST_ITEM]            = 'ERR_AUCTION_QUEST_ITEM',
+	[ERR_AUCTION_REPAIR_ITEM]           = 'ERR_AUCTION_REPAIR_ITEM',
+	[ERR_AUCTION_USED_CHARGES]          = 'ERR_AUCTION_USED_CHARGES',
+	[ERR_AUCTION_WRAPPED_ITEM]          = 'ERR_AUCTION_WRAPPED_ITEM',
+	[ERR_AUCTION_REPAIR_ITEM]           = 'ERR_AUCTION_REPAIR_ITEM',
 }
 
 function Auctions:UI_ERROR_MESSAGE(_, message)

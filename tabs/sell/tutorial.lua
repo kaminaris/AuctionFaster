@@ -65,13 +65,6 @@ function Sell:InitTutorial(force)
 				parent = sellTab.iconBackdrop,
 			},
 			{
-				text   = L['AuctionFaster keeps auctions cache for about 10 minutes, you can see when last real scan was performed.\n\n'] ..
-					C(L['You can click Refresh Auctions to scan again'], green),
-				anchor = 'RIGHT',
-				parent = sellTab,
-				customAnchor = sellTab.lastScan,
-			},
-			{
 				text   = L['Your bid price '] .. C(L['per one item.'], red) .. '\n\n' ..
 					C(L['AuctionFaster understands a lot of money formats'], green) ..
 					L[', for example:\n\n' .. '5g 6s 19c\n5g6s86c\n999s 50c\n3000s\n9000000c'],

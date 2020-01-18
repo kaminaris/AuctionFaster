@@ -10,10 +10,10 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @type Buy
 local Buy = AuctionFaster:GetModule('Buy');
 
---- @type AuctionCache
-local AuctionCache = AuctionFaster:GetModule('AuctionCache');
 --- @type ConfirmBuy
 local ConfirmBuy = AuctionFaster:GetModule('ConfirmBuy');
+--- @type ItemCache
+local ItemCache = AuctionFaster:GetModule('ItemCache');
 
 local format = string.format;
 local TableInsert = tinsert;
@@ -24,21 +24,50 @@ function Buy:Enable()
 end
 
 function Buy:OnShow()
-
-	self.buyTab.auctions = {};
 	self.buyTab.items = {};
 
 	self:UpdateSearchAuctions();
 	self:UpdateStateText();
 
 	self:InitTutorial();
+	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
+	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_ADDED');
+	self:RegisterEvent('AUCTION_HOUSE_BROWSE_FAILURE');
 end
 
-function Buy:OnHide()
+--	if event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" then
+--		self:UpdateBrowseResults();
+--	elseif event == "AUCTION_HOUSE_BROWSE_RESULTS_ADDED" then
+--		local addedBrowseResults = ...;
+--		self:UpdateBrowseResults(addedBrowseResults);
+--	elseif event == "AUCTION_HOUSE_BROWSE_FAILURE" then
+--		self.ItemList:SetCustomError(RED_FONT_COLOR:WrapTextInColorCode(ERR_AUCTION_DATABASE_ERROR));
+--	end
 
+function Buy:OnHide()
+	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
+	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_ADDED');
+	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_FAILURE');
 end
 
 function Buy:Disable()
+end
+
+function Buy:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
+	local items = Auctions:ScanBrowseResults();
+	self.buyTab.items = items;
+
+	self:UpdateSearchAuctions(items);
+	self:UpdateStateText();
+end
+
+function Buy:AUCTION_HOUSE_BROWSE_RESULTS_ADDED(...)
+	print(...)
+end
+
+function Buy:AUCTION_HOUSE_BROWSE_FAILURE()
+	self:UpdateSearchAuctions({});
+	self:UpdateStateText(false, true);
 end
 
 ----------------------------------------------------------------------------
@@ -57,25 +86,7 @@ function Buy:SearchAuctions(name, exact)
 	self:UpdateStateText(true);
 	self:SaveRecentSearches(name);
 
-	Auctions:QueryAuctions(self.currentQuery, function(items)
-		Buy:SearchAuctionsCallback(items)
-	end);
-end
-
-function Buy:SearchItem(itemKey)
-	self.currentQuery = {
-		itemKey = itemKey,
-	};
-
-	-- no need for filter if we are searching for specific item
-	-- self:ApplyFilters(self.currentQuery);
-
-	self:ClearSearchAuctions();
-	self:UpdateStateText(true);
-
-	Auctions:QueryItem(self.currentQuery, function(items)
-		Buy:SearchItemCallback(items)
-	end);
+	Auctions:QueryAuctions(self.currentQuery);
 end
 
 function Buy:SearchFavoriteItems()
@@ -86,9 +97,7 @@ function Buy:SearchFavoriteItems()
 	self:ClearSearchAuctions();
 	self:UpdateStateText(true);
 
-	Auctions:SearchFavoriteItems(self.currentQuery, function(items)
-		Buy:SearchItemCallback(items)
-	end);
+	Auctions:SearchFavoriteItems(self.currentQuery);
 end
 
 function Buy:SaveRecentSearches(searchQuery)
@@ -127,32 +136,17 @@ end
 --- Searching callback function
 ----------------------------------------------------------------------------
 
-function Buy:SearchAuctionsCallback(items)
-	print(#items)
-	-- TODO: this needs to be done twice
-	-- AuctionCache:ParseScanResults(items);
-	self.buyTab.items = items;
-	self.mode = 'items';
+function Buy:UpdateStateText(inProgress, failure)
+	if failure then
+		self.buyTab.stateLabel:SetText(L['Error occurred while searching']);
+		self.buyTab.stateLabel:Show();
+		return;
+	end
 
-	self:UpdateSearchAuctions();
-	self:UpdateStateText();
-end
-
-function Buy:SearchItemCallback(items)
-	print(#items)
-	AuctionCache:ParseScanResults(items);
-	self.buyTab.auctions = items;
-	self.mode = 'auctions';
-
-	self:UpdateSearchAuctions();
-	self:UpdateStateText();
-end
-
-function Buy:UpdateStateText(inProgress)
 	if inProgress then
 		self.buyTab.stateLabel:SetText(L['Search in progress...']);
 		self.buyTab.stateLabel:Show();
-	elseif #self.buyTab.auctions == 0 and #self.buyTab.items == 0 then
+	elseif #self.buyTab.items == 0 then
 		self.buyTab.stateLabel:SetText(L['Nothing was found for this query.']);
 		self.buyTab.stateLabel:Show();
 	else
@@ -206,24 +200,22 @@ function Buy:RemoveCurrentSearchAuction()
 		return ;
 	end
 
-	if not self.buyTab.auctions[index] then
+	if not self.buyTab.items[index] then
 		return;
 	end
 
-	tremove(self.buyTab.auctions, index);
+	tremove(self.buyTab.items, index);
 	self:UpdateSearchAuctions();
 
-	if self.buyTab.auctions[index] then
+	if self.buyTab.items[index] then
 		self.buyTab.searchResults:SetSelection(index);
 	end
 end
 
-function Buy:UpdateSearchAuctions()
-	if self.mode == 'auctions' then
-		self.buyTab.searchResults:SetData(self.buyTab.auctions, true);
-	else
-		self.buyTab.searchResults:SetData(self.buyTab.items, true);
-	end
+function Buy:UpdateSearchAuctions(items)
+	items = items or {};
+	self.buyTab.items = items;
+	self.buyTab.searchResults:SetData(items, true);
 end
 
 function Buy:ClearSearchAuctions()

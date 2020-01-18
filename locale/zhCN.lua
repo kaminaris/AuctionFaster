@@ -256,3 +256,5 @@ L['Lvl'] = '等级'	-- qty and stack and lvl in list are invisible in asia clien
 
 -- new in 8.3
 L['Qty: %d, Remaining: %d'] = true;
+L['Post'] = true;
+L['Error occurred while searching'] = true;

@@ -251,3 +251,5 @@ L['Lvl'] = 'Ур.'
 
 -- new in 8.3
 L['Qty: %d, Remaining: %d'] = true;
+L['Post'] = true;
+L['Error occurred while searching'] = true;

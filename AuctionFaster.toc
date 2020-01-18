@@ -31,9 +31,8 @@ Options.lua
 Utils.lua
 
 modules\HelpPlateX.xml
-modules\ItemCache.lua
-modules\AuctionCache.lua
 modules\Pricing.lua
+modules\ItemCache.lua
 modules\Tooltip.lua
 modules\Inventory.lua
 modules\Auctions.lua

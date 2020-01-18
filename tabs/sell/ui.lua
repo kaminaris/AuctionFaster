@@ -132,6 +132,17 @@ function Sell:DrawItemsFrame()
 	self:DoFilterSort();
 end
 
+local buttonCreate = function(parent, data, i)
+	local lineHeight = 32;
+	local margin = 5;
+	return Sell:CreateItemFrame(parent, lineHeight, margin);
+end;
+
+local buttonUpdate = function(parent, itemFrame, data, i)
+	Sell:UpdateItemFrame(itemFrame, data);
+	itemFrame.itemIndex = i;
+end;
+
 function Sell:DrawItems()
 	-- Update bag delayed may cause this to happen before we open auction tab
 	if not self.safeToDrawItems then
@@ -139,17 +150,6 @@ function Sell:DrawItems()
 	end
 
 	local scrollChild = self.sellTab.scrollChild;
-	local lineHeight = 32;
-	local margin = 5;
-
-	local buttonCreate = function(parent, data, i)
-		return Sell:CreateItemFrame(parent, lineHeight, margin);
-	end;
-
-	local buttonUpdate = function(parent, itemFrame, data, i)
-		Sell:UpdateItemFrame(itemFrame, data);
-		itemFrame.itemIndex = i;
-	end;
 
 	if not scrollChild.items then
 		scrollChild.items = {};
@@ -160,7 +160,6 @@ function Sell:DrawItems()
 end
 
 function Sell:CreateItemFrame(parent, lineHeight, margin)
-	--local holdingFrame = StdUi:HighlightButton(parent, parent:GetWidth(), lineHeight);
 	local holdingFrame = CreateFrame('Button', nil, parent);
 	StdUi:SetObjSize(holdingFrame, parent:GetWidth(), lineHeight);
 	holdingFrame.text = StdUi:ButtonLabel(holdingFrame, '');
@@ -196,7 +195,7 @@ function Sell:CreateItemFrame(parent, lineHeight, margin)
 
 	holdingFrame:SetScript('OnClick', function(self)
 		Sell:SelectItem(self.itemIndex);
-		self.highlightTexture:Show();
+		Sell:HideItemsHighlight(self.itemIndex);
 	end);
 
 	holdingFrame.itemIcon = StdUi:Texture(holdingFrame, lineHeight - 2, lineHeight - 2);
@@ -221,6 +220,7 @@ function Sell:UpdateItemFrame(holdingFrame, inventoryItem)
 	holdingFrame.itemIcon:SetTexture(inventoryItem.icon);
 	holdingFrame.itemName:SetText(inventoryItem.link);
 	holdingFrame.itemQty:SetText('#: |cff00f209' .. inventoryItem.count .. '|r');
+
 	holdingFrame.itemPrice:SetText(StdUi.Util.formatMoney(inventoryItem.price, true));
 end
 
@@ -258,10 +258,6 @@ function Sell:DrawRightPaneItemIcon(leftMargin, topMargin, iconSize)
 	sellTab.itemQty = StdUi:Label(sellTab, format(L['Qty: %d, Max Stacks: %d, Remaining: %d'], 0, 0, 0), nil, nil, 250,
 								  20);
 	StdUi:GlueBelow(sellTab.itemQty, sellTab.itemName, 0, 5);
-
-	-- Last scan time
-	sellTab.lastScan = StdUi:Label(sellTab, format(L['Last scan: %s'], '---'));
-	StdUi:GlueRight(sellTab.lastScan, sellTab.itemName, 5, 0);
 end
 
 function Sell:DrawRightPaneItemPrices(marginToIcon)
@@ -281,11 +277,11 @@ function Sell:DrawRightPaneItemPrices(marginToIcon)
 	sellTab.buyPerItem:Validate();
 	StdUi:GlueBelow(sellTab.buyPerItem, sellTab.bidPerItem, 0, -20);
 
-	sellTab.bidPerItem:SetScript('OnTabPressed', function(self)
+	sellTab.bidPerItem:SetScript('OnTabPressed', function()
 		sellTab.buyPerItem:SetFocus();
 	end);
 
-	sellTab.buyPerItem:SetScript('OnTabPressed', function(self)
+	sellTab.buyPerItem:SetScript('OnTabPressed', function()
 		sellTab.stackSize:SetFocus();
 	end);
 
@@ -309,6 +305,17 @@ function Sell:DrawRightPaneStackSettings(marginToPrices)
 
 	sellTab.stackSize:SetValue(1);
 	StdUi:GlueRight(sellTab.stackSize, sellTab.bidPerItem, marginToPrices, 0);
+
+	sellTab.maxStackSize = StdUi:Button(sellTab, 60, 20, AUCTION_HOUSE_MAX_QUANTITY_BUTTON);
+	sellTab.maxStackSize:SetPoint('BOTTOMRIGHT', sellTab.stackSize, 'TOPRIGHT', 0, 5);
+
+	sellTab.maxStackSize:SetScript('OnClick', function()
+		if not self.selectedItem then
+			return ;
+		end
+
+		sellTab.stackSize:SetValue(self.selectedItem.count);
+	end);
 
 	sellTab.stackSize.OnValueChanged = function(self)
 		Sell:ValidateStackSize(self);
@@ -438,42 +445,44 @@ function Sell:DrawRightPaneCurrentAuctionsTable(leftMargin)
 
 	sellTab.currentAuctions = StdUi:ScrollTable(sellTab, cols, 10, 18);
 	sellTab.currentAuctions:EnableSelection(true);
-	sellTab.currentAuctions:RegisterEvents({
-											   OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
-												   if button == 'LeftButton' then
-													   if IsModifiedClick('CHATLINK') then
-														   -- link item
-														   local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
-														   if itemKeyInfo and itemKeyInfo.battlePetLink then
-															   ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
-														   else
-															   local _, itemLink = GetItemInfo(rowData.itemId);
-															   ChatEdit_InsertLink(itemLink);
-														   end
-													   elseif IsAltKeyDown() then
-														   Sell:InstantBuy(rowData, rowIndex)
-													   elseif IsModifiedClick('DRESSUP') then
-														   local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
-														   if itemKeyInfo and itemKeyInfo.battlePetLink then
-															   DressUpBattlePetLink(itemKeyInfo.battlePetLink);
-														   else
-															   local _, itemLink = GetItemInfo(rowData.itemId);
-															   DressUpLink(itemLink);
-														   end
-													   else
-														   if table:GetSelection() == rowIndex then
-															   table:ClearSelection();
-														   else
-															   table:SetSelection(rowIndex);
-														   end
-													   end
-												   end
+	sellTab.currentAuctions:RegisterEvents(
+		{
+			OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
+				if button == 'LeftButton' then
+					if IsModifiedClick('CHATLINK') then
+						-- link item
+						local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+						if itemKeyInfo and itemKeyInfo.battlePetLink then
+							ChatEdit_InsertLink(itemKeyInfo.battlePetLink);
+						else
+							local _, itemLink = GetItemInfo(rowData.itemId);
+							ChatEdit_InsertLink(itemLink);
+						end
+					elseif IsAltKeyDown() then
+						Sell:InstantBuy(rowData, rowIndex)
+					elseif IsModifiedClick('DRESSUP') then
+						local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(rowData.itemKey);
+						if itemKeyInfo and itemKeyInfo.battlePetLink then
+							DressUpBattlePetLink(itemKeyInfo.battlePetLink);
+						else
+							local _, itemLink = GetItemInfo(rowData.itemId);
+							DressUpLink(itemLink);
+						end
+					else
+						if table:GetSelection() == rowIndex then
+							table:ClearSelection();
+						else
+							table:SetSelection(rowIndex);
+						end
+					end
+				end
 
-												   if button == 'RightButton' then
+				if button == 'RightButton' then
 
-												   end
-												   return true;
-											   end
-										   });
+				end
+				return true;
+			end
+		}
+	);
 	StdUi:GlueAcross(sellTab.currentAuctions, sellTab, leftMargin, -200, -20, 55);
 end

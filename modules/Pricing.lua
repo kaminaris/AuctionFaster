@@ -11,6 +11,8 @@ local floor = math.floor;
 local pow = math.pow;
 local sqrt = math.sqrt;
 local format = string.format;
+local pairs = pairs;
+local UnitName = UnitName;
 
 Pricing.models = {};
 
@@ -33,7 +35,7 @@ function Pricing:GetPricingModels()
 	return builtFunctions;
 end
 
-function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filter)
+function Pricing:CalculateStatData(itemRecord, auctions)
 	local maxBidDeviation = AuctionFaster.db.pricing.maxBidDeviation;
 	if not maxBidDeviation then
 		maxBidDeviation = 20;
@@ -41,8 +43,6 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 
 	local auctionInfo = {
 		itemRecord         = itemRecord,
-		auctions           = {},
-		stackSize          = stackSize,
 		maxBidDeviation    = maxBidDeviation,
 		totalQty           = 0,
 		totalQtyWithBuy    = 0,
@@ -63,52 +63,42 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 		estimatedVolume    = 0
 	}
 
-	local playerName = UnitName('player');
+	for _, auction in pairs(auctions) do
+		local bid, buy = auction.bid, auction.buy;
+		auctionInfo.totalQty = auctionInfo.totalQty + auction.count;
 
-	for i = 1, #auctions do
-		local auction = auctions[i];
-		if
-		auction.owner ~= playerName and
-			(not filter or filter(auction))
-		then
-			local bid, buy = auction.bid, auction.buy;
+		if buy and buy > 0 then
+			auctionInfo.weightedTotalBuy = auctionInfo.weightedTotalBuy + (auction.count * buy);
+			auctionInfo.totalQtyWithBuy = auctionInfo.totalQtyWithBuy + auction.count;
+			auctionInfo.totalBuy = auctionInfo.totalBuy + 1;
+		end
 
-			TableInsert(auctionInfo.auctions, auction);
-			auctionInfo.totalQty = auctionInfo.totalQty + auction.count;
+		if bid and bid > 0 then
+			auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * bid);
+		end
 
-			if buy and buy > 0 then
-				auctionInfo.weightedTotalBuy = auctionInfo.weightedTotalBuy + (auction.count * buy);
-				auctionInfo.totalQtyWithBuy = auctionInfo.totalQtyWithBuy + auction.count;
-				auctionInfo.totalBuy = auctionInfo.totalBuy + 1;
-			end
+		if buy and buy > 0 then
+			auctionInfo.totalBuy = auctionInfo.totalBuy + buy;
+		end
 
-			if bid and bid > 0 then
-				auctionInfo.weightedTotalBid = auctionInfo.weightedTotalBid + (auction.count * bid);
-			end
+		if bid and bid > 0 then
+			auctionInfo.totalBid = auctionInfo.totalBid + bid;
+		end
 
-			if buy and buy > 0 then
-				auctionInfo.totalBuy = auctionInfo.totalBuy + buy;
-			end
+		if buy and buy > 0 and (not auctionInfo.lowestBuy or auctionInfo.lowestBuy > buy) then
+			auctionInfo.lowestBuy = buy;
+		end
 
-			if bid and bid > 0 then
-				auctionInfo.totalBid = auctionInfo.totalBid + bid;
-			end
+		if bid and (not auctionInfo.lowestBid or auctionInfo.lowestBid > bid) then
+			auctionInfo.lowestBid = bid;
+		end
 
-			if buy and buy > 0 and (not auctionInfo.lowestBuy or auctionInfo.lowestBuy > buy) then
-				auctionInfo.lowestBuy = buy;
-			end
+		if buy and buy > 0 and (not auctionInfo.highestBuy or auctionInfo.highestBuy < buy) then
+			auctionInfo.highestBuy = buy;
+		end
 
-			if not auctionInfo.lowestBid or auctionInfo.lowestBid > bid then
-				auctionInfo.lowestBid = bid;
-			end
-
-			if buy and buy > 0 and (not auctionInfo.highestBuy or auctionInfo.highestBuy < buy) then
-				auctionInfo.highestBuy = buy;
-			end
-
-			if not auctionInfo.highestBid or auctionInfo.highestBid < bid then
-				auctionInfo.highestBid = bid;
-			end
+		if bid and (not auctionInfo.highestBid or auctionInfo.highestBid < bid) then
+			auctionInfo.highestBid = bid;
 		end
 	end
 
@@ -116,14 +106,14 @@ function Pricing:CalculateStatData(itemRecord, auctions, stackSize, total, filte
 	if auctionInfo.totalBuy > 0 then
 		auctionInfo.averageBuy = floor(auctionInfo.totalBuy / auctionInfo.totalBuy);
 	end
-	auctionInfo.averageBid = floor(auctionInfo.totalBid / #auctionInfo.auctions);
+	auctionInfo.averageBid = floor(auctionInfo.totalBid / #auctions);
 
 	if auctionInfo.totalQtyWithBuy > 0 then
 		auctionInfo.weightedAverageBuy = floor(auctionInfo.weightedTotalBuy / auctionInfo.totalQtyWithBuy);
 	end
 	auctionInfo.weightedAverageBid = floor(auctionInfo.weightedTotalBid / auctionInfo.totalQty);
 
-	auctionInfo.estimatedVolume = averageQty * total;
+	auctionInfo.estimatedVolume = averageQty * #auctions;
 
 	return auctionInfo;
 end
@@ -132,9 +122,10 @@ function Pricing:RoundPrice(p)
 	return Round(Round(p / 100) * 100);
 end
 
-function Pricing:CalculatePrice(priceModel, itemRecord, auctions, stackSize, total)
-	local auctionInfo = self:CalculateStatData(itemRecord, auctions, stackSize, total);
+function Pricing:CalculatePrice(priceModel, itemRecord, auctions)
+	local auctionInfo = self:CalculateStatData(itemRecord, auctions);
 	local bid, buy, success;
+
 	if self[priceModel] then
 		bid, buy, success = self[priceModel](self, auctionInfo);
 	elseif self.models[priceModel] then

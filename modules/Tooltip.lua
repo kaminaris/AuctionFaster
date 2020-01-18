@@ -40,8 +40,9 @@ function Tooltip:UpdateTooltip(tooltip, ...)
 	end
 
 	local itemId = GetItemInfoInstant(link);
+	local itemKey = C_AuctionHouse.MakeItemKey(itemId);
+	local cacheItem = ItemCache:GetItemFromCache(itemKey);
 
-	local cacheItem = ItemCache:GetItemFromCache(itemId, name, true);
 	if cacheItem then
 		tooltip:AddLine('---');
 		tooltip:AddLine(L['AuctionFaster']);
@@ -80,7 +81,10 @@ function Tooltip:HookBattlePetBreedId()
 			return;
 		end
 		local petName = C_PetJournal.GetPetInfoBySpeciesID(speciesID);
-		local afPane = Tooltip:UpdateBattlePetTooltip(parent, {name = petName});
+		local afPane = Tooltip:UpdateBattlePetTooltip(parent, {
+			speciesID = speciesID,
+			level = 1
+		});
 		local origWidth = afPane:GetWidth();
 		afPane:AddLine('');
 
@@ -343,7 +347,9 @@ function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	end
 
 	tooltip.afPane:SetText('');
-	local cacheItem = ItemCache:GetItemFromCache(82800, petData.name, true);
+
+	local itemKey = C_AuctionHouse.MakeItemKey(82800 , petData.level, 0, petData.speciesID);
+	local cacheItem = ItemCache:GetItemFromCache(itemKey);
 	if not cacheItem then
 		return tooltip.afPane;
 	end

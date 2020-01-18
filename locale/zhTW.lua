@@ -256,3 +256,5 @@ L['Lvl'] = '等級'	-- qty and lvl are invisible in asia client after translate 
 
 -- new in 8.3
 L['Qty: %d, Remaining: %d'] = true;
+L['Post'] = true;
+L['Error occurred while searching'] = true;

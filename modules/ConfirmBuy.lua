@@ -1,66 +1,89 @@
 ---@type AuctionFaster
-local AuctionFaster  = unpack(select(2, ...));
+local AuctionFaster = unpack(select(2, ...));
 --- @type StdUi
-local StdUi          = LibStub('StdUi');
-local L              = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
+local StdUi = LibStub('StdUi');
+local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
 local C_AuctionHouse = C_AuctionHouse;
-local format         = string.format;
+local format = string.format;
 
 --- @type Auctions
-local Auctions       = AuctionFaster:GetModule('Auctions');
+local Auctions = AuctionFaster:GetModule('Auctions');
 
 --- @class ConfirmBuy
-local ConfirmBuy     = AuctionFaster:NewModule('ConfirmBuy', 'AceEvent-3.0', 'AceTimer-3.0');
+local ConfirmBuy = AuctionFaster:NewModule('ConfirmBuy', 'AceEvent-3.0', 'AceTimer-3.0');
 
 function ConfirmBuy:Enable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
-	self:RegisterEvent('COMMODITY_PRICE_UPDATED');
+	self:RegisterEvent('AUCTION_HOUSE_SHOW');
+end
+
+function ConfirmBuy:Disable()
+	self:UnregisterEvent('AUCTION_HOUSE_CLOSED');
+	self:UnregisterEvent('AUCTION_HOUSE_SHOW');
+end
+
+function ConfirmBuy:AUCTION_HOUSE_SHOW()
+	self:RegisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
+	self:RegisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+	--self:RegisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
 end
 
 function ConfirmBuy:AUCTION_HOUSE_CLOSED()
 	if self.window then
 		self.window:Hide();
 	end
+
+	self:UnregisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
+	self:UnregisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+	--self:UnregisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
 end
 
-function ConfirmBuy:COMMODITY_PRICE_UPDATED()
+function ConfirmBuy:COMMODITY_PURCHASE_SUCCEEDED()
 	if not self.window then
 		return ;
 	end
 
-	Auctions:QueryItem(self.itemKey, function(items)
-		print('did we?')
-		self:SetItems(items);
-		self.window.buy:Enable();
-	end);
-	--
-	--local items = Auctions:FetchCommodityResults(self.itemKey.itemID);
-	--print('NEW ITEMS:', #items)
-	--self:SetItems(items);
+	self:RefreshAuctions();
+end
+
+function ConfirmBuy:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
+	local items = Auctions:ScanCommodityResults(itemId);
+	self:SetItems(items);
+end
+
+function ConfirmBuy:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
+	local items = Auctions:ScanItemResults(itemKey);
+	self:SetItems(items);
+end
+
+function ConfirmBuy:RefreshAuctions()
+	Auctions:QueryItem(self.itemKey);
 end
 
 function ConfirmBuy:ConfirmPurchase(itemKey, isCommodity)
 	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
 
-	self.isCommodity  = isCommodity;
-	self.itemKey      = itemKey;
-	self.itemKeyInfo  = itemKeyInfo;
-	self.items        = {};
-	self.boughtSoFar  = 0;
-	self.itemsReady   = false;
+	self.isCommodity = isCommodity;
+	self.itemKey = itemKey;
+	self.itemKeyInfo = itemKeyInfo;
+	self.items = {};
+	self.boughtSoFar = 0;
+	self.itemsReady = false;
 
 	self:CreateUpdateWindow();
 	self.window:Show();
 	self.window.buy:Disable();
 
-	Auctions:QueryItem(itemKey, function(items)
-		ConfirmBuy:SetItems(items);
-	end)
+	Auctions:QueryItem(itemKey);
 end
 
 function ConfirmBuy:SetItems(items)
-	self.items      = items;
+	if not self.window or not self.window:IsVisible() then
+		return;
+	end
+
+	self.items = items;
 	self.itemsReady = true;
 	self.window.searchResults:SetData(items, true);
 	self:UpdatePrices();
@@ -68,21 +91,21 @@ end
 
 function ConfirmBuy:CreateUpdateWindow()
 	if not self.window then
-		local window = StdUi:Window(UIParent, 400, 300, 'Confirm Buy');
-		window:SetPoint('CENTER');
+		local window = StdUi:Window(UIParent, 600, 500, 'Confirm Buy');
+		window:SetPoint('LEFT', AuctionHouseFrame, 'RIGHT', 100, 0);
 
-		window.itemIcon      = StdUi:Texture(window, 32, 32, '');
-		window.itemName      = StdUi:Label(window, '', 14);
+		window.itemIcon = StdUi:Texture(window, 32, 32, '');
+		window.itemName = StdUi:Label(window, '', 14);
 
-		window.qty           = StdUi:Label(window, L['Qty'], 14);
-		window.qtyBox        = StdUi:EditBox(window, 100, 20, 0, StdUi.Util.numericBoxValidator);
-		window.buy           = StdUi:Button(window, 60, 20, L['Buy']);
+		window.qty = StdUi:Label(window, L['Qty'], 14);
+		window.qtyBox = StdUi:EditBox(window, 100, 20, 0, StdUi.Util.numericBoxValidator);
+		window.buy = StdUi:Button(window, 60, 20, L['Buy']);
 
-		window.pricePerItem  = StdUi:Label(window, '', 12);
-		window.priceTotal    = StdUi:Label(window, '', 12);
-		window.boughtSoFar   = StdUi:Label(window, '', 12);
+		window.pricePerItem = StdUi:Label(window, '', 12);
+		window.priceTotal = StdUi:Label(window, '', 12);
+		window.boughtSoFar = StdUi:Label(window, '', 12);
 
-		local cols           = {
+		local cols = {
 			{
 				name     = '',
 				width    = 16,
@@ -120,13 +143,13 @@ function ConfirmBuy:CreateUpdateWindow()
 		window.searchResults = StdUi:ScrollTable(window, cols, 8, 16);
 		window.searchResults:RegisterEvents({
 			OnEnter = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
-				if self.isCommodity then return true end;
+				if self.isCommodity then return true end ;
 				table:SetHighLightColor(rowFrame, table.stdUi.config.highlight.color);
 				return true;
 			end,
 
 			OnLeave = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex)
-				if self.isCommodity then return true end;
+				if self.isCommodity then return true end ;
 				if rowIndex ~= table.selected or not table.selectionEnabled then
 					table:SetHighLightColor(rowFrame, nil);
 				end
@@ -135,7 +158,7 @@ function ConfirmBuy:CreateUpdateWindow()
 			end,
 
 			OnClick = function(table, cellFrame, rowFrame, rowData, columnData, rowIndex, button)
-				if self.isCommodity then return true end;
+				if self.isCommodity then return true end ;
 				if button == 'LeftButton' then
 					if table:GetSelection() == rowIndex then
 						table:ClearSelection();
@@ -175,11 +198,12 @@ function ConfirmBuy:CreateUpdateWindow()
 					qty = 0;
 				end
 				if qty > 0 then
-					Auctions:BuyCommodity(ConfirmBuy.itemKey.itemID, qty);
+					Auctions:BuyCommodity(ConfirmBuy.itemKey.itemID, qty, self.lowestPrice);
 				end
 			else
 				local item = self.window.searchResults:GetSelectedItem();
 				Auctions:BuyItem(item);
+				self:ScheduleTimer('RefreshAuctions', 0.7);
 			end
 
 		end);
@@ -233,19 +257,24 @@ function ConfirmBuy:UpdatePrices()
 
 	self.window.buy:Enable();
 
-	local total           = 0;
-	local qtyLeft         = qty;
+	local total = 0;
+	local qtyLeft = qty;
 	local rowsToHighlight = {};
+	self.lowestPrice = nil;
 	for idx, item in pairs(self.items) do
+		if not self.lowestPrice then
+			self.lowestPrice = item.buy;
+		end
+
 		if qtyLeft == 0 then
 			break ;
 		end
 
 		if item.count > qtyLeft then
-			total   = total + (qtyLeft * item.buy);
+			total = total + (qtyLeft * item.buy);
 			qtyLeft = 0;
 		else
-			total   = total + (item.count * item.buy);
+			total = total + (item.count * item.buy);
 			qtyLeft = qtyLeft - item.count;
 		end
 		tinsert(rowsToHighlight, idx);

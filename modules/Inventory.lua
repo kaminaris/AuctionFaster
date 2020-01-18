@@ -115,7 +115,7 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 		end
 	end
 
-	local itemName, itemIcon, itemStackCount, additionalInfo, quality, level;
+	local itemName, itemIcon, additionalInfo, quality, level;
 
 	local itemKey = C_AuctionHouse.GetItemKeyFromItem(itemLocation);
 	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
@@ -126,14 +126,11 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 		quality = breedQuality;
 		itemIcon = icon;
 		level = petLevel;
-		itemStackCount = 1;
 		count = 1;
 	else
-		local n, _, q, _, _, _, _, c, _, _, itemSellPrice = GetItemInfo(link);
 
 		level = C_Item.GetCurrentItemLevel(itemLocation);
 		itemName = C_Item.GetItemName(itemLocation);
-		itemStackCount = c;
 		quality = C_Item.GetItemQuality(itemLocation);
 		itemIcon = C_Item.GetItemIcon(itemLocation);
 	end
@@ -143,7 +140,7 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 	if itemId ~= battlePetId then
 		for i = 1, #self.inventoryItems do
 			local ii = self.inventoryItems[i];
-			if ii.itemId == itemId and ii.itemName == itemName then
+			if self:ItemKeyEqual(ii.itemKey, itemKey) then
 				found = true;
 				break ;
 			end
@@ -151,7 +148,7 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 	end
 
 	if not found then
-		local scanPrice = ItemCache:GetLastScanPrice(itemId, itemName);
+		local scanPrice = ItemCache:GetLastScanPrice(itemKey);
 		if not scanPrice then
 			scanPrice = '---';
 		end
@@ -165,7 +162,6 @@ function Inventory:AddItemToInventory(itemLocation, bag, slot)
 			quality        = quality,
 			level          = level,
 			count          = count,
-			maxStackSize   = itemStackCount,
 			icon           = itemIcon,
 			additionalInfo = additionalInfo,
 			itemId         = itemId,
