@@ -33,6 +33,7 @@ function Buy:OnShow()
 	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
 	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_ADDED');
 	self:RegisterEvent('AUCTION_HOUSE_BROWSE_FAILURE');
+	self:RegisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
 end
 
 --	if event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" then
@@ -48,6 +49,7 @@ function Buy:OnHide()
 	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
 	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_ADDED');
 	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_FAILURE');
+	self:UnregisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
 end
 
 function Buy:Disable()
@@ -59,6 +61,29 @@ function Buy:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
 
 	self:UpdateSearchAuctions(items);
 	self:UpdateStateText();
+end
+
+function Buy:ITEM_KEY_ITEM_INFO_RECEIVED(_, itemId)
+	local itemUpdated = false;
+
+	for _, itemResult in pairs(self.buyTab.items) do
+		if itemResult.itemId == itemId then
+			local itemKey = itemResult.itemKey;
+			local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
+			if itemKeyInfo then
+				itemResult.name = itemKeyInfo.itemName;
+				itemResult.quality = itemKeyInfo.quality;
+				itemResult.texture = itemKeyInfo.iconFileID;
+				itemResult.isCommodity = itemKeyInfo.isCommodity;
+				itemResult.itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(itemKey, itemKeyInfo, false);
+				itemUpdated = true;
+			end
+		end
+	end
+
+	if itemUpdated then
+		self:UpdateSearchAuctions(self.buyTab.items);
+	end
 end
 
 function Buy:AUCTION_HOUSE_BROWSE_RESULTS_ADDED(...)
@@ -138,7 +163,7 @@ end
 
 function Buy:UpdateStateText(inProgress, failure)
 	if failure then
-		self.buyTab.stateLabel:SetText(L['Error occurred while searching']);
+		self.buyTab.stateLabel:SetText(RED_FONT_COLOR:WrapTextInColorCode(ERR_AUCTION_DATABASE_ERROR));
 		self.buyTab.stateLabel:Show();
 		return;
 	end

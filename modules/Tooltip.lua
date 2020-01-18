@@ -34,6 +34,9 @@ function Tooltip:Disable()
 end
 
 function Tooltip:UpdateTooltip(tooltip, ...)
+	if tooltip.afPane then
+		tooltip.afPane:Hide();
+	end
 	local name, link = tooltip:GetItem();
 	if not link then
 		return ;

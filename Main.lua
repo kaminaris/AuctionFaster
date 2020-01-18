@@ -35,7 +35,7 @@ function AuctionFaster:OnInitialize()
 	self:EnableModule('Tutorial');
 
 	-- TODO: COMMENT THIS OUT
-	UIParentLoadAddOn('Blizzard_DebugTools')
+	--UIParentLoadAddOn('Blizzard_DebugTools')
 end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()
@@ -48,12 +48,11 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 			self.onTabClickHooked = true;
 		end
 
-		-- @TODO
-		--if self.db.defaultTab == 'SELL' then
-		--	AuctionFrameTab_OnClick(self.auctionTabs[1].tabButton);
-		--elseif self.db.defaultTab == 'BUY' then
-		--	AuctionFrameTab_OnClick(self.auctionTabs[2].tabButton);
-		--end
+		if self.db.defaultTab == 'SELL' then
+			AuctionHouseFrame:SetDisplayMode(AuctionHouseFrameDisplayMode.AFSellMode);
+		elseif self.db.defaultTab == 'BUY' then
+			AuctionHouseFrame:SetDisplayMode(AuctionHouseFrameDisplayMode.AFBuyMode);
+		end
 	end
 end
 
@@ -69,13 +68,8 @@ local function stripFrameTextures(frame, strip)
 
 		if region and region:GetObjectType() == 'Texture' then
 			if strip then
-				-- region.origTex = region:GetTexture();
-				-- region:SetTexture(nil);
 				region:Hide();
 			else
-				-- if region.origTex and region:GetTexture() == nil then
-				--	region:SetTexture(region.origTex);
-				-- end
 				region:Show()
 			end
 		end
@@ -83,21 +77,17 @@ local function stripFrameTextures(frame, strip)
 end
 
 function AuctionFaster:StripAhTextures()
-	--if not IsAddOnLoaded('ElvUI') then
-	print('strippin textures')
-	stripFrameTextures(AuctionHouseFrame, true);
-	stripFrameTextures(AuctionHouseFrame.NineSlice, true);
-
-	--end
+	if not IsAddOnLoaded('ElvUI') then
+		stripFrameTextures(AuctionHouseFrame, true);
+		stripFrameTextures(AuctionHouseFrame.NineSlice, true);
+	end
 end
 
 function AuctionFaster:RestoreAhTextures()
-	--if not IsAddOnLoaded('ElvUI') then
-	print('restorin textures')
-	stripFrameTextures(AuctionHouseFrame, false);
-	stripFrameTextures(AuctionHouseFrame.NineSlice, false);
-
-	--end
+	if not IsAddOnLoaded('ElvUI') then
+		stripFrameTextures(AuctionHouseFrame, false);
+		stripFrameTextures(AuctionHouseFrame.NineSlice, false);
+	end
 end
 
 function AuctionFaster:SetDisplayModeHook(_, displayMode)

@@ -58,11 +58,11 @@ end
 function Sell:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 	local items = Auctions:ScanCommodityResults(itemId);
 
-	local itemRecord = self:GetSelectedItemRecord();
+	local selectedItem = self:GetSelectedItemRecord();
 	-- No item selected ? - should not happen
-	if not itemRecord then return; end
+	if not selectedItem then return; end
 
-	self:UpdateItemListPrices(itemRecord, items);
+	self:UpdateItemListPrices(selectedItem, items);
 	self:UpdateInfoPaneText();
 end
 
@@ -183,10 +183,12 @@ function Sell:UpdateTabPrices(bid, buy)
 end
 
 function Sell:GetCurrentAuctions()
-	local selectedItem = self.selectedItem;
-	local itemKey = selectedItem.itemKey;
+	local selectedItem = self:GetSelectedItemRecord();
+	-- No item selected ? - should not happen
+	if not selectedItem then return; end
 
-	Auctions:QueryItem(itemKey);
+	self:UpdateItemListPrices(selectedItem, {});
+	Auctions:QueryItem(selectedItem.itemKey);
 end
 
 function Sell:UpdateStackSettings(stackSize)

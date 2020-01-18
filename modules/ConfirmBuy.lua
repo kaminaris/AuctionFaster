@@ -97,13 +97,17 @@ function ConfirmBuy:CreateUpdateWindow()
 		window.itemIcon = StdUi:Texture(window, 32, 32, '');
 		window.itemName = StdUi:Label(window, '', 14);
 
-		window.qty = StdUi:Label(window, L['Qty'], 14);
-		window.qtyBox = StdUi:EditBox(window, 100, 20, 0, StdUi.Util.numericBoxValidator);
-		window.buy = StdUi:Button(window, 60, 20, L['Buy']);
+		window.qty = StdUi:Label(window, L['Qty'], 18);
+		window.qtyBox = StdUi:SimpleEditBox(window, 100, 40, 1);
+		window.qtyBox:SetNumeric(true);
+		window.qtyBox:SetFontSize(18);
+		window.qtyBox:SetJustifyH('CENTER');
+		window.buy = StdUi:Button(window, 100, 40, L['Buy']);
+		window.buy:SetFontSize(18);
 
-		window.pricePerItem = StdUi:Label(window, '', 12);
-		window.priceTotal = StdUi:Label(window, '', 12);
-		window.boughtSoFar = StdUi:Label(window, '', 12);
+		window.pricePerItem = StdUi:Label(window, '', 14);
+		window.priceTotal = StdUi:Label(window, '', 14);
+		window.boughtSoFar = StdUi:Label(window, '', 14);
 
 		local cols = {
 			{
@@ -116,7 +120,7 @@ function ConfirmBuy:CreateUpdateWindow()
 			},
 			{
 				name     = L['Name'],
-				width    = 150,
+				width    = 280,
 				align    = 'LEFT',
 				index    = 'itemLink',
 				format   = 'string',
@@ -124,7 +128,7 @@ function ConfirmBuy:CreateUpdateWindow()
 			},
 			{
 				name     = L['Qty'],
-				width    = 40,
+				width    = 60,
 				align    = 'LEFT',
 				index    = 'count',
 				format   = 'number',
@@ -132,10 +136,10 @@ function ConfirmBuy:CreateUpdateWindow()
 			},
 			{
 				name     = L['Buy'],
-				width    = 120,
+				width    = 140,
 				align    = 'RIGHT',
 				index    = 'buy',
-				format   = 'money',
+				format   = 'moneyShort',
 				sortable = false,
 			},
 		}
@@ -182,13 +186,13 @@ function ConfirmBuy:CreateUpdateWindow()
 		StdUi:GlueLeft(window.qtyBox, window.buy, -10, 0);
 		StdUi:GlueLeft(window.qty, window.qtyBox, -10, 0);
 
-		StdUi:GlueTop(window.pricePerItem, window, 20, -80, 'LEFT');
+		StdUi:GlueTop(window.pricePerItem, window, 20, -90, 'LEFT');
 		StdUi:GlueRight(window.priceTotal, window.pricePerItem, 20, 0);
 		StdUi:GlueRight(window.boughtSoFar, window.priceTotal, 20, 0);
 
-		window.qtyBox.OnValueChanged = function()
+		window.qtyBox:SetScript('OnTextChanged', function(self, isUserInput)
 			ConfirmBuy:UpdatePrices();
-		end
+		end);
 
 		window.buy:SetScript('OnClick', function()
 			window.buy:Disable();
@@ -245,10 +249,11 @@ function ConfirmBuy:UpdatePrices()
 		return ;
 	end
 
-	local qty = self.window.qtyBox:GetValue();
+	local qty = self.window.qtyBox:GetText();
 	if qty == nil then
 		qty = 0;
 	end
+	qty = tonumber(qty);
 
 	if qty < 0 then
 		self.window.buy:Disable();
