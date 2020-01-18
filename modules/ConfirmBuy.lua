@@ -61,6 +61,10 @@ function ConfirmBuy:RefreshAuctions()
 	Auctions:QueryItem(self.itemKey);
 end
 
+function ConfirmBuy:EnableBuyButtonTimeout()
+	self.window.buy:Enable();
+end
+
 function ConfirmBuy:ConfirmPurchase(itemKey, isCommodity)
 	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(itemKey);
 
@@ -197,12 +201,15 @@ function ConfirmBuy:CreateUpdateWindow()
 		window.buy:SetScript('OnClick', function()
 			window.buy:Disable();
 			if self.isCommodity then
-				local qty = ConfirmBuy.window.qtyBox:GetValue();
+				local qty = ConfirmBuy.window.qtyBox:GetText();
 				if qty == nil then
 					qty = 0;
 				end
+
+				qty = tonumber(qty);
 				if qty > 0 then
-					Auctions:BuyCommodity(ConfirmBuy.itemKey.itemID, qty, self.lowestPrice);
+					Auctions:BuyCommodity(ConfirmBuy.itemKey.itemID, qty); --, self.lowestPrice
+					self:ScheduleTimer('EnableBuyButtonTimeout', 2);
 				end
 			else
 				local item = self.window.searchResults:GetSelectedItem();
@@ -292,7 +299,7 @@ function ConfirmBuy:UpdatePrices()
 	self.window.searchResults:HighlightRows(rowsToHighlight);
 
 	if qtyLeft > 0 then
-		AuctionFaster:Print('Not enough quantity on market');
+		--AuctionFaster:Print('Not enough quantity on market');
 		self.window.buy:Disable();
 	end
 

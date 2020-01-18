@@ -406,12 +406,9 @@ function Auctions:CalculateDeposit(itemLocation, settings)
 end
 
 function Auctions:BuyItem(auctionData, qty, callback)
-	print('BUYING ITEM/COMMODITY', auctionData.isCommodity, auctionData.auctionId)
 	if auctionData.isCommodity then
-		print('buying commodity', auctionData.itemId, qty)
 		self:BuyCommodity(auctionData.itemId, qty, auctionData.buy, callback)
 	else
-		print('buying item', auctionData.auctionId, auctionData.buy)
 		C_AuctionHouse.PlaceBid(auctionData.auctionId, auctionData.buy);
 	end
 
