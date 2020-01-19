@@ -87,7 +87,7 @@ function Buy:ITEM_KEY_ITEM_INFO_RECEIVED(_, itemId)
 end
 
 function Buy:AUCTION_HOUSE_BROWSE_RESULTS_ADDED(...)
-	print(...)
+	--print(...)
 end
 
 function Buy:AUCTION_HOUSE_BROWSE_FAILURE()
