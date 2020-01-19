@@ -35,15 +35,8 @@ function Pricing:GetPricingModels()
 	return builtFunctions;
 end
 
-function Pricing:CalculateStatData(itemRecord, auctions)
-	local maxBidDeviation = AuctionFaster.db.pricing.maxBidDeviation;
-	if not maxBidDeviation then
-		maxBidDeviation = 20;
-	end
-
+function Pricing:CalculateStatData(auctions)
 	local auctionInfo = {
-		itemRecord         = itemRecord,
-		maxBidDeviation    = maxBidDeviation,
 		totalQty           = 0,
 		totalQtyWithBuy    = 0,
 		totalBuy           = 0,
@@ -122,8 +115,8 @@ function Pricing:RoundPrice(p)
 	return Round(Round(p / 100) * 100);
 end
 
-function Pricing:CalculatePrice(priceModel, itemRecord, auctions)
-	local auctionInfo = self:CalculateStatData(itemRecord, auctions);
+function Pricing:CalculatePrice(priceModel, auctions)
+	local auctionInfo = self:CalculateStatData(auctions);
 	local bid, buy, success;
 
 	if self[priceModel] then
@@ -143,7 +136,12 @@ function Pricing:CalculatePrice(priceModel, itemRecord, auctions)
 	return bid, buy, success;
 end
 
-function Pricing:ClampBid(bid, buy, maxBidDeviation)
+function Pricing:ClampBid(bid, buy)
+	local maxBidDeviation = AuctionFaster.db.pricing.maxBidDeviation;
+	if not maxBidDeviation then
+		maxBidDeviation = 20;
+	end
+
 	local limit = ((100 - maxBidDeviation) / 100) * buy;
 	return Clamp(bid, limit, buy);
 end
@@ -165,7 +163,7 @@ function Pricing:Simple(auctionInfo)
 		lowestBuy = lowestBid;
 	end
 
-	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy, false;
+	return self:ClampBid(lowestBid, lowestBuy), lowestBuy, false;
 end
 
 function Pricing:WeightedAverage(auctionInfo)
@@ -183,7 +181,7 @@ function Pricing:WeightedAverage(auctionInfo)
 		lowestBuy = lowestBid;
 	end
 
-	return self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation), lowestBuy, false;
+	return self:ClampBid(lowestBid, lowestBuy), lowestBuy, false;
 end
 
 function Pricing:StandardDeviation(auctionInfo)
@@ -203,7 +201,7 @@ function Pricing:StandardDeviation(auctionInfo)
 	lowestBuy = floor(lowestBuy + buyStdDev);
 	lowestBid = floor(lowestBid + bidStdDev);
 
-	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
+	lowestBid = self:ClampBid(lowestBid, lowestBuy);
 
 	return lowestBid, lowestBuy, false;
 end
@@ -217,12 +215,12 @@ function Pricing:Stack(auctionInfo)
 		local auction = auctionInfo.auctions[i];
 		if auction.count >= minQty then
 			lowestBid, lowestBuy = auction.bid, auction.buy;
-			lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
+			lowestBid = self:ClampBid(lowestBid, lowestBuy);
 
 			return lowestBid, lowestBuy, false;
 		end
 	end
 
-	lowestBid = self:ClampBid(lowestBid, lowestBuy, auctionInfo.maxBidDeviation);
+	lowestBid = self:ClampBid(lowestBid, lowestBuy);
 	return lowestBid, lowestBuy, true, format(L['No auction found with minimum quantity: %d'], minQty);
 end

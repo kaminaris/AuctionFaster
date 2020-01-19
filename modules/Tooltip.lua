@@ -350,16 +350,21 @@ function Tooltip:UpdateBattlePetTooltip(tooltip, petData)
 	end
 
 	tooltip.afPane:SetText('');
-
-	local itemKey = C_AuctionHouse.MakeItemKey(82800 , petData.level, 0, petData.speciesID);
+	local itemKey = C_AuctionHouse.MakeItemKey(82800 , 0, 0, petData.speciesID);
 	local cacheItem = ItemCache:GetItemFromCache(itemKey);
 	if not cacheItem then
+		tooltip.afPane:Show();
+		tooltip.afPane:SetWidth(tooltip:GetWidth());
 		return tooltip.afPane;
 	end
 
 	tooltip.afPane:AddLine(L['AuctionFaster']);
-	tooltip.afPane:AddLine(L['Lowest Bid: '] .. StdUi.Util.formatMoney(cacheItem.bid, true));
-	tooltip.afPane:AddLine(L['Lowest Buy: '] .. StdUi.Util.formatMoney(cacheItem.buy, true));
+	if cacheItem.bid then
+		tooltip.afPane:AddLine(L['Lowest Bid: '] .. StdUi.Util.formatMoney(cacheItem.bid, true));
+	end
+	if cacheItem.buy then
+		tooltip.afPane:AddLine(L['Lowest Buy: '] .. StdUi.Util.formatMoney(cacheItem.buy, true));
+	end
 
 	tooltip.afPane:Show();
 	tooltip.afPane:SetWidth(tooltip:GetWidth());

@@ -313,11 +313,7 @@ end
 
 function Sell:CalculatePrice(itemRecord, auctions)
 	local priceModel = itemRecord.settings.priceModel or 'Simple';
-	local lowestBid, lowestBuy, fail, message = Pricing:CalculatePrice(
-		priceModel,
-		itemRecord,
-		auctions
-	);
+	local lowestBid, lowestBuy, fail, message = Pricing:CalculatePrice(priceModel, auctions);
 
 	if fail == true and message then
 		AuctionFaster:Echo(3, message);

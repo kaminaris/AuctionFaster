@@ -1,7 +1,7 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
 --- @class ItemCache
-local ItemCache = AuctionFaster:NewModule('ItemCache');
+local ItemCache = AuctionFaster:NewModule('ItemCache', 'AceEvent-3.0');
 ---@type Pricing
 local Pricing = AuctionFaster:GetModule('Pricing');
 local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
@@ -28,6 +28,61 @@ function ItemCache:Enable()
 	end
 
 	self.db = AuctionFaster.db.auctionDb;
+	self:RegisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
+	self:RegisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
+	self:RegisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+end
+
+function ItemCache:Disable()
+	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
+	self:UnregisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
+	self:UnregisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
+end
+
+function ItemCache:AUCTION_HOUSE_BROWSE_RESULTS_UPDATED()
+	local browseResults = C_AuctionHouse.GetBrowseResults();
+	local serverTime = GetServerTime();
+
+	for _, result in pairs(browseResults) do
+		local itemKey = result.itemKey;
+
+		local cacheItem = self:FindOrCreateCacheItem(itemKey);
+		cacheItem.buy = result.minPrice;
+		cacheItem.lastScanTime = serverTime;
+	end
+end
+
+function ItemCache:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
+	if not self.Auctions then
+		self.Auctions = AuctionFaster:GetModule('Auctions');
+	end
+
+	local items = self.Auctions:ScanCommodityResults(itemId);
+	if #items < 1 then
+		return;
+	end
+
+	local serverTime = GetServerTime();
+	local itemKey = items[1].itemKey;
+	local cacheItem = self:FindOrCreateCacheItem(itemKey);
+
+	self:RefreshHistoricalData(cacheItem, items, serverTime);
+end
+
+function ItemCache:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
+	if not self.Auctions then
+		self.Auctions = AuctionFaster:GetModule('Auctions');
+	end
+
+	local items = self.Auctions:ScanItemResults(itemKey);
+	if #items < 1 then
+		return;
+	end
+
+	local serverTime = GetServerTime();
+	local cacheItem = self:FindOrCreateCacheItem(itemKey);
+
+	self:RefreshHistoricalData(cacheItem, items, serverTime);
 end
 
 local function isSameDate(date1, date2)
@@ -35,18 +90,18 @@ local function isSameDate(date1, date2)
 end
 
 function ItemCache:MakeCacheKeyFromItemKey(itemKey)
-	return itemKey.itemID or 0 .. '-' ..
-		itemKey.itemLevel or 0 .. '-' ..
-		itemKey.itemSuffix or 0 .. '-' ..
-		itemKey.battlePetSpeciesID or 0;
+	return (itemKey.itemID or '0') .. '-' ..
+		(itemKey.itemLevel or '0') .. '-' ..
+		(itemKey.itemSuffix or '0') .. '-' ..
+		(itemKey.battlePetSpeciesID or '0');
 end
 
-function ItemCache:RefreshHistoricalData(itemRecord, serverTime)
-	if not itemRecord.prices then
-		itemRecord.prices = {};
+function ItemCache:RefreshHistoricalData(cacheItem, auctions, serverTime)
+	if not cacheItem.prices then
+		cacheItem.prices = {};
 	end
 
-	local auctionInfo = Pricing:CalculateStatData(itemRecord, {}, 1, 2);
+	local auctionInfo = Pricing:CalculateStatData(auctions);
 	auctionInfo.itemRecord = nil;
 	auctionInfo.auctions = nil;
 	auctionInfo.stackSize = nil;
@@ -56,32 +111,32 @@ function ItemCache:RefreshHistoricalData(itemRecord, serverTime)
 	local cacheLifetime = AuctionFaster.db.historical.keepDays * 24 * 60 * 60;
 	local limit = serverTime - cacheLifetime;
 
-	for i = #itemRecord.prices, 1, -1 do
-		local historicalData = itemRecord.prices[i];
+	for i = #cacheItem.prices, 1, -1 do
+		local historicalData = cacheItem.prices[i];
 
 		if historicalData.scanTime < limit then
 			-- remove old records
-			TableRemove(itemRecord.prices, i);
+			TableRemove(cacheItem.prices, i);
 		end
 	end
 
 	-- if there are no records, just insert and bail out
-	if #itemRecord.prices == 0 then
-		TableInsert(itemRecord.prices, auctionInfo);
+	if #cacheItem.prices == 0 then
+		TableInsert(cacheItem.prices, auctionInfo);
 		return ;
 	end
 
 	-- since it is impossible to perform future scans we can be sure that last record is newest
-	local lastHistoricalData = itemRecord.prices[#itemRecord.prices];
+	local lastHistoricalData = cacheItem.prices[#cacheItem.prices];
 	local lastDate = date('*t', lastHistoricalData.scanTime);
 	local currentDate = date('*t', serverTime);
 
 	if isSameDate(lastDate, currentDate) then
 		-- same day, replace last record
-		itemRecord.prices[#itemRecord.prices] = auctionInfo;
+		cacheItem.prices[#cacheItem.prices] = auctionInfo;
 	else
 		-- last date is older than today, we can safely insert new one
-		TableInsert(itemRecord.prices, auctionInfo);
+		TableInsert(cacheItem.prices, auctionInfo);
 	end
 end
 
