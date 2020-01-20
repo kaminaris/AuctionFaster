@@ -43,6 +43,10 @@ function Tooltip:UpdateTooltip(tooltip, ...)
 	end
 
 	local itemId = GetItemInfoInstant(link);
+	if not itemId then
+		return;
+	end
+
 	local itemKey = C_AuctionHouse.MakeItemKey(itemId);
 	local cacheItem = ItemCache:GetItemFromCache(itemKey);
 

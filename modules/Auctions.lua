@@ -214,7 +214,7 @@ function Auctions:ITEM_KEY_ITEM_INFO_RECEIVED(_, itemId)
 		end
 	end
 
-	if infoComplete then
+	if infoComplete and self.currentCallback then
 		self.currentCallback(self.searchResults);
 		-- no longer our scan
 		self.currentCallback = nil;
@@ -227,12 +227,14 @@ function Auctions:ITEM_KEY_ITEM_INFO_RECEIVED(_, itemId)
 end
 
 function Auctions:WaitingForKeyInfoTimeout()
-	self.currentCallback(self.searchResults);
-	-- no longer our scan
-	self.currentCallback = nil;
-	self:UnregisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
-	if self.keyInfoTimeout then
-		self.keyInfoTimeout = nil;
+	if self.currentCallback then
+		self.currentCallback(self.searchResults);
+		-- no longer our scan
+		self.currentCallback = nil;
+		self:UnregisterEvent('ITEM_KEY_ITEM_INFO_RECEIVED');
+		if self.keyInfoTimeout then
+			self.keyInfoTimeout = nil;
+		end
 	end
 end
 

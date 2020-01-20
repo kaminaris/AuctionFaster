@@ -262,7 +262,7 @@ function ConfirmBuy:UpdatePrices()
 	end
 	qty = tonumber(qty);
 
-	if qty < 0 then
+	if not qty or qty <= 0 then
 		self.window.buy:Disable();
 		return ;
 	end
