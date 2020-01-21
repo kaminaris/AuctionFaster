@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
 ## Notes: Super Fast AuctionHouse Addon
-## Version: 8.3.0.5
+## Version: 8.3.0.6
 ## Author: Kaminaris
 ## Interface: 80300
 ## OptionalDeps: BattlePetBreedID

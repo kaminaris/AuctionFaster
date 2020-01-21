@@ -11,6 +11,11 @@ local Sell = AuctionFaster:GetModule('Sell');
 local Graph = LibStub('LibGraph-2.0');
 
 local format = string.format;
+local TableInsert = tinsert;
+local MathMax = math.max;
+local MathMin = math.min;
+local MathFloor = math.floor;
+local MathCeil = math.ceil;
 
 function Sell:DrawInfoPane()
 	if self.sellTab.infoPane then
@@ -89,26 +94,35 @@ function Sell:ToggleInfoPane()
 	end
 end
 
-function Sell:PrepareHistoricalData(itemRecord)
-	if #itemRecord.prices < 2 then
-		AuctionFaster:Echo(3, format(L['No historical data available for: %s'], itemRecord.itemName));
+function Sell:PrepareHistoricalData(cacheItem)
+	local itemName = cacheItem.itemKey.itemID;
+
+	local itemKeyInfo = C_AuctionHouse.GetItemKeyInfo(cacheItem.itemKey);
+	if itemKeyInfo then
+		itemName = itemKeyInfo.itemName;
+	end
+
+	if #cacheItem.prices < 2 then
+		AuctionFaster:Echo(3, format(L['No historical data available for: %s'], itemName));
 		return false;
 	end
 
 	local result = {
+		itemKeyInfo = itemKeyInfo,
+		itemKey = cacheItem.itemKey,
 		stats = {
-			itemRecord = itemRecord,
+			itemRecord = cacheItem,
 			startingStamp = 0,
-			maxLowestBuy = itemRecord.prices[1].lowestBuy,
-			minLowestBuy = itemRecord.prices[1].lowestBuy,
+			maxLowestBuy = cacheItem.prices[1].lowestBuy,
+			minLowestBuy = cacheItem.prices[1].lowestBuy,
 		},
 	};
 
 	local lowestBuy, trendLowest, averageBuy, trendAverage, highestBuy = {}, {}, {}, {}, {};
 	local X, YLow, YAvg = {}, {}, {};
 	local yts = 0;
-	for i = 1, #itemRecord.prices do
-		local historicalData = itemRecord.prices[i];
+	for i = 1, #cacheItem.prices do
+		local historicalData = cacheItem.prices[i];
 		if i == 1 then
 			yts = historicalData.scanTime - 1;
 			result.stats.startingStamp = yts;
@@ -116,16 +130,16 @@ function Sell:PrepareHistoricalData(itemRecord)
 
 		local ts = ((historicalData.scanTime - yts) / 3600); -- + (24 * (i - 1))
 
-		tinsert(lowestBuy, { ts, historicalData.lowestBuy / 10000 });
-		tinsert(averageBuy, { ts, historicalData.averageBuy / 10000 });
-		tinsert(highestBuy, { ts, historicalData.highestBuy / 10000 });
+		TableInsert(lowestBuy, { ts, historicalData.lowestBuy / 100 });
+		TableInsert(averageBuy, { ts, historicalData.averageBuy / 100 });
+		--TableInsert(highestBuy, { ts, historicalData.highestBuy / 100 });
 
-		tinsert(X, ts);
-		tinsert(YAvg, historicalData.averageBuy / 10000);
-		tinsert(YLow, historicalData.lowestBuy / 10000);
+		TableInsert(X, ts);
+		TableInsert(YAvg, historicalData.averageBuy / 100);
+		TableInsert(YLow, historicalData.lowestBuy / 100);
 
-		result.stats.maxLowestBuy = math.max(result.stats.maxLowestBuy, historicalData.lowestBuy);
-		result.stats.minLowestBuy = math.min(result.stats.minLowestBuy, historicalData.lowestBuy);
+		result.stats.maxLowestBuy = MathMax(result.stats.maxLowestBuy, historicalData.lowestBuy);
+		result.stats.minLowestBuy = MathMin(result.stats.minLowestBuy, historicalData.lowestBuy);
 	end
 
 	trendLowest = AuctionFaster:TrendLine(X, YLow);
@@ -135,12 +149,12 @@ function Sell:PrepareHistoricalData(itemRecord)
 		{ text = L['Lowest Buy'],        color = { 0.0, 1.0, 0.0, 0.8 }, series = lowestBuy },
 		{ text = L['Trend Lowest Buy'],  color = { 0.0, 1.0, 0.0, 0.5 }, series = trendLowest },
 
-		{ text = L['Average Buy'],       color = { 1.0, 1.0, 0.0, 0.8 }, series = averageBuy },
-		{ text = L['Trend Average Buy'], color = { 1.0, 1.0, 0.0, 0.5 }, series = trendAverage },
+		--{ text = L['Average Buy'],       color = { 1.0, 1.0, 0.0, 0.8 }, series = averageBuy },
+		--{ text = L['Trend Average Buy'], color = { 1.0, 1.0, 0.0, 0.5 }, series = trendAverage },
 
-		{ text = L['Highest Buy'],       color = { 1.0, 0.0, 0.0, 0.8 }, series = highestBuy },
+		--{ text = L['Highest Buy'],       color = { 1.0, 0.0, 0.0, 0.8 }, series = highestBuy },
 	}
-
+--DevTools_Dump(cacheItem.prices)
 	return result;
 end
 
@@ -153,7 +167,7 @@ function Sell:RescaleLines(historicalData)
 	local yStep = (g.YMax - g.YMin) / 7;
 
 	for i = 1, #verticalDivs do
-		local moneyValue = math.floor((g.YMax - ((i - 1) * yStep)) * 10000);
+		local moneyValue = MathFloor((g.YMax - ((i - 1) * yStep)) * 100);
 
 		verticalDivs[i]:SetText(StdUi.Util.formatMoney(moneyValue, true));
 	end
@@ -164,7 +178,7 @@ function Sell:RescaleLines(historicalData)
 
 	local s = historicalData.data[1].series;
 	local diff = s[#s][1] - s[1][1];
-	local numLines = math.ceil(diff / 48);
+	local numLines = MathCeil(diff / 48);
 
 	for i = 1, #horizontalDivs do
 		horizontalDivs[i]:Hide();
@@ -285,7 +299,12 @@ function Sell:ShowHistoricalWindow(historicalData)
 	historicalWindow = self.historicalWindow;
 	g = self.historicalWindow.g;
 
-	historicalWindow.titlePanel.label:SetText(L['Historical Data: '] .. historicalData.stats.itemRecord.itemName);
+	local itemLink = AuctionHouseUtil.GetItemDisplayTextFromItemKey(
+		historicalData.itemKey,
+		historicalData.itemKeyInfo,
+		false
+	);
+	historicalWindow.titlePanel.label:SetText(L['Historical Data: '] .. itemLink);
 
 	g:ResetData();
 
