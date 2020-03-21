@@ -64,6 +64,12 @@ function Sell:COMMODITY_SEARCH_RESULTS_UPDATED(_, itemId)
 
 	self:UpdateItemListPrices(selectedItem, items);
 	self:UpdateInfoPaneText();
+
+	if self.enableUiTimer then
+		self:CancelTimer(self.enableUiTimer);
+		self.enableUiTimer = nil;
+	end
+	self:EnableAuctionTabControls(true);
 end
 
 function Sell:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
@@ -75,11 +81,21 @@ function Sell:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
 
 	self:UpdateItemListPrices(itemRecord, items);
 	self:UpdateInfoPaneText();
+
+	if self.enableUiTimer then
+		self:CancelTimer(self.enableUiTimer);
+		self.enableUiTimer = nil;
+	end
+	self:EnableAuctionTabControls(true);
 end
 
 function Sell:AFTER_INVENTORY_SCAN()
 	-- redraw items
 	self:DoFilterSort();
+
+	if self.selectedItemIndex then
+		self:SelectItem(self.selectedItemIndex);
+	end
 
 	-- ignore if last sold item was over 2 seconds ago, prevents from opening when closing and opening AH again
 	if GetTime() - Auctions.lastSoldTimestamp > 2 or not Auctions.soldFlag then
@@ -214,7 +230,7 @@ function Sell:SelectItem(index)
 	local cacheItem = ItemCache:FindOrCreateCacheItem(self.selectedItem.itemKey);
 
 	-- Clear prices
-	self:UpdateTabPrices(nil, nil);
+	self:UpdateTabPrices(cacheItem.buy or nil, cacheItem.bid or nil);
 
 	if cacheItem.settings.rememberStack then
 		self:UpdateStackSettings(cacheItem.stackSize or self.selectedItem.count or 1)
@@ -223,9 +239,18 @@ function Sell:SelectItem(index)
 	end
 
 	self:UpdateItemQtyText();
-	self:GetCurrentAuctions();
 	self:LoadItemSettings();
-	self:EnableAuctionTabControls(true);
+	self:GetCurrentAuctions();
+
+	self:EnableAuctionTabControls(false);
+
+	-- if failed to fetch auctions, allow to post after 1s
+	if self.enableUiTimer then
+		self:CancelTimer(self.enableUiTimer);
+		self.enableUiTimer = nil;
+	end
+	self.enableUiTimer = self:ScheduleTimer('EnableAuctionTabControls', 1, true);
+	--self:EnableAuctionTabControls(true);
 end
 
 function Sell:CheckIfSelectedItemExists()
@@ -294,6 +319,10 @@ function Sell:EnableAuctionTabControls(enable)
 end
 
 function Sell:UpdateItemsTabPrice(itemKey, newPrice)
+	if not newPrice then
+		return;
+	end
+
 	for _, f in pairs(self.sellTab.scrollChild.items) do
 		if Inventory:ItemKeyEqual(f.item.itemKey, itemKey) then
 			f.itemPrice:SetText(StdUi.Util.formatMoney(newPrice, true));
@@ -319,7 +348,9 @@ function Sell:CalculatePrice(itemRecord, auctions)
 		AuctionFaster:Echo(3, message);
 	end
 
-	self:UpdateTabPrices(lowestBid, lowestBuy);
+	if lowestBid and lowestBuy then
+		self:UpdateTabPrices(lowestBid, lowestBuy);
+	end
 
 	return lowestBuy;
 end

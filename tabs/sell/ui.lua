@@ -6,7 +6,7 @@ local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 ---@type Inventory
 local Inventory = AuctionFaster:GetModule('Inventory');
 --- @class Sell
-local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0');
+local Sell = AuctionFaster:NewModule('Sell', 'AceEvent-3.0', 'AceTimer-3.0');
 
 local format = string.format;
 
