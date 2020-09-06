@@ -20,7 +20,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 local format = string.format;
 local pairs = pairs;
 
-function Sell:Enable()
+function Sell:Attach()
 	self:AddSellAuctionHouseTab();
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
@@ -29,7 +29,7 @@ function Sell:Enable()
 	self:RegisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
 end
 
-function Sell:Disable()
+function Sell:Detach()
 	self:OnHide();
 	self:UnregisterEvent('AUCTION_HOUSE_CLOSED');
 	self:UnregisterEvent('AUCTION_HOUSE_SHOW');

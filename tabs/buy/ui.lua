@@ -72,7 +72,9 @@ function Buy:DrawSearchPane()
 	StdUi:GlueRight(sniperButton, filtersButton, 5, 0);
 
 	addFavoritesButton:SetScript('OnClick', function() Buy:AddToFavorites(); end);
-	searchBox:SetScript('OnEnterPressed', function() Buy:SearchAuctions(searchBox:GetText(), false, 0); end);
+	searchBox.CustomEnterPressed = function()
+		Buy:SearchAuctions(searchBox:GetText(), false, 0);
+	end
 	searchButton:SetScript('OnClick', function() Buy:SearchAuctions(searchBox:GetText(), false, 0); end);
 	filtersButton:SetScript('OnClick', function() Buy:ToggleFilterFrame(); end);
 	sniperButton:SetScript('OnClick', function() Buy:ToggleSniperFrame(); end);

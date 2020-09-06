@@ -28,11 +28,15 @@ function AuctionFaster:OnInitialize()
 	end
 
 	-- These modules must be enabled on start, they handle events themselves
-	self:EnableModule('ItemCache');
-	self:EnableModule('Inventory');
-	self:EnableModule('Auctions');
-	self:EnableModule('ConfirmBuy');
-	self:EnableModule('Tutorial');
+	-- Update, this automatically enabled
+	--self:EnableModule('ItemCache');
+	--self:EnableModule('Inventory');
+	--self:EnableModule('Auctions');
+	--self:EnableModule('ConfirmBuy');
+	--self:EnableModule('Tutorial');
+
+	self.buyModule = self:GetModule('Buy');
+	self.sellModule = self:GetModule('Sell');
 
 	-- TODO: COMMENT THIS OUT
 	--UIParentLoadAddOn('Blizzard_DebugTools')
@@ -40,8 +44,8 @@ end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()
 	if self.db.enabled then
-		self:EnableModule('Sell');
-		self:EnableModule('Buy');
+		self.buyModule:Attach();
+		self.sellModule:Attach();
 
 		if not self.onTabClickHooked then
 			self:Hook(AuctionHouseFrame, 'SetDisplayMode', 'SetDisplayModeHook', true);
@@ -57,8 +61,8 @@ function AuctionFaster:AUCTION_HOUSE_SHOW()
 end
 
 function AuctionFaster:AUCTION_HOUSE_CLOSED()
-	self:DisableModule('Sell');
-	self:DisableModule('Buy');
+	self.buyModule:Detach();
+	self.sellModule:Detach();
 end
 
 local function stripFrameTextures(frame, strip)
