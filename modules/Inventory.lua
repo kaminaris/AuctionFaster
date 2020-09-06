@@ -9,7 +9,7 @@ local Inventory = AuctionFaster:NewModule('Inventory', 'AceEvent-3.0');
 local battlePetId = 82800;
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
-function Inventory:Enable()
+function Inventory:OnEnable()
 	self.inventoryItems = {};
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');

@@ -11,7 +11,7 @@ local TableRemove = tremove;
 local GetServerTime = GetServerTime;
 local pairs = pairs;
 
-function ItemCache:Enable()
+function ItemCache:OnEnable()
 	if AuctionFaster.db.auctionDb then
 		-- upgrade db
 		local upgradeNeeded = false;
@@ -33,7 +33,7 @@ function ItemCache:Enable()
 	self:RegisterEvent('ITEM_SEARCH_RESULTS_UPDATED');
 end
 
-function ItemCache:Disable()
+function ItemCache:OnDisable()
 	self:UnregisterEvent('AUCTION_HOUSE_BROWSE_RESULTS_UPDATED');
 	self:UnregisterEvent('COMMODITY_SEARCH_RESULTS_UPDATED');
 	self:UnregisterEvent('ITEM_SEARCH_RESULTS_UPDATED');

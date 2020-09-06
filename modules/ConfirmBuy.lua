@@ -13,12 +13,12 @@ local Auctions = AuctionFaster:GetModule('Auctions');
 --- @class ConfirmBuy
 local ConfirmBuy = AuctionFaster:NewModule('ConfirmBuy', 'AceEvent-3.0', 'AceTimer-3.0');
 
-function ConfirmBuy:Enable()
+function ConfirmBuy:OnEnable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 end
 
-function ConfirmBuy:Disable()
+function ConfirmBuy:OnDisable()
 	self:UnregisterEvent('AUCTION_HOUSE_CLOSED');
 	self:UnregisterEvent('AUCTION_HOUSE_SHOW');
 end

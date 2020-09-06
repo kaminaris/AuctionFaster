@@ -24,7 +24,7 @@ local defaultSorts = {
 };
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
-function Auctions:Enable()
+function Auctions:OnEnable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 	--self:Hook(C_AuctionHouse, 'SendBrowseQuery', 'SendBrowseQueryHook', true);
