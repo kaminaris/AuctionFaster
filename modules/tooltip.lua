@@ -7,7 +7,7 @@ local ItemCache = AuctionFaster:GetModule('ItemCache');
 local StdUi = LibStub('StdUi');
 local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
-function Tooltip:OnEnable()
+function Tooltip:Attach()
 	if not self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:HookScript(GameTooltip, 'OnTooltipSetItem', 'UpdateTooltip');
 		if BattlePetTooltipTemplate_SetBattlePet then
@@ -22,7 +22,7 @@ function Tooltip:OnEnable()
 	end
 end
 
-function Tooltip:OnDisable()
+function Tooltip:Detach()
 	if self:IsHooked(GameTooltip, 'OnTooltipSetItem') then
 		self:Unhook(GameTooltip, 'OnTooltipSetItem');
 		if BattlePetTooltipTemplate_SetBattlePet then

@@ -23,32 +23,24 @@ function AuctionFaster:OnInitialize()
 		self.db.auctionDb = {};
 	end
 
-	if self.db.enableToolTips then
-		self:EnableModule('Tooltip');
+	if not self.db.enableToolTips then
+		local tooltips = self:GetModule('Tooltips');
+		tooltips:Attach();
 	end
 
 	-- These modules must be enabled on start, they handle events themselves
-	self:EnableModule('ItemCache');
-	self:EnableModule('Inventory');
-	self:EnableModule('Auctions');
-	self:EnableModule('ChainBuy');
-	self:EnableModule('Tutorial');
+	--self:EnableModule('ItemCache');
+	--self:EnableModule('Inventory');
+	--self:EnableModule('Auctions');
+	--self:EnableModule('ChainBuy');
+	--self:EnableModule('Tutorial');
 end
 
 function AuctionFaster:AUCTION_HOUSE_SHOW()
 	if self.db.enabled then
-		self:EnableModule('Sell');
-		self:EnableModule('Buy');
-
 		if not self.onTabClickHooked then
 			self:Hook('AuctionFrameTab_OnClick', true);
 			self.onTabClickHooked = true;
-		end
-
-		if self.db.defaultTab == 'SELL' then
-			AuctionFrameTab_OnClick(self.auctionTabs[1].tabButton);
-		elseif self.db.defaultTab == 'BUY' then
-			AuctionFrameTab_OnClick(self.auctionTabs[2].tabButton);
 		end
 	end
 end

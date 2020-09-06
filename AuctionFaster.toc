@@ -1,8 +1,8 @@
 ## Title: AuctionFaster
 ## Notes: Super Fast AuctionHouse Addon
-## Version: 1.13.8
+## Version: 1.13.9
 ## Author: Kaminaris
-## Interface: 11302
+## Interface: 11305
 ## SavedVariables: AuctionFasterDb
 ## X-Curse-Project-ID: 292892
 ## X-WoWI-ID: 24771

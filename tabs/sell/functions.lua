@@ -22,7 +22,22 @@ local Sell = AuctionFaster:GetModule('Sell');
 local format = string.format;
 
 function Sell:OnEnable()
-	self:AddSellAuctionHouseTab();
+	self:RegisterEvent('AUCTION_HOUSE_SHOW');
+	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
+end
+
+Sell.initialized = false;
+function Sell:AUCTION_HOUSE_SHOW()
+	if AuctionFaster.db.enabled then
+		if not self.initialized then
+			self:AddSellAuctionHouseTab();
+			self.initialized = true;
+		end
+
+		if AuctionFaster.db.defaultTab == 'SELL' then
+			AuctionFrameTab_OnClick(self.auctionTabs[1].tabButton);
+		end
+	end
 end
 
 function Sell:OnShow()
@@ -36,7 +51,7 @@ function Sell:OnHide()
 	--self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
-function Sell:OnDisable()
+function Sell:AUCTION_HOUSE_CLOSED()
 	self:OnHide();
 end
 
