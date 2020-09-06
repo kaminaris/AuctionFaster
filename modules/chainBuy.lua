@@ -21,11 +21,11 @@ local fastModeExplanation = L['Fast Mode - AuctionFaster will NOT wait until you
 'This may result in inaccurate amount of bought items and some missed auctions.\n' ..
 '|cFFFF0000Use this only if you don\'t care about how much you will buy and want to buy fast.|r'];
 
-function ChainBuy:Enable()
+function ChainBuy:OnEnable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED')
 end
 
-function ChainBuy:Disable()
+function ChainBuy:OnDisable()
 	self:UnregisterEvent('AUCTION_HOUSE_CLOSED');
 end
 

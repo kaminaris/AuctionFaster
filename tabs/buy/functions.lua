@@ -18,7 +18,7 @@ local AuctionCache = AuctionFaster:GetModule('AuctionCache');
 local format = string.format;
 local TableInsert = tinsert;
 
-function Buy:Enable()
+function Buy:OnEnable()
 	self:AddBuyAuctionHouseTab();
 	self:InterceptLinkClick();
 end
@@ -39,7 +39,7 @@ function Buy:OnHide()
 	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
-function Buy:Disable()
+function Buy:OnDisable()
 	self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 

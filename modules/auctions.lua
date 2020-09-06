@@ -12,7 +12,7 @@ local Inventory = AuctionFaster:GetModule('Inventory');
 local Auctions = AuctionFaster:NewModule('Auctions', 'AceEvent-3.0', 'AceTimer-3.0');
 
 --- Enable is a must so we know when AH has been closed or opened, all events are handled in this module
-function Auctions:Enable()
+function Auctions:OnEnable()
 	self:RegisterEvent('AUCTION_HOUSE_CLOSED');
 	self:RegisterEvent('AUCTION_HOUSE_SHOW');
 end

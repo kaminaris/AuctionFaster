@@ -4,7 +4,7 @@ local AuctionFaster = unpack(select(2, ...));
 local ItemCache = AuctionFaster:NewModule('ItemCache');
 local L = LibStub('AceLocale-3.0'):GetLocale('AuctionFaster');
 
-function ItemCache:Enable()
+function ItemCache:OnEnable()
 	if AuctionFaster.db.auctionDb then
 		-- upgrade db
 		local upgradeNeeded = false;

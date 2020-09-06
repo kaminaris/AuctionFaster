@@ -21,7 +21,7 @@ local Sell = AuctionFaster:GetModule('Sell');
 
 local format = string.format;
 
-function Sell:Enable()
+function Sell:OnEnable()
 	self:AddSellAuctionHouseTab();
 end
 
@@ -36,7 +36,7 @@ function Sell:OnHide()
 	--self:UnregisterEvent('AUCTION_ITEM_LIST_UPDATE');
 end
 
-function Sell:Disable()
+function Sell:OnDisable()
 	self:OnHide();
 end
 

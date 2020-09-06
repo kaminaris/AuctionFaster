@@ -247,7 +247,7 @@ function Tutorial:Terminate()
 	end
 end
 
-function Tutorial:Enable()
+function Tutorial:OnEnable()
 	if not Clicker then
 		Clicker = CreateFrame('Frame', nil, HelpPlateXTooltip);
 
