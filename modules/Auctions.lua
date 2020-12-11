@@ -373,6 +373,15 @@ function Auctions:ITEM_SEARCH_RESULTS_UPDATED(_, itemKey)
 	end
 end
 
+Auctions.commodityToBuy = nil;
+function Auctions:AUCTION_HOUSE_THROTTLED_SYSTEM_READY()
+	if self.commodityToBuy then
+		C_AuctionHouse.ConfirmCommoditiesPurchase(self.commodityToBuy.itemId, self.commodityToBuy.qty);
+		self.commodityToBuy = nil;
+		self:UnregisterEvent('AUCTION_HOUSE_THROTTLED_SYSTEM_READY');
+	end
+end
+
 --- TODO
 function Auctions:SellItem(itemLocation, qty, duration, price, bid)
 	local isCommodity = C_AuctionHouse.GetItemCommodityStatus(itemLocation) == 2;
@@ -418,8 +427,13 @@ function Auctions:BuyItem(auctionData, qty, callback)
 end
 
 function Auctions:BuyCommodity(itemId, qty, unitPrice)
+	self.commodityToBuy = {
+		itemId    = itemId,
+		qty       = qty,
+		unitPrice = unitPrice
+	};
+	self:RegisterEvent('AUCTION_HOUSE_THROTTLED_SYSTEM_READY');
 	C_AuctionHouse.StartCommoditiesPurchase(itemId, qty, unitPrice);
-	C_AuctionHouse.ConfirmCommoditiesPurchase(itemId, qty);
 end
 
 local failedAuctionErrors = {
