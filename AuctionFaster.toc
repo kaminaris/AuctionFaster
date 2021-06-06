@@ -1,6 +1,6 @@
 ## Title: AuctionFaster
 ## Notes: Super Fast AuctionHouse Addon
-## Version: 2.5.1
+## Version: 2.5.1.1
 ## Author: Kaminaris
 ## Interface: 20501
 ## SavedVariables: AuctionFasterDb
