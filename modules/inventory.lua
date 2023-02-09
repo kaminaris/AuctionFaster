@@ -1,6 +1,5 @@
 ---@type AuctionFaster
 local AuctionFaster = unpack(select(2, ...));
-local Gratuity = LibStub('LibGratuity-3.0');
 ---@type ItemCache
 local ItemCache = AuctionFaster:GetModule('ItemCache');
 ---@class Inventory
@@ -35,15 +34,14 @@ function Inventory:ScanInventory()
 	end
 
 	for bag = 0, NUM_BAG_SLOTS do
-		local numSlots = GetContainerNumSlots(bag);
+		local numSlots = C_Container.GetContainerNumSlots(bag);
 
 		if numSlots ~= 0 then
 			for slot = 1, numSlots do
-				local itemId = GetContainerItemID(bag, slot);
-				local link = GetContainerItemLink(bag, slot);
-				local _, count = GetContainerItemInfo(bag, slot);
-
-				self:AddItemToInventory(itemId, count, link, bag, slot);
+				local itemId = C_Container.GetContainerItemID(bag, slot);
+				local link = C_Container.GetContainerItemLink(bag, slot);
+				local info = C_Container.GetContainerItemInfo(bag, slot);
+				self:AddItemToInventory(itemId, info.stackCount, link, bag, slot);
 			end
 		end
 	end
@@ -73,38 +71,43 @@ end
 
 function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	local canSell = false;
-
+	
 	if itemId == battlePetId then
 		canSell = true;
 	else
-		Gratuity:SetBagItem(bag, slot);
+		
+		local cTip = CreateFrame("GameTooltip","PrivTooltip",nil,"GameTooltipTemplate")
+		cTip:SetOwner(UIParent, "ANCHOR_NONE")
+		cTip:SetBagItem(bag, slot)
+		cTip:Show();
 
-		local n = Gratuity:NumLines();
-		local firstLine = Gratuity:GetLine(1);
+		local name = "PrivTooltip"
+		local n = cTip:NumLines();		
+		local firstLine = _G[name.."TextLeft1"]:GetText()
 
 		if not firstLine or strfind(tostring(firstLine), RETRIEVING_ITEM_INFO) then
 			return false
 		end
 
 		for i = 1, n do
-			local line = Gratuity:GetLine(i);
+			local line = _G[name.."TextLeft"..i]:GetText()
 
 			if line then
 				canSell = not (strfind(line, ITEM_BIND_ON_PICKUP) or strfind(line, ITEM_BIND_TO_BNETACCOUNT)
 						or strfind(line, ITEM_BNETACCOUNTBOUND) or strfind(line, ITEM_SOULBOUND)
 						or strfind(line, ITEM_BIND_QUEST) or strfind(line, ITEM_CONJURED));
-
 				if strfind(line, USE_COLON) then
 					break ;
 				end
 			end
-
 			if not canSell then
+
 				return false;
 			end
 		end
+		cTip:Hide();
 	end
-
+	
 	local itemName, itemIcon, itemStackCount, additionalInfo, quality, level;
 
 	if itemId == battlePetId then
@@ -124,14 +127,14 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		itemIcon = GetItemIcon(itemId);
 	end
 
-
 	local found = false;
 	-- don't stack battle pets
+	
 	if itemId ~= battlePetId then
 		for i = 1, #self.inventoryItems do
 			local ii = self.inventoryItems[i];
 			if ii.itemId == itemId and ii.itemName == itemName then
-				found = true;
+				found = true;			
 				self.inventoryItems[i].count = self.inventoryItems[i].count + count;
 				break ;
 			end
@@ -173,11 +176,12 @@ function Inventory:GetItemFromInventory(itemId, itemName, itemQuality, itemLevel
 	local firstBag, firstSlot, remainingQty;
 
 	for bag = 0, 4 do
-		for slot = 1, GetContainerNumSlots(bag) do
-			local id = GetContainerItemID(bag, slot);
+		for slot = 1, C_Container.GetContainerNumSlots(bag) do
+			local id = C_Container.GetContainerItemID(bag, slot);
 			if id then
-				local link = GetContainerItemLink(bag, slot);
-				local _, count = GetContainerItemInfo(bag, slot);
+				local link = C_Container.GetContainerItemLink(bag, slot);
+				local info = C_Container.GetContainerItemInfo(bag, slot);
+				local count = info.stackCount;
 
 				if id == battlePetId then
 					local name, icon, speciesId, petLevel, breedQuality = AuctionFaster:ParseBattlePetLink(link);

@@ -175,7 +175,7 @@ function Auctions:PutItemInSellBox(itemId, itemName, itemQuality, itemLevel)
 		return false;
 	end
 
-	PickupContainerItem(bag, slot);
+	C_Container.PickupContainerItem(bag, slot);
 	if not CursorHasItem() then
 		AuctionFaster:Echo(3, L['Could not pick up item from inventory']);
 		return false;
