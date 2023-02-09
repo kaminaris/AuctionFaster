@@ -41,7 +41,9 @@ function Inventory:ScanInventory()
 				local itemId = C_Container.GetContainerItemID(bag, slot);
 				local link = C_Container.GetContainerItemLink(bag, slot);
 				local info = C_Container.GetContainerItemInfo(bag, slot);
-				self:AddItemToInventory(itemId, info.stackCount, link, bag, slot);
+				if link then
+					self:AddItemToInventory(itemId, info.stackCount, link, bag, slot);
+				end 
 			end
 		end
 	end
@@ -79,7 +81,7 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		local cTip = CreateFrame("GameTooltip","PrivTooltip",nil,"GameTooltipTemplate")
 		cTip:SetOwner(UIParent, "ANCHOR_NONE")
 		cTip:SetBagItem(bag, slot)
-		cTip:Show();
+		
 
 		local name = "PrivTooltip"
 		local n = cTip:NumLines();		
@@ -101,13 +103,12 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 				end
 			end
 			if not canSell then
-
 				return false;
 			end
 		end
-		cTip:Hide();
+		
 	end
-	
+
 	local itemName, itemIcon, itemStackCount, additionalInfo, quality, level;
 
 	if itemId == battlePetId then
