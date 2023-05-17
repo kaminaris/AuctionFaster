@@ -71,6 +71,9 @@ function Inventory:UpdateItemInventory(itemId, itemName)
 	return totalQty;
 end
 
+local cTip = CreateFrame("GameTooltip","PrivTooltip",nil,"GameTooltipTemplate")
+cTip:SetOwner(UIParent, "ANCHOR_NONE")
+
 function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 	local canSell = false;
 	
@@ -78,8 +81,7 @@ function Inventory:AddItemToInventory(itemId, count, link, bag, slot)
 		canSell = true;
 	else
 		
-		local cTip = CreateFrame("GameTooltip","PrivTooltip",nil,"GameTooltipTemplate")
-		cTip:SetOwner(UIParent, "ANCHOR_NONE")
+		cTip:ClearLines()
 		cTip:SetBagItem(bag, slot)
 		
 
