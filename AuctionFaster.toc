@@ -16,7 +16,6 @@ Libs\AceEvent-3.0\AceEvent-3.0.xml
 Libs\AceHook-3.0\AceHook-3.0.xml
 Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceLocale-3.0\AceLocale-3.0.xml
-Libs\LibGratuity-3.0\LibGratuity-3.0.lua
 Libs\StdUi\StdUi.xml
 Libs\LibGraph-2.0\LibGraph-2.0.lua
 
